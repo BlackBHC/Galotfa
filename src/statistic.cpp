@@ -97,7 +97,6 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
     unsigned long                  idy = 0;
     std::unique_ptr< double[] >    statisticResutls( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< int[] > const count( new int[ xBinNum * yBinNum ]() );
-    std::unique_ptr< int[] > const count_recv( new int[ xBinNum * yBinNum ]() );
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
