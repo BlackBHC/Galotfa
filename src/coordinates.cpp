@@ -1,0 +1,205 @@
+/**
+ * @file
+ * @brief define some functions of coordinate transformation.
+ */
+
+#include "../include/coordinate.hpp"
+#include "../include/myprompt.hpp"
+#include <cmath>
+#include <numbers>
+using namespace std;
+
+/**
+ * @brief transform the coordinate from cartesian to spherical.
+ *
+ * @param data: double[3] for x, y, z to r, theta, phi
+ */
+void coordinate_transformer::car2sph( double data[ 3 ] )
+{
+    static double r = 0;
+    // theta for latitude, phi for longitude
+    static double theta = 0;
+    static double phi   = 0;
+    r = sqrt( data[ 0 ] * data[ 0 ] + data[ 1 ] * data[ 1 ] + data[ 2 ] * data[ 2 ] );
+
+    if ( r != 0 )
+    {
+        theta = acos( data[ 2 ] / r );
+    }
+    else if ( data[ 2 ] >= 0 )
+    {
+        theta = 0;
+    }
+    else
+    {
+        theta = -numbers::pi;
+    }
+
+    phi = atan2( data[ 1 ], data[ 0 ] );
+
+    data[ 0 ] = r;
+    data[ 1 ] = theta;
+    data[ 2 ] = phi;
+}
+
+/**
+ * @brief transform the coordinate from spherical to cartesian.
+ *
+ * @param data: double[3] for r, theta (latitude), phi (longitude) to x, y, z
+ */
+void coordinate_transformer::sph2car( double data[ 3 ] )
+{
+    static double x = 0;
+    static double y = 0;
+    static double z = 0;
+    x               = data[ 0 ] * sin( data[ 1 ] ) * cos( data[ 2 ] );
+    y               = data[ 0 ] * sin( data[ 1 ] ) * sin( data[ 2 ] );
+    z               = data[ 0 ] * cos( data[ 1 ] );
+    data[ 0 ]       = x;
+    data[ 1 ]       = y;
+    data[ 2 ]       = z;
+}
+
+/**
+ * @brief transform the coordinate from cartesian to cylindrical.
+ *
+ * @param data: double[3] for x, y, z to R, phi, z
+ */
+void coordinate_transformer::car2cyl( double data[ 3 ] )
+{
+    static double R   = 0;
+    static double phi = 0;
+    R                 = sqrt( data[ 0 ] * data[ 0 ] + data[ 1 ] * data[ 1 ] );
+    phi               = atan2( data[ 1 ], data[ 0 ] );
+
+    data[ 0 ] = R;
+    data[ 1 ] = phi;
+}
+
+/**
+ * @brief transform the coordinate from cylindrical to cartesian.
+ *
+ * @param data: double[3] for R, phi, z to x, y, z
+ */
+void coordinate_transformer::cyl2car( double data[ 3 ] )
+{
+    static double x = 0;
+    static double y = 0;
+    x               = data[ 0 ] * cos( data[ 1 ] );
+    y               = data[ 0 ] * sin( data[ 1 ] );
+
+    data[ 0 ] = x;
+    data[ 1 ] = y;
+}
+
+/**
+ * @brief transform the coordinate from cartesian to cylindrical.
+ *
+ * @param data: double[3] for r, theta, phi to R, phi, z
+ */
+void coordinate_transformer::sph2cyl( double data[ 3 ] )
+{
+    static double R   = 0;
+    static double phi = 0;
+    static double z   = 0;
+    R                 = data[ 0 ] * sin( data[ 1 ] );
+    z                 = data[ 0 ] * cos( data[ 1 ] );
+    phi               = data[ 2 ];
+    data[ 0 ]         = R;
+    data[ 1 ]         = phi;
+    data[ 2 ]         = z;
+}
+
+/**
+ * @brief transform the coordinate from cylindrical to cartesian.
+ *
+ * @param data: double[3] for R, phi, z to r, theta, phi
+ */
+void coordinate_transformer::cyl2sph( double data[ 3 ] )
+{
+    static double r     = 0;
+    static double theta = 0;
+    static double phi   = 0;  // theta for latitude, phi for longitude
+    r                   = sqrt( data[ 0 ] * data[ 0 ] + data[ 2 ] * data[ 2 ] );
+    theta               = atan( data[ 0 ] / data[ 2 ] );
+    if ( theta < 0 )
+    {
+        theta += numbers::pi;
+    }
+    phi       = data[ 1 ];
+    data[ 0 ] = r;
+    data[ 1 ] = theta;
+    data[ 2 ] = phi;
+}
+
+/**
+ * @brief Transform the array of coordinates into other frame.
+ *
+ * @param num: array length (array is <num>x3)
+ * @param data: the pointer to the array
+ * @param from: original frame type
+ * @param to: target frame type
+ */
+void coordinate_transformer::transform( unsigned int& num, double* data, coordate_type& from,
+                                        coordate_type& to )
+{
+    if ( from == to )
+    {
+        WARN( "Try to perform identical transformation!" );
+        return;
+    }
+
+    if ( from == CARTESIAN and to == SPHERICAL )
+    {
+        for ( unsigned int i = 0; i < num; ++i )
+        {
+            car2sph( data + static_cast< unsigned long >( 3 * i ) );
+        }
+        return;
+    }
+
+    if ( from == CARTESIAN and to == CYLINDRICAL )
+    {
+        for ( unsigned int i = 0; i < num; ++i )
+        {
+            car2cyl( data + static_cast< unsigned long >( 3 * i ) );
+        }
+        return;
+    }
+
+    if ( from == SPHERICAL and to == CARTESIAN )
+    {
+        for ( unsigned int i = 0; i < num; ++i )
+        {
+            sph2car( data + static_cast< unsigned long >( 3 * i ) );
+        }
+        return;
+    }
+
+    if ( from == SPHERICAL and to == CYLINDRICAL )
+    {
+        for ( unsigned int i = 0; i < num; ++i )
+        {
+            sph2cyl( data + static_cast< unsigned long >( 3 * i ) );
+        }
+        return;
+    }
+
+    if ( from == CYLINDRICAL and to == CARTESIAN )
+    {
+        for ( unsigned int i = 0; i < num; ++i )
+        {
+            cyl2car( data + static_cast< unsigned long >( 3 * i ) );
+        }
+        return;
+    }
+
+    if ( from == CYLINDRICAL and to == SPHERICAL )
+    {
+        for ( unsigned int i = 0; i < num; ++i )
+        {
+            cyl2sph( data + static_cast< unsigned long >( 3 * i ) );
+        }
+        return;
+    }
+}

@@ -1,0 +1,103 @@
+title = "galotfa runtime parameters"
+# This is a comment line
+
+[global]
+outdir = "./otfLogs"      # path of the log directorys
+filename = "galotfa.hdf5" # filename of the log file
+maxiter = 25              # maximal iteration times during analysis
+epsilon = 1e-12           # the equal threshold for float numbers
+
+[components]
+component1 = [1] # the ids of particle types in the component1
+
+# You need to specify the following parameters for each component you
+# defined in [components]
+[component1]
+##### Global parameters
+# The period of analyses, in units of syncrhonized time steps in the
+# simulation.
+period = 10
+# Whether recenter the component before analyses or not.
+recenter.enable = true
+# The method used to recenter the component, meaningful only when
+# recenter=true.
+# Available values:
+# mbp: most bound particle, define the component's center as the
+#      position of particle with minimal potential in such group.
+# dp: denest pixel, define the component's center as the center of the
+#     denest pixel in the cartesian projection, see image and note
+#     that this option requires the parameters for image calculation,
+#     and force image.enable=true, please refer to later parameters.
+# com: define ... as the center of mass.
+recenter.method = "mbp"
+# The coordinate frame used for analyses.
+# Available values:
+# cyl: cylindrical, recommended for disk-like components, including
+#      barred disk.
+# sph: spherical, recommended for spherical components such as
+#      classical bulge and dark matter halo.
+# car: cartesian, to be implemented in future versions.
+frame = "cyl"
+# Whether align the x,y,z axes with the eigenvectors of the inertial
+# tensor or not. The calculation of the inertial tensor is based on
+# the image parameters. Again,  align=true requires the parameters
+# for image calculation and force image.enable=true.
+align = true
+# Parameters for calculations of x-y, x-z, and y-z projections. Must
+# be given if recenter.enable=true and method="dp", or if align=true.
+image.enable = true
+image.hl = 10.0     # the half length of the box to be projected.
+image.binnum = 100  # the number of bins in each direction.
+##### The parameters for frame="cyl" cases
+# Parameters for bar strength calculation.
+# A2 := |\frac{ \sum_k m_k * exp(2i * phi_k) }{ \sum_k m_k }|, where
+# the subscript k is over particles in curtain radial range.
+# Whether calculate the normalized bar strength parameter or not.
+A2.enable = true # if true, require the following 2 parameters
+# Minimal radius for A2 calculation
+A2.rmin = 0.1
+# Maximal radius for A2 calculation
+A2.rmax = 10
+# Parameters for bar angle calculation, where the bar angle is
+# defined as the phase angle \sum_k m_k * exp(2i * phi_k).
+# Note: the program assumes that the bar is in the X-Y plane, if you
+# can not make sure whether it's true or not, you can choose to set
+# recenter=true and align=true
+barangle.enable = true # if true, require the following 3 parameters
+# Minimal radius for bar angle calculation
+barangle.rmin = 0.1
+# Maximal radius for bar angle calculation
+barangle.rmax = 10
+# Parameters for buckling strength calculation.
+# Sbuckle:=|\frac{ \sum_k z_k * m_k * exp(2i * phi_k) }{ \sum_k m_k }|,
+# where the subscript k is over particles in curtain radial range.
+# Again, the program assumes that the bar is in the X-Y plane.
+buckle.enable = true # if true, require the following 2 parameters
+# Minimal radius for A2 calculation
+buckle.rmin = 0.1
+# Maximal radius for A2 calculation
+buckle.rmax = 10
+
+##### Parameter for orbital logs
+[orbit]
+# Whether enable the log of orbits.
+enable = true
+## Two ways to specify which particles to be logged.
+# The text file name that specifies the particle ids to be logged.
+idfile = "./idlists.txt"
+# Another way to specify the logged particles.
+# Whether log the orbits of particles that are randomly selected.
+# Note: this is mutually exclusive with the filename option, and if
+# enable=true, at least one of filename or random selection should be
+# specified.
+random.enable = false
+# The array of particle types for random selection.
+random.ids = [1]
+# The fraction to be randomly selected, must be in [0, 1]
+random.frac = 0.05
+# The component used for recenter and alignment during orbital log,
+# which is needed only when recenter.enable=true or align=true.
+anchorids = [1]
+# Whether recenter the system before output the orbits or not.
+recenter.enable = true
+recenter.method = "mbp"
