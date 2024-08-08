@@ -15,6 +15,11 @@ if(NOT CMAKE_BUILD_TYPE)
       Debug
       CACHE STRING "Build type" FORCE)
 endif()
+# export the compilation commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
+# COMPILATION FLAGS PART
 # customized debug flags: default one only includes -g
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC")
 # print fundamental flags: -g, -O, and whether -DNDEBUG
@@ -66,12 +71,27 @@ set_target_properties(message-static
 # C++ programes
 enable_testing()
 add_executable(coordinate ./validation/test_coordTrans.cpp ./src/coordinates.cpp)
+target_link_options(coordinate PRIVATE
+    -fsanitize=address
+    # -fsanitize=leak
+    -fsanitize=undefined
+)
 add_test(NAME test_coordinate COMMAND $<TARGET_FILE:coordinate>)
 
 add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
 target_link_libraries(bin2d PRIVATE
     gsl
     gslcblas
+)
+find_package(MPI REQUIRED) # first: find the package
+#[[ target_link_libraries(hello-mpi
+  PUBLIC
+    MPI::MPI_CXX
+) ]]
+target_link_options(bin2d PRIVATE
+    -fsanitize=address
+    # -fsanitize=leak
+    -fsanitize=undefined
 )
 add_test(NAME test_bin2d COMMAND $<TARGET_FILE:bin2d>)
 
@@ -80,11 +100,21 @@ target_link_libraries(eigen PRIVATE
     gsl
     gslcblas
 )
+target_link_options(eigen PRIVATE
+    -fsanitize=address
+    # -fsanitize=leak
+    -fsanitize=undefined
+)
 add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
 
 add_executable(h5out ./validation/test_h5out.cpp ./src/h5out.cpp)
 target_link_libraries(h5out PRIVATE
     hdf5
+)
+target_link_options(h5out PRIVATE
+    -fsanitize=address
+    # -fsanitize=leak
+    -fsanitize=undefined
 )
 add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
 

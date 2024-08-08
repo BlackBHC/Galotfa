@@ -98,18 +98,17 @@ int main()
                            22.051675,      std::nan( "" ), std::nan( "" ) };
 
     // test the C++ codes
-    statistic calculator;
 
-    auto count = calculator.bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+    auto count = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                    statistic_method::COUNT, dataNum );
     cout << "results of count:" << endl;
-    for ( unsigned long i = 0; i < xBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum; ++i )
     {
         for ( unsigned long j = 0; j < yBinNum; ++j )
             cout << count[ i * yBinNum + j ] << " ";
         cout << endl;
     }
-    for ( unsigned long i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
     {
         if ( abs( count[ i ] - targetCount[ i ] ) >= THRESHOLD )
         {
@@ -119,16 +118,16 @@ int main()
         }
     }
 
-    auto sum = calculator.bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+    auto sum = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                  statistic_method::SUM, dataNum, values );
     cout << "results of sum:" << endl;
-    for ( unsigned long i = 0; i < xBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum; ++i )
     {
         for ( unsigned long j = 0; j < yBinNum; ++j )
             cout << sum[ i * yBinNum + j ] << " ";
         cout << endl;
     }
-    for ( unsigned long i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
     {
         if ( abs( sum[ i ] - targetSum[ i ] ) >= THRESHOLD )
         {
@@ -138,16 +137,16 @@ int main()
         }
     }
 
-    auto mean = calculator.bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+    auto mean = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                   statistic_method::MEAN, dataNum, values );
     cout << "results of mean:" << endl;
-    for ( unsigned long i = 0; i < xBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum; ++i )
     {
-        for ( unsigned long j = 0; j < yBinNum; ++j )
+        for ( auto j = 0UL; j < yBinNum; ++j )
             cout << mean[ i * yBinNum + j ] << " ";
         cout << endl;
     }
-    for ( unsigned long i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
     {
         if ( abs( mean[ i ] - targetMean[ i ] ) >= THRESHOLD )
         {
@@ -156,16 +155,16 @@ int main()
             return -1;
         }
     }
-    auto std = calculator.bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+    auto std = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                  statistic_method::STD, dataNum, values );
     cout << "results of std:" << endl;
-    for ( unsigned long i = 0; i < xBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum; ++i )
     {
-        for ( unsigned long j = 0; j < yBinNum; ++j )
+        for ( auto j = 0UL; j < yBinNum; ++j )
             cout << std[ i * yBinNum + j ] << " ";
         cout << endl;
     }
-    for ( unsigned long i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
     {
         if ( abs( std[ i ] - targetStd[ i ] ) >= THRESHOLD )
         {

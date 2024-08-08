@@ -4,13 +4,13 @@
  */
 #include "../include/h5out.hpp"
 #include "../include/myprompt.hpp"
-#include "H5Fpublic.h"
-#include "H5Gpublic.h"
-#include "H5Ppublic.h"
-#include "H5public.h"
 #include <H5Dpublic.h>
+#include <H5Fpublic.h>
+#include <H5Gpublic.h>
 #include <H5Ipublic.h>
+#include <H5Ppublic.h>
 #include <H5Spublic.h>
+#include <H5public.h>
 #include <algorithm>
 #include <cstdio>
 #include <memory>
@@ -187,21 +187,22 @@ dataset_handle::dataset_handle( hid_t& parent, const string& datasetName,
     : datasetName( datasetName ), dataType( dataType ), sizeInEachDim( sizeInEachDim )
 {
     // set the chunk size and compression at here
-    auto                          rank = sizeInEachDim.size() + 1;
+    auto                          rank = ( int )sizeInEachDim.size() + 1;
     unique_ptr< hsize_t[] > const chunk( new hsize_t[ rank ]() );
     fileSize           = make_unique< hsize_t[] >( rank );
     countOfSingleBlock = make_unique< hsize_t[] >( rank );
     offset             = make_unique< hsize_t[] >( rank );
     unique_ptr< hsize_t[] > const maxDims( new hsize_t[ rank ]() );
-    // hsize_t dataSizes[ rank ];  // only for the data space creation
     fileSize[ 0 ]           = 0;
     countOfSingleBlock[ 0 ] = 1;
-    for ( unsigned long i = 0; i < rank; ++i )
+    for ( auto i = 0; i < rank; ++i )
+    {
         offset[ i ] = 0;
+    }
     chunk[ 0 ]   = CHUCK_SIZE;
     maxDims[ 0 ] = H5S_UNLIMITED;
 
-    for ( unsigned int i = 1; i < rank; ++i )
+    for ( auto i = 1; i < rank; ++i )
     {
         countOfSingleBlock[ i ] = fileSize[ i ] = chunk[ i ] = maxDims[ i ] =
             sizeInEachDim[ i - 1 ];

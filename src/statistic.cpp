@@ -37,19 +37,19 @@ auto statistic::bin2d( double* xData, double xLowerBound, double xUpperBound,
 {
     switch ( method )
     {
-    case COUNT: {
+    case statistic_method::COUNT: {
         return bin2dcount( xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
                            yUpperBound, yBinNum, dataNum );
     }
-    case SUM: {
+    case statistic_method::SUM: {
         return bin2dsum( xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound, yUpperBound,
                          yBinNum, dataNum, data );
     }
-    case MEAN: {
+    case statistic_method::MEAN: {
         return bin2dmean( xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound, yUpperBound,
                           yBinNum, dataNum, data );
     }
-    case STD: {
+    case statistic_method::STD: {
         return bin2dstd( xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound, yUpperBound,
                          yBinNum, dataNum, data );
     }
@@ -86,7 +86,7 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
     std::unique_ptr< double[] >              statisticResutls( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< unsigned long[] > const count( new unsigned long[ xBinNum * yBinNum ]() );
 
-    for ( unsigned long i = 0; i < dataNum; ++i )
+    for ( auto i = 0UL; i < dataNum; ++i )
     {
         if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
              || yData[ i ] >= yUpperBound )
@@ -98,7 +98,7 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
         ++count[ idx * yBinNum + idy ];
     }
 
-    for ( unsigned i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
     {
         statisticResutls[ i ] = ( double )count[ i ];
     }
@@ -133,7 +133,7 @@ auto statistic::bin2dsum( double* xData, double xLowerBound, double xUpperBound,
     std::unique_ptr< double[] >       statisticResutls( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< double[] > const sum( new double[ xBinNum * yBinNum ]() );
 
-    for ( unsigned long i = 0; i < dataNum; ++i )
+    for ( auto i = 0UL; i < dataNum; ++i )
     {
         if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
              || yData[ i ] >= yUpperBound )
@@ -145,7 +145,7 @@ auto statistic::bin2dsum( double* xData, double xLowerBound, double xUpperBound,
         sum[ idx * yBinNum + idy ] += data[ i ];
     }
 
-    for ( unsigned i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
     {
         statisticResutls[ i ] = sum[ i ];
     }
@@ -175,13 +175,13 @@ auto statistic::bin2dmean( double* xData, double xLowerBound, double xUpperBound
                            const double*        data ) -> std::unique_ptr< double[] >
 
 {
-    static unsigned long                     idx = 0;
-    static unsigned long                     idy = 0;
-    std::unique_ptr< double[] >              statisticResutls( new double[ xBinNum * yBinNum ]() );
-    std::unique_ptr< double[] > const        sum( new double[ xBinNum * yBinNum ]() );
-    std::unique_ptr< unsigned long[] > const count( new unsigned long[ xBinNum * yBinNum ]() );
+    static unsigned long                    idx = 0;
+    static unsigned long                    idy = 0;
+    std::unique_ptr< double[] >             statisticResutls( new double[ xBinNum * yBinNum ]() );
+    std::unique_ptr< double[] > const       sum( new double[ xBinNum * yBinNum ]() );
+    std::unique_ptr< unsigned int[] > const count( new unsigned int[ xBinNum * yBinNum ]() );
 
-    for ( unsigned long i = 0; i < dataNum; ++i )
+    for ( auto i = 0UL; i < dataNum; ++i )
     {
         if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
              || yData[ i ] >= yUpperBound )
@@ -194,7 +194,7 @@ auto statistic::bin2dmean( double* xData, double xLowerBound, double xUpperBound
         sum[ idx * yBinNum + idy ] += data[ i ];
     }
 
-    for ( unsigned i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
     {
         if ( count[ i ] != 0 )
         {
@@ -237,7 +237,7 @@ auto statistic::bin2dstd( double* xData, double xLowerBound, double xUpperBound,
     std::unique_ptr< std::vector< double >[] > const dataInEachBin(
         new std::vector< double >[ xBinNum * yBinNum ] );
 
-    for ( unsigned long i = 0; i < dataNum; ++i )
+    for ( auto i = 0UL; i < dataNum; ++i )
     {
         if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
              || yData[ i ] >= yUpperBound )
@@ -249,7 +249,7 @@ auto statistic::bin2dstd( double* xData, double xLowerBound, double xUpperBound,
         dataInEachBin[ idx * yBinNum + idy ].push_back( data[ i ] );
     }
 
-    for ( unsigned i = 0; i < xBinNum * yBinNum; ++i )
+    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
     {
         if ( dataInEachBin[ i ].empty() )
         {
@@ -278,5 +278,5 @@ auto statistic::bin2dstd( double* xData, double xLowerBound, double xUpperBound,
 auto statistic::find_index( double lowerBound, double upperBound, const unsigned long& binNum,
                             double value ) -> unsigned long
 {
-    return ( value - lowerBound ) / ( upperBound - lowerBound ) * binNum;
+    return ( unsigned long )( ( value - lowerBound ) / ( upperBound - lowerBound ) ) * binNum;
 }

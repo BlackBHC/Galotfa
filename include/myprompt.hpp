@@ -5,7 +5,6 @@
 #ifndef MY_UTILS_HEADER
 #define MY_UTILS_HEADER
 #include <cstdio>
-#include <stdio.h>
 
 // print with a line break at the end
 #define print( ... )                \

@@ -151,7 +151,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
 
     if ( from == CARTESIAN and to == SPHERICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             car2sph( data + static_cast< unsigned long >( 3 * i ) );
         }
@@ -160,7 +160,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
 
     if ( from == CARTESIAN and to == CYLINDRICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             car2cyl( data + static_cast< unsigned long >( 3 * i ) );
         }
@@ -169,7 +169,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
 
     if ( from == SPHERICAL and to == CARTESIAN )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             sph2car( data + static_cast< unsigned long >( 3 * i ) );
         }
@@ -178,7 +178,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
 
     if ( from == SPHERICAL and to == CYLINDRICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             sph2cyl( data + static_cast< unsigned long >( 3 * i ) );
         }
@@ -187,7 +187,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
 
     if ( from == CYLINDRICAL and to == CARTESIAN )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             cyl2car( data + static_cast< unsigned long >( 3 * i ) );
         }
@@ -196,7 +196,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
 
     if ( from == CYLINDRICAL and to == SPHERICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             cyl2sph( data + static_cast< unsigned long >( 3 * i ) );
         }
