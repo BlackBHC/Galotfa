@@ -36,6 +36,12 @@ auto statistic::bin2d( double* xData, double xLowerBound, double xUpperBound,
                        double yUpperBound, const unsigned long& yBinNum, statistic_method method,
                        const unsigned long& dataNum, double* data ) -> std::unique_ptr< double[] >
 {
+    int alreadyInitialized;
+    MPI_Initialized( &alreadyInitialized );
+    if ( !alreadyInitialized )
+    {
+        MPI_Init( nullptr, nullptr );
+    }
     switch ( method )
     {
     case statistic_method::COUNT: {
@@ -58,6 +64,11 @@ auto statistic::bin2d( double* xData, double xLowerBound, double xUpperBound,
         ERROR( "Get an unsupported statistic method!" );
         return nullptr;
     }
+    }
+
+    if ( !alreadyInitialized )
+    {
+        MPI_Finalize();
     }
     return nullptr;
 }
@@ -82,10 +93,11 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
                             const unsigned long& dataNum ) -> std::unique_ptr< double[] >
 
 {
-    static unsigned long                     idx = 0;
-    static unsigned long                     idy = 0;
-    std::unique_ptr< double[] >              statisticResutls( new double[ xBinNum * yBinNum ]() );
-    std::unique_ptr< unsigned long[] > const count( new unsigned long[ xBinNum * yBinNum ]() );
+    unsigned long                  idx = 0;
+    unsigned long                  idy = 0;
+    std::unique_ptr< double[] >    statisticResutls( new double[ xBinNum * yBinNum ]() );
+    std::unique_ptr< int[] > const count( new int[ xBinNum * yBinNum ]() );
+    std::unique_ptr< int[] > const count_recv( new int[ xBinNum * yBinNum ]() );
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
@@ -98,6 +110,11 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
         idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
         ++count[ idx * yBinNum + idy ];
     }
+
+    int rank = -1;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Allreduce( MPI_IN_PLACE, count.get(), ( int )xBinNum * yBinNum, MPI_INT, MPI_SUM,
+                   MPI_COMM_WORLD );
 
     for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
     {
@@ -129,8 +146,8 @@ auto statistic::bin2dsum( double* xData, double xLowerBound, double xUpperBound,
                           const double*        data ) -> std::unique_ptr< double[] >
 
 {
-    static unsigned long              idx = 0;
-    static unsigned long              idy = 0;
+    unsigned long                     idx = 0;
+    unsigned long                     idy = 0;
     std::unique_ptr< double[] >       statisticResutls( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< double[] > const sum( new double[ xBinNum * yBinNum ]() );
 
@@ -176,8 +193,8 @@ auto statistic::bin2dmean( double* xData, double xLowerBound, double xUpperBound
                            const double*        data ) -> std::unique_ptr< double[] >
 
 {
-    static unsigned long                    idx = 0;
-    static unsigned long                    idy = 0;
+    unsigned long                           idx = 0;
+    unsigned long                           idy = 0;
     std::unique_ptr< double[] >             statisticResutls( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< double[] > const       sum( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< unsigned int[] > const count( new unsigned int[ xBinNum * yBinNum ]() );
@@ -232,8 +249,8 @@ auto statistic::bin2dstd( double* xData, double xLowerBound, double xUpperBound,
                           double*              data ) -> std::unique_ptr< double[] >
 
 {
-    static unsigned long        idx = 0;
-    static unsigned long        idy = 0;
+    unsigned long               idx = 0;
+    unsigned long               idy = 0;
     std::unique_ptr< double[] > statisticResutls( new double[ xBinNum * yBinNum ]() );
     std::unique_ptr< std::vector< double >[] > const dataInEachBin(
         new std::vector< double >[ xBinNum * yBinNum ] );

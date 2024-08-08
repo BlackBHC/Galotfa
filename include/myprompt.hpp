@@ -55,6 +55,7 @@
         fprint( stderr, "Call from file [%s] line[%d].", __FILE__, __LINE__ ); \
         fprint( stderr, "[ERROR]: " __VA_ARGS__ );                             \
     }
+// TODO: finish and test the following mpi prompts.
 /* #define MPI_INFO( ... ) mpi_print( "[INFO]: " __VA_ARGS__ );
 #define MPI_WARN( ... )                                                            \
     {                                                                              \

@@ -5,13 +5,15 @@
 
 #define DEBUG
 #define THRESHOLD 1e-6  // the equal threshold of floating numbers
+#include "../include/myprompt.hpp"
 #include "../include/statistic.hpp"
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <mpi.h>
 using namespace std;
 
-int main()
+int main( int argc, char* argv[] )
 {
     // The following datas and results are generated with the python codes at the end of this file
     double xs[ 100 ] = { 5.88014519, 6.99108748, 1.8815196,  0.43808564, 2.05018952, 1.06062874,
@@ -78,100 +80,113 @@ int main()
                              3.88991946e+02, 1.38641387e+02, 2.35900352e+02, 3.12212492e+02,
                              6.10517680e+01, 7.12722498e+01, 3.33044078e+01, 0.00000000e+00,
                              1.01871713e+02, 8.03815177e+01, 0.00000000e+00 };
-    double targetMean[]  = {
-        63.9838373,  45.33630359,    49.05773617, 48.54135756,    0.3767982,     43.24996664,
-        53.94606275, 23.77712388,    55.33687655, 42.60598006,    31.76633095,   44.78070586,
-        27.22368136, 91.34630229,    49.07104591, std::nan( "" ), 70.71883408,   53.9053148,
-        47.44166082, 40.54047222,    70.2248913,  69.975406,      34.11282249,   57.54443392,
-        55.57027795, 34.66034681,    47.18007048, 44.60178458,    61.05176795,   71.27224976,
-        33.30440777, std::nan( "" ), 50.93585644, 80.3815177,     std::nan( "" )
+    double targetMean[]  = { 63.9838373,  45.33630359, 49.05773617, 48.54135756, 0.3767982,
+                             43.24996664, 53.94606275, 23.77712388, 55.33687655, 42.60598006,
+                             31.76633095, 44.78070586, 27.22368136, 91.34630229, 49.07104591,
+                             nan( "" ),   70.71883408, 53.9053148,  47.44166082, 40.54047222,
+                             70.2248913,  69.975406,   34.11282249, 57.54443392, 55.57027795,
+                             34.66034681, 47.18007048, 44.60178458, 61.05176795, 71.27224976,
+                             33.30440777, nan( "" ),   50.93585644, 80.3815177,  std::nan( "" ) };
+
+    double targetStd[] = {
+        18.75567473,    42.62855176,    nan( "" ),   37.46470903,    nan( "" ),     30.22894086,
+        43.9255855,     11.00146599,    27.94362765, 23.29016545,    17.67330037,   47.6146172,
+        14.51762071,    nan( "" ),      15.84447911, std::nan( "" ), 28.83476107,   12.69753188,
+        49.03093592,    35.25411684,    37.65583983, 23.05579374,    34.08242533,   27.83088862,
+        28.74139899,    21.93742425,    33.68937857, 33.43481006,    nan( "" ),     std::nan( "" ),
+        std::nan( "" ), std::nan( "" ), 22.051675,   nan( "" ),      std::nan( "" )
     };
 
-    double targetStd[] = { 18.75567473,    42.62855176,    std::nan( "" ), 37.46470903,
-                           std::nan( "" ), 30.22894086,    43.9255855,     11.00146599,
-                           27.94362765,    23.29016545,    17.67330037,    47.6146172,
-                           14.51762071,    std::nan( "" ), 15.84447911,    std::nan( "" ),
-                           28.83476107,    12.69753188,    49.03093592,    35.25411684,
-                           37.65583983,    23.05579374,    34.08242533,    27.83088862,
-                           28.74139899,    21.93742425,    33.68937857,    33.43481006,
-                           std::nan( "" ), std::nan( "" ), std::nan( "" ), std::nan( "" ),
-                           22.051675,      std::nan( "" ), std::nan( "" ) };
-
     // test the C++ codes
-
+    int rank = -1, size = 0;
+    MPI_Init( &argc, &argv );
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    if ( rank == 0 )
+    {
+        print( "Test in %d ranks.", size );
+    }
     auto count = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                    statistic_method::COUNT, dataNum );
-    cout << "results of count:" << endl;
-    for ( auto i = 0UL; i < xBinNum; ++i )
+    if ( rank == 0 )
     {
-        for ( unsigned long j = 0; j < yBinNum; ++j )
-            cout << count[ i * yBinNum + j ] << " ";
-        cout << endl;
-    }
-    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
-    {
-        if ( abs( count[ i ] - targetCount[ i ] ) >= THRESHOLD )
+        cout << "results of count:" << endl;
+        for ( auto i = 0UL; i < xBinNum; ++i )
         {
-            cout << "Target value=" << targetCount[ i ] << endl;
-            cout << "Get value=" << count[ i ] << endl;
-            return -1;
+            for ( unsigned long j = 0; j < yBinNum; ++j )
+                cout << count[ i * yBinNum + j ] << " ";
+            cout << endl;
         }
-    }
+        for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
+        {
+            if ( abs( count[ i ] - size * targetCount[ i ] ) >= THRESHOLD )
+            {
+                cout << "Target value=" << size * targetCount[ i ] << endl;
+                cout << "Get value=" << count[ i ] << endl;
+                return -1;
+            }
+        }
+        return 0;
 
-    auto sum = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
-                                 statistic_method::SUM, dataNum, values );
-    cout << "results of sum:" << endl;
-    for ( auto i = 0UL; i < xBinNum; ++i )
-    {
-        for ( unsigned long j = 0; j < yBinNum; ++j )
-            cout << sum[ i * yBinNum + j ] << " ";
-        cout << endl;
-    }
-    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
-    {
-        if ( abs( sum[ i ] - targetSum[ i ] ) >= THRESHOLD )
+        auto sum = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+                                     statistic_method::SUM, dataNum, values );
+        cout << "results of sum:" << endl;
+        for ( auto i = 0UL; i < xBinNum; ++i )
         {
-            cout << "Target value=" << targetSum[ i ] << endl;
-            cout << "Get value=" << sum[ i ] << endl;
-            return -1;
+            for ( unsigned long j = 0; j < yBinNum; ++j )
+                cout << sum[ i * yBinNum + j ] << " ";
+            cout << endl;
         }
-    }
+        for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
+        {
+            if ( abs( sum[ i ] - targetSum[ i ] ) >= THRESHOLD )
+            {
+                cout << "Target value=" << targetSum[ i ] << endl;
+                cout << "Get value=" << sum[ i ] << endl;
+                return -1;
+            }
+        }
 
-    auto mean = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
-                                  statistic_method::MEAN, dataNum, values );
-    cout << "results of mean:" << endl;
-    for ( auto i = 0UL; i < xBinNum; ++i )
-    {
-        for ( auto j = 0UL; j < yBinNum; ++j )
-            cout << mean[ i * yBinNum + j ] << " ";
-        cout << endl;
-    }
-    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
-    {
-        if ( abs( mean[ i ] - targetMean[ i ] ) >= THRESHOLD )
+        auto mean = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+                                      statistic_method::MEAN, dataNum, values );
+        cout << "results of mean:" << endl;
+        for ( auto i = 0UL; i < xBinNum; ++i )
         {
-            cout << "Target value=" << targetMean[ i ] << endl;
-            cout << "Get value=" << mean[ i ] << endl;
-            return -1;
+            for ( auto j = 0UL; j < yBinNum; ++j )
+                cout << mean[ i * yBinNum + j ] << " ";
+            cout << endl;
+        }
+        for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
+        {
+            if ( abs( mean[ i ] - targetMean[ i ] ) >= THRESHOLD )
+            {
+                cout << "Target value=" << targetMean[ i ] << endl;
+                cout << "Get value=" << mean[ i ] << endl;
+                return -1;
+            }
+        }
+        auto std = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+                                     statistic_method::STD, dataNum, values );
+        cout << "results of std:" << endl;
+        for ( auto i = 0UL; i < xBinNum; ++i )
+        {
+            for ( auto j = 0UL; j < yBinNum; ++j )
+                cout << std[ i * yBinNum + j ] << " ";
+            cout << endl;
+        }
+        for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
+        {
+            if ( abs( std[ i ] - targetStd[ i ] ) >= THRESHOLD )
+            {
+                cout << "Target value=" << targetStd[ i ] << endl;
+                cout << "Get value=" << std[ i ] << endl;
+                return -1;
+            }
         }
     }
-    auto std = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
-                                 statistic_method::STD, dataNum, values );
-    cout << "results of std:" << endl;
-    for ( auto i = 0UL; i < xBinNum; ++i )
+    else
     {
-        for ( auto j = 0UL; j < yBinNum; ++j )
-            cout << std[ i * yBinNum + j ] << " ";
-        cout << endl;
-    }
-    for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
-    {
-        if ( abs( std[ i ] - targetStd[ i ] ) >= THRESHOLD )
-        {
-            cout << "Target value=" << targetStd[ i ] << endl;
-            cout << "Get value=" << std[ i ] << endl;
-            return -1;
-        }
+        return 0;
     }
     return 0;
 }
