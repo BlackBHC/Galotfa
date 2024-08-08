@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <gsl/gsl_statistics_double.h>
 #include <memory>
+#include <mpi.h>
 #include <vector>
 using namespace std;
 
@@ -278,5 +279,5 @@ auto statistic::bin2dstd( double* xData, double xLowerBound, double xUpperBound,
 auto statistic::find_index( double lowerBound, double upperBound, const unsigned long& binNum,
                             double value ) -> unsigned long
 {
-    return ( unsigned long )( ( value - lowerBound ) / ( upperBound - lowerBound ) ) * binNum;
+    return ( value - lowerBound ) / ( upperBound - lowerBound ) * binNum;
 }

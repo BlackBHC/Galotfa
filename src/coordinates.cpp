@@ -149,7 +149,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == CARTESIAN and to == SPHERICAL )
+    if ( from == coordate_type::CARTESIAN and to == coordate_type::SPHERICAL )
     {
         for ( auto i = 0U; i < num; ++i )
         {
@@ -158,7 +158,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == CARTESIAN and to == CYLINDRICAL )
+    if ( from == coordate_type::CARTESIAN and to == coordate_type::CYLINDRICAL )
     {
         for ( auto i = 0U; i < num; ++i )
         {
@@ -167,7 +167,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == SPHERICAL and to == CARTESIAN )
+    if ( from == coordate_type::SPHERICAL and to == coordate_type::CARTESIAN )
     {
         for ( auto i = 0U; i < num; ++i )
         {
@@ -176,7 +176,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == SPHERICAL and to == CYLINDRICAL )
+    if ( from == coordate_type::SPHERICAL and to == coordate_type::CYLINDRICAL )
     {
         for ( auto i = 0U; i < num; ++i )
         {
@@ -185,7 +185,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == CYLINDRICAL and to == CARTESIAN )
+    if ( from == coordate_type::CYLINDRICAL and to == coordate_type::CARTESIAN )
     {
         for ( auto i = 0U; i < num; ++i )
         {
@@ -194,7 +194,7 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == CYLINDRICAL and to == SPHERICAL )
+    if ( from == coordate_type::CYLINDRICAL and to == coordate_type::SPHERICAL )
     {
         for ( auto i = 0U; i < num; ++i )
         {
