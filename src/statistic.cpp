@@ -31,17 +31,12 @@ using namespace std;
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2d( double* xData, double xLowerBound, double xUpperBound,
-                       const unsigned long& xBinNum, double* yData, double yLowerBound,
-                       double yUpperBound, const unsigned long& yBinNum, statistic_method method,
-                       const unsigned long& dataNum, double* data ) -> std::unique_ptr< double[] >
+auto statistic::bin2d( const double* xData, const double xLowerBound, const double xUpperBound,
+                       const unsigned long& xBinNum, const double* yData, const double yLowerBound,
+                       const double yUpperBound, const unsigned long& yBinNum,
+                       statistic_method method, const unsigned long& dataNum,
+                       const double* data ) -> std::unique_ptr< double[] >
 {
-    int alreadyInitialized;
-    MPI_Initialized( &alreadyInitialized );
-    if ( !alreadyInitialized )
-    {
-        MPI_Init( nullptr, nullptr );
-    }
     switch ( method )
     {
     case statistic_method::COUNT: {
@@ -66,10 +61,6 @@ auto statistic::bin2d( double* xData, double xLowerBound, double xUpperBound,
     }
     }
 
-    if ( !alreadyInitialized )
-    {
-        MPI_Finalize();
-    }
     return nullptr;
 }
 
@@ -87,16 +78,22 @@ auto statistic::bin2d( double* xData, double xLowerBound, double xUpperBound,
  * @param dataNum: number of data points to be analyzed
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBound,
-                            const unsigned long& xBinNum, double* yData, double yLowerBound,
-                            double yUpperBound, const unsigned long& yBinNum,
+auto statistic::bin2dcount( const double* xData, const double xLowerBound, const double xUpperBound,
+                            const unsigned long& xBinNum, const double* yData,
+                            const double yLowerBound, const double yUpperBound,
+                            const unsigned long& yBinNum,
                             const unsigned long& dataNum ) -> std::unique_ptr< double[] >
 
 {
     unsigned long                  idx = 0;
     unsigned long                  idy = 0;
     std::unique_ptr< double[] >    statisticResutls( new double[ xBinNum * yBinNum ]() );
-    std::unique_ptr< int[] > const count( new int[ xBinNum * yBinNum ]() );
+    const std::unique_ptr< int[] > count(
+        new int[ xBinNum * yBinNum ]() );  // TEST: the position of const may cause a bug
+    const std::unique_ptr< int[] > countRecv( new int[ xBinNum * yBinNum ]() );
+
+    int rank = -1;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
@@ -110,14 +107,12 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
         ++count[ idx * yBinNum + idy ];
     }
 
-    int rank = -1;
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Allreduce( MPI_IN_PLACE, count.get(), ( int )xBinNum * yBinNum, MPI_INT, MPI_SUM,
-                   MPI_COMM_WORLD );
+    MPI_Reduce( count.get(), countRecv.get(), ( int )xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
+                MPI_COMM_WORLD );
 
     for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
     {
-        statisticResutls[ i ] = ( double )count[ i ];
+        statisticResutls[ i ] = ( double )countRecv[ i ];
     }
 
     return statisticResutls;
@@ -138,11 +133,11 @@ auto statistic::bin2dcount( double* xData, double xLowerBound, double xUpperBoun
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dsum( double* xData, double xLowerBound, double xUpperBound,
-                          const unsigned long& xBinNum, double* yData, double yLowerBound,
-                          double yUpperBound, const unsigned long& yBinNum,
-                          const unsigned long& dataNum,
-                          const double*        data ) -> std::unique_ptr< double[] >
+auto statistic::bin2dsum( const double* xData, const double xLowerBound, const double xUpperBound,
+                          const unsigned long& xBinNum, const double* yData,
+                          const double yLowerBound, const double yUpperBound,
+                          const unsigned long& yBinNum, const unsigned long& dataNum,
+                          const double* data ) -> std::unique_ptr< double[] >
 
 {
     unsigned long                     idx = 0;
@@ -185,12 +180,11 @@ auto statistic::bin2dsum( double* xData, double xLowerBound, double xUpperBound,
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dmean( double* xData, double xLowerBound, double xUpperBound,
-                           const unsigned long& xBinNum, double* yData, double yLowerBound,
-                           double yUpperBound, const unsigned long& yBinNum,
-                           const unsigned long& dataNum,
-                           const double*        data ) -> std::unique_ptr< double[] >
-
+auto statistic::bin2dmean( const double* xData, const double xLowerBound, const double xUpperBound,
+                           const unsigned long& xBinNum, const double* yData,
+                           const double yLowerBound, const double yUpperBound,
+                           const unsigned long& yBinNum, const unsigned long& dataNum,
+                           const double* data ) -> std::unique_ptr< double[] >
 {
     unsigned long                           idx = 0;
     unsigned long                           idy = 0;
@@ -241,11 +235,11 @@ auto statistic::bin2dmean( double* xData, double xLowerBound, double xUpperBound
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dstd( double* xData, double xLowerBound, double xUpperBound,
-                          const unsigned long& xBinNum, double* yData, double yLowerBound,
-                          double yUpperBound, const unsigned long& yBinNum,
-                          const unsigned long& dataNum,
-                          double*              data ) -> std::unique_ptr< double[] >
+auto statistic::bin2dstd( const double* xData, const double xLowerBound, const double xUpperBound,
+                          const unsigned long& xBinNum, const double* yData,
+                          const double yLowerBound, const double yUpperBound,
+                          const unsigned long& yBinNum, const unsigned long& dataNum,
+                          const double* data ) -> std::unique_ptr< double[] >
 
 {
     unsigned long               idx = 0;
