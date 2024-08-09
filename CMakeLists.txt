@@ -93,7 +93,7 @@ target_link_options(bin2d PRIVATE
     # -fsanitize=leak
     -fsanitize=undefined
 )
-add_test(NAME test_bin2d COMMAND mpirun -np 3 $<TARGET_FILE:bin2d>)
+add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
 
 add_executable(eigen ./validation/test_eigen.cpp ./src/eigen.cpp)
 target_link_libraries(eigen PRIVATE

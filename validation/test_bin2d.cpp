@@ -15,6 +15,13 @@ using namespace std;
 
 int main( int argc, char* argv[] )
 {
+    // NOTE: test in rank 4 mpi process program
+    int rank = -1;
+    MPI_Init( &argc, &argv );
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+
+    double        xmin = -0.1, xmax = 10.7, ymin = -5.5, ymax = 5.9;
+    unsigned long xBinNum = 7, yBinNum = 5, dataNum = 100;
     // The following datas and results are generated with the python codes at the end of this file
     double xs[ 100 ] = { 5.88014519, 6.99108748, 1.8815196,  0.43808564, 2.05018952, 1.06062874,
                          7.27240144, 6.79400524, 4.73845703, 4.48295824, 0.19106948, 7.52598337,
@@ -67,8 +74,64 @@ int main( int argc, char* argv[] )
         28.10358977, 41.5205741,  8.15149347,  61.76688924, 86.40467441, 3.86381641,  75.33962543,
         96.851591,   79.21758306
     };
-    double        xmin = -0.1, xmax = 10.7, ymin = -5.5, ymax = 5.9;
-    unsigned long xBinNum = 7, yBinNum = 5, dataNum = 100;
+    double xsRecv[ 100 ] = { 0 }, ysRecv[ 100 ] = { 0 }, valuesRecv[ 100 ] = { 0 };
+    for ( auto i = 0; i < 100; ++i )
+    {
+        xsRecv[ i ]     = nan( "" );
+        ysRecv[ i ]     = nan( "" );
+        valuesRecv[ i ] = nan( "" );
+    }
+    mpi_print( rank, "Data before MPI_Scatter:" );
+    for ( int i = 0; i < 4; ++i )
+    {
+        MPI_Barrier( MPI_COMM_WORLD );
+        if ( rank == i )
+        {
+            print( "Values in rank %d:", rank );
+            for ( int j = 0; j < 100; ++j )
+            {
+                printf( "%lf ", valuesRecv[ j ] );
+            }
+            print( "\nEnd of values." );
+
+            print( "xsRecv in rank %d:", rank );
+            for ( int j = 0; j < 100; ++j )
+            {
+                printf( "%lf ", xsRecv[ j ] );
+            }
+            print( "\nEnd of xsRecv." );
+        }
+    }
+    // Scatter the data to 4 ranks
+    MPI_Scatter( xs, 25, MPI_DOUBLE, xsRecv + rank * 25, 25, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+    MPI_Scatter( ys, 25, MPI_DOUBLE, ysRecv + rank * 25, 25, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+    MPI_Scatter( values, 25, MPI_DOUBLE, valuesRecv + rank * 25, 25, MPI_DOUBLE, 0,
+                 MPI_COMM_WORLD );
+    MPI_Barrier( MPI_COMM_WORLD );
+    mpi_print( rank, "Data after MPI_Scatter:" );
+    for ( int i = 0; i < 4; ++i )
+    {
+        MPI_Barrier( MPI_COMM_WORLD );
+        if ( rank == i )
+        {
+            print( "Values in rank %d:", rank );
+            for ( int j = 0; j < 100; ++j )
+            {
+                printf( "%lf ", valuesRecv[ j ] );
+            }
+            print( "\nEnd of values." );
+
+            print( "xsRecv in rank %d:", rank );
+            for ( int j = 0; j < 100; ++j )
+            {
+                printf( "%lf ", xsRecv[ j ] );
+            }
+            print( "\nEnd of xsRecv." );
+        }
+    }
+    // MPI_Finalize();
+    // return 0;
+
     double targetCount[] = { 2., 3., 1., 2., 1., 3., 3., 2., 9., 4., 3., 2., 7., 1., 2., 0., 4., 3.,
                              3., 5., 2., 3., 2., 4., 7., 4., 5., 7., 1., 1., 1., 0., 2., 1., 0. };
     double targetSum[]   = { 1.27967675e+02, 1.36008911e+02, 4.90577362e+01, 9.70827151e+01,
@@ -86,29 +149,20 @@ int main( int argc, char* argv[] )
                              nan( "" ),   70.71883408, 53.9053148,  47.44166082, 40.54047222,
                              70.2248913,  69.975406,   34.11282249, 57.54443392, 55.57027795,
                              34.66034681, 47.18007048, 44.60178458, 61.05176795, 71.27224976,
-                             33.30440777, nan( "" ),   50.93585644, 80.3815177,  std::nan( "" ) };
+                             33.30440777, nan( "" ),   50.93585644, 80.3815177,  nan( "" ) };
 
-    double targetStd[] = {
-        18.75567473,    42.62855176,    nan( "" ),   37.46470903,    nan( "" ),     30.22894086,
-        43.9255855,     11.00146599,    27.94362765, 23.29016545,    17.67330037,   47.6146172,
-        14.51762071,    nan( "" ),      15.84447911, std::nan( "" ), 28.83476107,   12.69753188,
-        49.03093592,    35.25411684,    37.65583983, 23.05579374,    34.08242533,   27.83088862,
-        28.74139899,    21.93742425,    33.68937857, 33.43481006,    nan( "" ),     std::nan( "" ),
-        std::nan( "" ), std::nan( "" ), 22.051675,   nan( "" ),      std::nan( "" )
-    };
+    double targetStd[] = { 18.75567473, 42.62855176, nan( "" ),   37.46470903, nan( "" ),
+                           30.22894086, 43.9255855,  11.00146599, 27.94362765, 23.29016545,
+                           17.67330037, 47.6146172,  14.51762071, nan( "" ),   15.84447911,
+                           nan( "" ),   28.83476107, 12.69753188, 49.03093592, 35.25411684,
+                           37.65583983, 23.05579374, 34.08242533, 27.83088862, 28.74139899,
+                           21.93742425, 33.68937857, 33.43481006, nan( "" ),   nan( "" ),
+                           nan( "" ),   nan( "" ),   22.051675,   nan( "" ),   nan( "" ) };
 
     // test the C++ codes
-    int rank = -1, size = 0;
-    MPI_Init( &argc, &argv );
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Comm_size( MPI_COMM_WORLD, &size );
-    if ( rank == 0 )
-    {
-        print( "Test in %d ranks.", size );
-    }
-    auto count = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+    auto count = statistic::bin2d( rank, xsRecv, xmin, xmax, xBinNum, ysRecv, ymin, ymax, yBinNum,
                                    statistic_method::COUNT, dataNum );
-    if ( rank == 0 )
+    if ( rank == 0 )  // check the results in the root process
     {
         cout << "results of count:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
@@ -119,16 +173,16 @@ int main( int argc, char* argv[] )
         }
         for ( auto i = 0UL; i < xBinNum * yBinNum; ++i )
         {
-            if ( abs( count[ i ] - size * targetCount[ i ] ) >= THRESHOLD )
+            if ( abs( count[ i ] - targetCount[ i ] ) >= THRESHOLD )
             {
-                cout << "Target value=" << size * targetCount[ i ] << endl;
+                cout << "Target value=" << targetCount[ i ] << endl;
                 cout << "Get value=" << count[ i ] << endl;
+                MPI_Finalize();
                 return -1;
             }
         }
-        return 0;
 
-        auto sum = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+        auto sum = statistic::bin2d( rank, xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                      statistic_method::SUM, dataNum, values );
         cout << "results of sum:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
@@ -143,11 +197,12 @@ int main( int argc, char* argv[] )
             {
                 cout << "Target value=" << targetSum[ i ] << endl;
                 cout << "Get value=" << sum[ i ] << endl;
+                MPI_Finalize();
                 return -1;
             }
         }
 
-        auto mean = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+        auto mean = statistic::bin2d( rank, xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                       statistic_method::MEAN, dataNum, values );
         cout << "results of mean:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
@@ -162,10 +217,11 @@ int main( int argc, char* argv[] )
             {
                 cout << "Target value=" << targetMean[ i ] << endl;
                 cout << "Get value=" << mean[ i ] << endl;
+                MPI_Finalize();
                 return -1;
             }
         }
-        auto std = statistic::bin2d( xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
+        auto std = statistic::bin2d( rank, xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
                                      statistic_method::STD, dataNum, values );
         cout << "results of std:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
@@ -180,14 +236,12 @@ int main( int argc, char* argv[] )
             {
                 cout << "Target value=" << targetStd[ i ] << endl;
                 cout << "Get value=" << std[ i ] << endl;
+                MPI_Finalize();
                 return -1;
             }
         }
     }
-    else
-    {
-        return 0;
-    }
+    MPI_Finalize();
     return 0;
 }
 /* python:
