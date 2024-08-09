@@ -1,3 +1,9 @@
+/**
+ * @file statistic.hpp
+ * @brief This file includes a class as a wrapper for statistic functions. At now, mainly the 1D/2D
+ * evenly binning statistics for limited methods.
+ */
+
 #ifndef STATISTIC_HEADER
 #define STATISTIC_HEADER
 #include <cstdint>

@@ -1,8 +1,3 @@
-/**
- * @file
- * @brief define some functions of coordinate transformation.
- */
-
 #include "../include/coordinate.hpp"
 #include "../include/myprompt.hpp"
 #include <cmath>

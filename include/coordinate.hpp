@@ -1,3 +1,8 @@
+/**
+ * @file coordinate.hpp
+ * @brief define some functions of coordinate transformation.
+ */
+
 #ifndef COORDINATES_HEADER
 #define COORDINATES_HEADER
 #include <cstdint>

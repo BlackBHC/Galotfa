@@ -1,3 +1,7 @@
+/**
+ * @file h5out.hpp
+ * @brief Organizer of the hdf5 output.
+ */
 #ifndef MY_H5_OUTPUT_HEADER
 #define MY_H5_OUTPUT_HEADER
 #include <H5Fpublic.h>
@@ -12,7 +16,6 @@
 #else
 #define CHUCK_SIZE 1024
 #endif
-
 /**
  * @class dataset_handle
  * @brief The class that handles the basic operations of a dataset, including memory space, chuck

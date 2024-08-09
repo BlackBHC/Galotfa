@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file galotfa.hpp
  * @brief The public C style API of the galotfa library.
  */
 

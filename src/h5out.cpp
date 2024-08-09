@@ -1,7 +1,3 @@
-/**
- * @file
- * @brief Organizer of the hdf5 output.
- */
 #include "../include/h5out.hpp"
 #include "../include/myprompt.hpp"
 #include <H5Dpublic.h>
