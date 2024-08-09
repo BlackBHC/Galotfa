@@ -361,6 +361,18 @@ auto statistic::find_index( double lowerBound, double upperBound, const unsigned
     return ( value - lowerBound ) / ( upperBound - lowerBound ) * binNum;
 }
 
+/**
+ * @brief Similar to bin2d but for 1D case.
+ *
+ * @param coord: pointing to the coordinates
+ * @param lowerBound: the lower inclusive limit of the first coordinates to be analyzed
+ * @param upperBound: the upper exclusive limit of the first coordinates to be analyzed
+ * @param binNum: binnum of the first coordinate
+ * @param method: statistic method
+ * @param dataNum: number of data points to be analyzed
+ * @param data: pointing to target data points
+ * @return a unique_ptr pointing to the 1D array of resutls.
+ */
 auto statistic::bin1d( int mpiRank, const double* coord, const double lowerBound,
                        const double upperBound, const unsigned long& binNum,
                        statistic_method method, const unsigned long& dataNum,
@@ -389,6 +401,9 @@ auto statistic::bin1d( int mpiRank, const double* coord, const double lowerBound
     return nullptr;
 }
 
+/**
+ * @brief similar to bin2dcount but for 1D case.
+ */
 auto statistic::bin1dcount( int mpiRank, const double* coord, const double lowerBound,
                             const double upperBound, const unsigned long& binNum,
                             const unsigned long& dataNum ) -> std::unique_ptr< double[] >
@@ -424,6 +439,9 @@ auto statistic::bin1dcount( int mpiRank, const double* coord, const double lower
     return statisticResutls;
 }
 
+/**
+ * @brief similar to bin2dsum but for 1D case.
+ */
 auto statistic::bin1dsum( int mpiRank, const double* coord, const double lowerBound,
                           const double upperBound, const unsigned long& binNum,
                           const unsigned long& dataNum,
@@ -460,6 +478,9 @@ auto statistic::bin1dsum( int mpiRank, const double* coord, const double lowerBo
     return statisticResutls;
 }
 
+/**
+ * @brief similar to bin2dmean but for 1D case.
+ */
 auto statistic::bin1dmean( int mpiRank, const double* coord, const double lowerBound,
                            const double upperBound, const unsigned long& binNum,
                            const unsigned long& dataNum,
@@ -508,6 +529,9 @@ auto statistic::bin1dmean( int mpiRank, const double* coord, const double lowerB
     return statisticResutls;
 }
 
+/**
+ * @brief similar to bin2dstd but for 1D case.
+ */
 auto statistic::bin1dstd( int mpiRank, const double* coord, const double lowerBound,
                           const double upperBound, const unsigned long& binNum,
                           const unsigned long& dataNum,
