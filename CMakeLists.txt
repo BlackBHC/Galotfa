@@ -30,6 +30,11 @@ message(
     STATUS
     "C++ flags, minimal Release configuration: ${CMAKE_CXX_FLAGS_MINSIZEREL}"
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(sanitizer_flags "-fsanitize=undefined" "-fsanitize=address")
+else()
+    set(sanitizer_flags "-fsanitize=undefined" "-fsanitize=address" "-fsanitize=leak")
+endif()
 
 # TARGET PART
 add_library(galotfa SHARED include/galotfa.hpp src/galotfa.cpp)
@@ -66,9 +71,7 @@ add_executable(
 target_link_options(
     coordinate
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_coordinate COMMAND $<TARGET_FILE:coordinate>)
 
@@ -79,9 +82,7 @@ target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
 target_link_options(
     bin2d
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
 
@@ -92,9 +93,7 @@ target_link_libraries(bin1d PUBLIC MPI::MPI_CXX)
 target_link_options(
     bin1d
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
 
@@ -103,9 +102,7 @@ target_link_libraries(eigen PRIVATE gsl gslcblas)
 target_link_options(
     eigen
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
 
@@ -114,9 +111,7 @@ target_link_libraries(h5out PRIVATE hdf5)
 target_link_options(
     h5out
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
 
