@@ -90,32 +90,41 @@ auto statistic::bin2dcount( const double* xData, const double xLowerBound, const
     std::unique_ptr< double[] >    statisticResutls( new double[ xBinNum * yBinNum ]() );
     const std::unique_ptr< int[] > count(
         new int[ xBinNum * yBinNum ]() );  // TEST: the position of const may cause a bug
-    const std::unique_ptr< int[] > countRecv( new int[ xBinNum * yBinNum ]() );
+    std::unique_ptr< int[] > countRecv;
 
     int rank = -1;
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    if ( rank == 0 )
+    {
+        countRecv.reset( new int[ xBinNum * yBinNum ]() );
+    }
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
-        if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
-             || yData[ i ] >= yUpperBound )
+        if ( xData[ i ] >= xLowerBound and xData[ i ] < xUpperBound and yData[ i ] >= yLowerBound
+             and yData[ i ] < yUpperBound )
         {
-            continue;  // exclude the data points outside the range
+            idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
+            idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
+            ++count[ idx * yBinNum + idy ];
         }
-        idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
-        idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
-        ++count[ idx * yBinNum + idy ];
     }
 
     MPI_Reduce( count.get(), countRecv.get(), ( int )xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
-    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
+    if ( rank == 0 )
     {
-        statisticResutls[ i ] = ( double )countRecv[ i ];
+        for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
+        {
+            statisticResutls[ i ] = ( double )countRecv[ i ];
+        }
+        return statisticResutls;
     }
-
-    return statisticResutls;
+    else
+    {
+        return statisticResutls;
+    }
 }
 
 /**
@@ -147,14 +156,13 @@ auto statistic::bin2dsum( const double* xData, const double xLowerBound, const d
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
-        if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
-             || yData[ i ] >= yUpperBound )
+        if ( xData[ i ] >= xLowerBound and xData[ i ] < xUpperBound and yData[ i ] >= yLowerBound
+             and yData[ i ] < yUpperBound )
         {
-            continue;  // exclude the data points outside the range
+            idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
+            idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
+            sum[ idx * yBinNum + idy ] += data[ i ];
         }
-        idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
-        idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
-        sum[ idx * yBinNum + idy ] += data[ i ];
     }
 
     for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
@@ -194,15 +202,14 @@ auto statistic::bin2dmean( const double* xData, const double xLowerBound, const 
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
-        if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
-             || yData[ i ] >= yUpperBound )
+        if ( xData[ i ] >= xLowerBound and xData[ i ] < xUpperBound and yData[ i ] >= yLowerBound
+             and yData[ i ] < yUpperBound )
         {
-            continue;  // exclude the data points outside the range
+            idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
+            idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
+            ++count[ idx * yBinNum + idy ];
+            sum[ idx * yBinNum + idy ] += data[ i ];
         }
-        idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
-        idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
-        ++count[ idx * yBinNum + idy ];
-        sum[ idx * yBinNum + idy ] += data[ i ];
     }
 
     for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
@@ -250,14 +257,13 @@ auto statistic::bin2dstd( const double* xData, const double xLowerBound, const d
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
-        if ( xData[ i ] < xLowerBound || xData[ i ] >= xUpperBound || yData[ i ] < yLowerBound
-             || yData[ i ] >= yUpperBound )
+        if ( xData[ i ] >= xLowerBound and xData[ i ] < xUpperBound and yData[ i ] >= yLowerBound
+             and yData[ i ] < yUpperBound )
         {
-            continue;  // exclude the data points outside the range
+            idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
+            idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
+            dataInEachBin[ idx * yBinNum + idy ].push_back( data[ i ] );
         }
-        idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
-        idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
-        dataInEachBin[ idx * yBinNum + idy ].push_back( data[ i ] );
     }
 
     for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
