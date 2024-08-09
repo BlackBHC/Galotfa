@@ -162,6 +162,12 @@ int main( int argc, char* argv[] )
     // test the C++ codes
     auto count = statistic::bin2d( rank, xsRecv, xmin, xmax, xBinNum, ysRecv, ymin, ymax, yBinNum,
                                    statistic_method::COUNT, dataNum );
+    auto sum   = statistic::bin2d( rank, xsRecv, xmin, xmax, xBinNum, ysRecv, ymin, ymax, yBinNum,
+                                   statistic_method::SUM, dataNum, values );
+    auto mean  = statistic::bin2d( rank, xsRecv, xmin, xmax, xBinNum, ysRecv, ymin, ymax, yBinNum,
+                                   statistic_method::MEAN, dataNum, values );
+    auto std   = statistic::bin2d( rank, xsRecv, xmin, xmax, xBinNum, ysRecv, ymin, ymax, yBinNum,
+                                   statistic_method::STD, dataNum, values );
     if ( rank == 0 )  // check the results in the root process
     {
         cout << "results of count:" << endl;
@@ -182,8 +188,6 @@ int main( int argc, char* argv[] )
             }
         }
 
-        auto sum = statistic::bin2d( rank, xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
-                                     statistic_method::SUM, dataNum, values );
         cout << "results of sum:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
         {
@@ -202,8 +206,6 @@ int main( int argc, char* argv[] )
             }
         }
 
-        auto mean = statistic::bin2d( rank, xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
-                                      statistic_method::MEAN, dataNum, values );
         cout << "results of mean:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
         {
@@ -221,8 +223,9 @@ int main( int argc, char* argv[] )
                 return -1;
             }
         }
-        auto std = statistic::bin2d( rank, xs, xmin, xmax, xBinNum, ys, ymin, ymax, yBinNum,
-                                     statistic_method::STD, dataNum, values );
+        MPI_Finalize();
+        return 0;
+
         cout << "results of std:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
         {
