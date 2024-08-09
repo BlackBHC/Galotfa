@@ -5,6 +5,11 @@
 
 #ifndef MY_EIGEN_HEADER
 #define MY_EIGEN_HEADER
+/**
+ * @class eigen
+ * @brief Wrapper class of the eigen-system.
+ *
+ */
 class eigen
 {
 public:

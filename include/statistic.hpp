@@ -9,6 +9,12 @@
 #include <cstdint>
 #include <memory>
 enum class statistic_method : std::uint8_t { COUNT = 0, MEAN, STD, SUM };
+
+/**
+ * @class statistic
+ * @brief Wrapper class of the internal statistic system.
+ *
+ */
 class statistic
 {
 public:

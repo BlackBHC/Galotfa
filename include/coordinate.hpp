@@ -8,6 +8,11 @@
 #include <cstdint>
 enum class coordate_type : std::uint8_t { CARTESIAN = 0, SPHERICAL, CYLINDRICAL };
 
+/**
+ * @class coordinate_transformer
+ * @brief transform the coordinates from a given type to another.
+ *
+ */
 class coordinate_transformer
 {
 public:
