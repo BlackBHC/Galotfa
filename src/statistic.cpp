@@ -9,10 +9,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <gsl/gsl_statistics_double.h>
 #include <memory>
 #include <mpi.h>
-#include <vector>
 using namespace std;
 
 /**
@@ -85,15 +83,15 @@ auto statistic::bin2dcount( int mpiRank, const double* xData, const double xLowe
                             const unsigned long& dataNum ) -> unique_ptr< double[] >
 
 {
-    unsigned long             idx = 0;
-    unsigned long             idy = 0;
-    unique_ptr< double[] >    statisticResutls( new double[ xBinNum * yBinNum ]() );
-    const unique_ptr< int[] > count( new int[ xBinNum * yBinNum ]() );
-    unique_ptr< int[] >       countRecv = nullptr;
+    unsigned long                      idx = 0;
+    unsigned long                      idy = 0;
+    unique_ptr< double[] >             statisticResutls( new double[ xBinNum * yBinNum ]() );
+    const unique_ptr< unsigned int[] > count( new unsigned int[ xBinNum * yBinNum ]() );
+    unique_ptr< unsigned int[] >       countRecv = nullptr;
 
     if ( mpiRank == 0 )
     {
-        countRecv = make_unique< int[] >( xBinNum * yBinNum );
+        countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
     }
 
     for ( auto i = 0UL; i < dataNum; ++i )
@@ -107,7 +105,7 @@ auto statistic::bin2dcount( int mpiRank, const double* xData, const double xLowe
         }
     }
 
-    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
+    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_UNSIGNED, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
     if ( mpiRank == 0 )  // effectively update the results in the root process
@@ -224,7 +222,7 @@ auto statistic::bin2dmean( int mpiRank, const double* xData, const double xLower
         }
     }
 
-    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
+    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_UNSIGNED, MPI_SUM, 0,
                 MPI_COMM_WORLD );
     MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
                 MPI_COMM_WORLD );
@@ -296,7 +294,7 @@ auto statistic::bin2dstd( int mpiRank, const double* xData, const double xLowerB
         }
     }
 
-    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
+    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_UNSIGNED, MPI_SUM, 0,
                 MPI_COMM_WORLD );
     MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
                 MPI_COMM_WORLD );
