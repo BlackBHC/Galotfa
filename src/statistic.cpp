@@ -17,7 +17,6 @@ using namespace std;
 
 /**
  * @brief 2D binning statistics with chosen method, support count, sum, mean and standard deviation.
- * If need to call the function in MPI mode, it should be called after MPI_Init
  *
  * @param xData: pointing to the first coordinates
  * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
@@ -32,7 +31,7 @@ using namespace std;
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2d( int rank, const double* xData, const double xLowerBound,
+auto statistic::bin2d( int mpiRank, const double* xData, const double xLowerBound,
                        const double xUpperBound, const unsigned long& xBinNum, const double* yData,
                        const double yLowerBound, const double yUpperBound,
                        const unsigned long& yBinNum, statistic_method method,
@@ -41,19 +40,19 @@ auto statistic::bin2d( int rank, const double* xData, const double xLowerBound,
     switch ( method )
     {
     case statistic_method::COUNT: {
-        return bin2dcount( rank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
+        return bin2dcount( mpiRank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
                            yUpperBound, yBinNum, dataNum );
     }
     case statistic_method::SUM: {
-        return bin2dsum( rank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
+        return bin2dsum( mpiRank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
                          yUpperBound, yBinNum, dataNum, data );
     }
     case statistic_method::MEAN: {
-        return bin2dmean( rank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
+        return bin2dmean( mpiRank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
                           yUpperBound, yBinNum, dataNum, data );
     }
     case statistic_method::STD: {
-        return bin2dstd( rank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
+        return bin2dstd( mpiRank, xData, xLowerBound, xUpperBound, xBinNum, yData, yLowerBound,
                          yUpperBound, yBinNum, dataNum, data );
     }
     default: {
@@ -79,7 +78,7 @@ auto statistic::bin2d( int rank, const double* xData, const double xLowerBound,
  * @param dataNum: number of data points to be analyzed
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dcount( int rank, const double* xData, const double xLowerBound,
+auto statistic::bin2dcount( int mpiRank, const double* xData, const double xLowerBound,
                             const double xUpperBound, const unsigned long& xBinNum,
                             const double* yData, const double yLowerBound, const double yUpperBound,
                             const unsigned long& yBinNum,
@@ -92,7 +91,7 @@ auto statistic::bin2dcount( int rank, const double* xData, const double xLowerBo
     const unique_ptr< int[] > count( new int[ xBinNum * yBinNum ]() );
     unique_ptr< int[] >       countRecv = nullptr;
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         countRecv = make_unique< int[] >( xBinNum * yBinNum );
     }
@@ -111,7 +110,7 @@ auto statistic::bin2dcount( int rank, const double* xData, const double xLowerBo
     MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
-    if ( rank == 0 )  // effectively update the results in the root process
+    if ( mpiRank == 0 )  // effectively update the results in the root process
     {
         for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
@@ -136,7 +135,7 @@ auto statistic::bin2dcount( int rank, const double* xData, const double xLowerBo
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dsum( int rank, const double* xData, const double xLowerBound,
+auto statistic::bin2dsum( int mpiRank, const double* xData, const double xLowerBound,
                           const double xUpperBound, const unsigned long& xBinNum,
                           const double* yData, const double yLowerBound, const double yUpperBound,
                           const unsigned long& yBinNum, const unsigned long& dataNum,
@@ -149,7 +148,7 @@ auto statistic::bin2dsum( int rank, const double* xData, const double xLowerBoun
     const unique_ptr< double[] > sum( new double[ xBinNum * yBinNum ]() );
     unique_ptr< double[] >       sumRecv = nullptr;
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         sumRecv = make_unique< double[] >( xBinNum * yBinNum );
     }
@@ -168,7 +167,7 @@ auto statistic::bin2dsum( int rank, const double* xData, const double xLowerBoun
     MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
-    if ( rank == 0 )  // effectively update the results in the root process
+    if ( mpiRank == 0 )  // effectively update the results in the root process
     {
         for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
@@ -193,13 +192,12 @@ auto statistic::bin2dsum( int rank, const double* xData, const double xLowerBoun
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBound,
+auto statistic::bin2dmean( int mpiRank, const double* xData, const double xLowerBound,
                            const double xUpperBound, const unsigned long& xBinNum,
                            const double* yData, const double yLowerBound, const double yUpperBound,
                            const unsigned long& yBinNum, const unsigned long& dataNum,
                            const double* data ) -> unique_ptr< double[] >
 {
-    ( void )rank;
     unsigned long                      idx = 0;
     unsigned long                      idy = 0;
     unique_ptr< double[] >             statisticResutls( new double[ xBinNum * yBinNum ]() );
@@ -208,7 +206,7 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
     unique_ptr< double[] >             sumRecv( new double[ xBinNum * yBinNum ]() );
     unique_ptr< unsigned int[] >       countRecv( new unsigned int[ xBinNum * yBinNum ]() );
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         sumRecv   = make_unique< double[] >( xBinNum * yBinNum );
         countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
@@ -231,7 +229,7 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
     MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
@@ -250,7 +248,7 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
 }
 
 /**
- * @brief 2D binning statistics for standard deviation, without Bessel correction
+ * @brief 2D binning statistics for standard deviation, without Bessel correction.
  *
  * @param xData: pointing to the first coordinates
  * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
@@ -264,14 +262,13 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
  * @param data: pointing to target data points
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
  */
-auto statistic::bin2dstd( int rank, const double* xData, const double xLowerBound,
+auto statistic::bin2dstd( int mpiRank, const double* xData, const double xLowerBound,
                           const double xUpperBound, const unsigned long& xBinNum,
                           const double* yData, const double yLowerBound, const double yUpperBound,
                           const unsigned long& yBinNum, const unsigned long& dataNum,
                           const double* data ) -> unique_ptr< double[] >
 
 {
-    ( void )rank;
     unsigned long          idx = 0;
     unsigned long          idy = 0;
     unique_ptr< double[] > statisticResutls( new double[ xBinNum * yBinNum ]() );
@@ -281,7 +278,7 @@ auto statistic::bin2dstd( int rank, const double* xData, const double xLowerBoun
     unique_ptr< double[] >             sumRecv( new double[ xBinNum * yBinNum ]() );
     unique_ptr< unsigned int[] >       countRecv( new unsigned int[ xBinNum * yBinNum ]() );
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         sumRecv   = make_unique< double[] >( xBinNum * yBinNum );
         countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
@@ -304,7 +301,7 @@ auto statistic::bin2dstd( int rank, const double* xData, const double xLowerBoun
     MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
@@ -336,7 +333,7 @@ auto statistic::bin2dstd( int rank, const double* xData, const double xLowerBoun
     MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
                 MPI_COMM_WORLD );
 
-    if ( rank == 0 )
+    if ( mpiRank == 0 )
     {
         for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
