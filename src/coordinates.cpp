@@ -149,54 +149,54 @@ void coordinate_transformer::transform( unsigned int& num, double* data, coordat
         return;
     }
 
-    if ( from == CARTESIAN and to == SPHERICAL )
+    if ( from == coordate_type::CARTESIAN and to == coordate_type::SPHERICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             car2sph( data + static_cast< unsigned long >( 3 * i ) );
         }
         return;
     }
 
-    if ( from == CARTESIAN and to == CYLINDRICAL )
+    if ( from == coordate_type::CARTESIAN and to == coordate_type::CYLINDRICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             car2cyl( data + static_cast< unsigned long >( 3 * i ) );
         }
         return;
     }
 
-    if ( from == SPHERICAL and to == CARTESIAN )
+    if ( from == coordate_type::SPHERICAL and to == coordate_type::CARTESIAN )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             sph2car( data + static_cast< unsigned long >( 3 * i ) );
         }
         return;
     }
 
-    if ( from == SPHERICAL and to == CYLINDRICAL )
+    if ( from == coordate_type::SPHERICAL and to == coordate_type::CYLINDRICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             sph2cyl( data + static_cast< unsigned long >( 3 * i ) );
         }
         return;
     }
 
-    if ( from == CYLINDRICAL and to == CARTESIAN )
+    if ( from == coordate_type::CYLINDRICAL and to == coordate_type::CARTESIAN )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             cyl2car( data + static_cast< unsigned long >( 3 * i ) );
         }
         return;
     }
 
-    if ( from == CYLINDRICAL and to == SPHERICAL )
+    if ( from == coordate_type::CYLINDRICAL and to == coordate_type::SPHERICAL )
     {
-        for ( unsigned int i = 0; i < num; ++i )
+        for ( auto i = 0U; i < num; ++i )
         {
             cyl2sph( data + static_cast< unsigned long >( 3 * i ) );
         }

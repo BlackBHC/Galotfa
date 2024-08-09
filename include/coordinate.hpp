@@ -1,6 +1,7 @@
 #ifndef COORDINATES_HEADER
 #define COORDINATES_HEADER
-enum coordate_type { CARTESIAN, SPHERICAL, CYLINDRICAL };
+#include <cstdint>
+enum class coordate_type : std::uint8_t { CARTESIAN = 0, SPHERICAL, CYLINDRICAL };
 
 class coordinate_transformer
 {

@@ -25,7 +25,7 @@ public:
     dataset_handle( hid_t& parent, const std::string& datasetName,
                     const std::vector< unsigned int >& sizeInEachDim, hid_t& dataType );
     ~dataset_handle();
-    int flush_single_block( void* dataBuffer );
+    auto flush_single_block( void* dataBuffer ) -> int;
 
 #ifdef DEBUG
 public:
@@ -64,18 +64,20 @@ private:
     // relation: group -> dataset name -> pointer of a handle
     std::unordered_map< hid_t,
                         std::unordered_map< std::string, std::unique_ptr< dataset_handle > > >
-        datasetPtrs;
-    int create_group_if_necessary( const std::string& groupName );
-    int ensure_dataset_empty( const std::string& groupName, const std::string& datasetName );
+                datasetPtrs;
+    auto        create_group_if_necessary( const std::string& groupName ) -> int;
+    auto        ensure_dataset_empty( const std::string& groupName,
+                                      const std::string& datasetName ) -> int;
     std::string filename;
 
 public:
     h5_out( const std::string& dir, const std::string& filename );
     ~h5_out();
-    int create_dataset_in_group( const std::string& datasetName, const std::string& groupName,
-                                 const std::vector< unsigned int >& sizeInEachDim, hid_t dataType );
-    int flush_single_block( const std::string& groupName, const std::string& datasetName,
-                            void* dataBuffer );
+    auto create_dataset_in_group( const std::string& datasetName, const std::string& groupName,
+                                  const std::vector< unsigned int >& sizeInEachDim,
+                                  hid_t                              dataType ) -> int;
+    auto flush_single_block( const std::string& groupName, const std::string& datasetName,
+                             void* dataBuffer ) -> int;
 };
 
 

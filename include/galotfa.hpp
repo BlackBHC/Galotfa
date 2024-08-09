@@ -17,8 +17,9 @@
  * @param velocities velocities in simulation units.
  * @return
  */
-extern "C" int OnTheFly_Analysis_Nbody( double currentTime, int particleNumber, int* particleIDs,
-                                        int* particleTypes, double* masses, double* coordiantes,
-                                        double* velocities );
+extern "C" auto OnTheFly_Analysis_Nbody( double currentTime, int particleNumber,
+                                         const int* particleIDs, const int* particleTypes,
+                                         const double* masses, const double* coordiantes,
+                                         const double* velocities ) -> int;
 
 #endif
