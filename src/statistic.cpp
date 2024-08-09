@@ -202,8 +202,16 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
     unsigned long                      idx = 0;
     unsigned long                      idy = 0;
     unique_ptr< double[] >             statisticResutls( new double[ xBinNum * yBinNum ]() );
-    unique_ptr< double[] > const       sum( new double[ xBinNum * yBinNum ]() );
-    unique_ptr< unsigned int[] > const count( new unsigned int[ xBinNum * yBinNum ]() );
+    const unique_ptr< double[] >       sum( new double[ xBinNum * yBinNum ]() );
+    const unique_ptr< unsigned int[] > count( new unsigned int[ xBinNum * yBinNum ]() );
+    unique_ptr< double[] >             sumRecv( new double[ xBinNum * yBinNum ]() );
+    unique_ptr< unsigned int[] >       countRecv( new unsigned int[ xBinNum * yBinNum ]() );
+
+    if ( rank == 0 )
+    {
+        sumRecv   = make_unique< double[] >( xBinNum * yBinNum );
+        countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
+    }
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
@@ -217,15 +225,23 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
         }
     }
 
-    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
+    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
+                MPI_COMM_WORLD );
+    MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
+                MPI_COMM_WORLD );
+
+    if ( rank == 0 )
     {
-        if ( count[ i ] != 0 )
+        for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
-            statisticResutls[ i ] = sum[ i ] / count[ i ];
-        }
-        else
-        {
-            statisticResutls[ i ] = nan( "" );
+            if ( count[ i ] != 0 )
+            {
+                statisticResutls[ i ] = sumRecv[ i ] / countRecv[ i ];
+            }
+            else
+            {
+                statisticResutls[ i ] = nan( "" );
+            }
         }
     }
 
