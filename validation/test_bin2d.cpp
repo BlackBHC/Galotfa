@@ -151,13 +151,13 @@ int main( int argc, char* argv[] )
                              34.66034681, 47.18007048, 44.60178458, 61.05176795, 71.27224976,
                              33.30440777, nan( "" ),   50.93585644, 80.3815177,  nan( "" ) };
 
-    double targetStd[] = { 18.75567473, 42.62855176, nan( "" ),   37.46470903, nan( "" ),
-                           30.22894086, 43.9255855,  11.00146599, 27.94362765, 23.29016545,
-                           17.67330037, 47.6146172,  14.51762071, nan( "" ),   15.84447911,
-                           nan( "" ),   28.83476107, 12.69753188, 49.03093592, 35.25411684,
-                           37.65583983, 23.05579374, 34.08242533, 27.83088862, 28.74139899,
-                           21.93742425, 33.68937857, 33.43481006, nan( "" ),   nan( "" ),
-                           nan( "" ),   nan( "" ),   22.051675,   nan( "" ),   nan( "" ) };
+    double targetStd[] = { 13.26226478, 34.80606676, 0.,          26.49154981, 0.,
+                           24.68182686, 35.86509038, 7.77921121,  26.3455048,  20.16987494,
+                           14.43018933, 33.6686187,  13.44070506, 0.,          11.20373862,
+                           nan( "" ),   24.9716356,  10.36749137, 40.03359154, 31.53224069,
+                           26.62669969, 18.82497676, 24.09991407, 24.10225655, 26.60936488,
+                           18.9983667,  30.13269624, 30.95461918, 0.,          0.,
+                           0.,          nan( "" ),   15.59288893, 0.,          nan( "" ) };
 
     // test the C++ codes
     auto count = statistic::bin2d( rank, xsRecv, xmin, xmax, xBinNum, ysRecv, ymin, ymax, yBinNum,
@@ -223,8 +223,6 @@ int main( int argc, char* argv[] )
                 return -1;
             }
         }
-        MPI_Finalize();
-        return 0;
 
         cout << "results of std:" << endl;
         for ( auto i = 0UL; i < xBinNum; ++i )
@@ -263,7 +261,6 @@ statistic="sum")[0].reshape(7*5)
 bin2d(x=xs, y=ys, values=values, range=[[-0.1, 10.7], [-5.5, 5.9]], bins=[7, 5],
 statistic="mean")[0].reshape(7*5)
 
-std_with_bessel_corrector = lambda data: np.std(data, ddof=1)
 bin2d(x=xs, y=ys, values=values, range=[[-0.1, 10.7], [-5.5, 5.9]], bins=[7, 5],
-statistic=std_with_bessel_corrector)[0].reshape(7*5)
+statistic="std")[0].reshape(7*5)
 */

@@ -8,6 +8,7 @@
 #include "../include/myprompt.hpp"
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <gsl/gsl_statistics_double.h>
 #include <memory>
 #include <mpi.h>
@@ -249,7 +250,7 @@ auto statistic::bin2dmean( int rank, const double* xData, const double xLowerBou
 }
 
 /**
- * @brief 2D binning statistics for standard deviation
+ * @brief 2D binning statistics for standard deviation, without Bessel correction
  *
  * @param xData: pointing to the first coordinates
  * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
@@ -271,11 +272,20 @@ auto statistic::bin2dstd( int rank, const double* xData, const double xLowerBoun
 
 {
     ( void )rank;
-    unsigned long                          idx = 0;
-    unsigned long                          idy = 0;
-    unique_ptr< double[] >                 statisticResutls( new double[ xBinNum * yBinNum ]() );
-    unique_ptr< vector< double >[] > const dataInEachBin(
-        new vector< double >[ xBinNum * yBinNum ] );
+    unsigned long          idx = 0;
+    unsigned long          idy = 0;
+    unique_ptr< double[] > statisticResutls( new double[ xBinNum * yBinNum ]() );
+
+    const unique_ptr< double[] >       sum( new double[ xBinNum * yBinNum ]() );
+    const unique_ptr< unsigned int[] > count( new unsigned int[ xBinNum * yBinNum ]() );
+    unique_ptr< double[] >             sumRecv( new double[ xBinNum * yBinNum ]() );
+    unique_ptr< unsigned int[] >       countRecv( new unsigned int[ xBinNum * yBinNum ]() );
+
+    if ( rank == 0 )
+    {
+        sumRecv   = make_unique< double[] >( xBinNum * yBinNum );
+        countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
+    }
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
@@ -284,20 +294,56 @@ auto statistic::bin2dstd( int rank, const double* xData, const double xLowerBoun
         {
             idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
             idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
-            dataInEachBin[ idx * yBinNum + idy ].push_back( data[ i ] );
+            ++count[ idx * yBinNum + idy ];
+            sum[ idx * yBinNum + idy ] += data[ i ];
         }
     }
 
-    for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
+    MPI_Reduce( count.get(), countRecv.get(), xBinNum * yBinNum, MPI_INT, MPI_SUM, 0,
+                MPI_COMM_WORLD );
+    MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
+                MPI_COMM_WORLD );
+
+    if ( rank == 0 )
     {
-        if ( dataInEachBin[ i ].empty() )
+        for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
         {
-            statisticResutls[ i ] = nan( "" );
+            if ( count[ i ] != 0 )
+            {
+                statisticResutls[ i ] = sumRecv[ i ] / countRecv[ i ];
+            }
+            else
+            {
+                statisticResutls[ i ] = nan( "" );
+            }
         }
-        else
+    }
+
+    MPI_Bcast( statisticResutls.get(), xBinNum * yBinNum, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+    std::memset( sum.get(), 0, sizeof( double ) * xBinNum * yBinNum );  // reset the sum to 0
+    for ( auto i = 0UL; i < dataNum; ++i )
+    {
+        if ( xData[ i ] >= xLowerBound and xData[ i ] < xUpperBound and yData[ i ] >= yLowerBound
+             and yData[ i ] < yUpperBound )
         {
-            statisticResutls[ i ] =
-                gsl_stats_sd( dataInEachBin[ i ].data(), 1, dataInEachBin[ i ].size() );
+            idx = find_index( xLowerBound, xUpperBound, xBinNum, xData[ i ] );
+            idy = find_index( yLowerBound, yUpperBound, yBinNum, yData[ i ] );
+            sum[ idx * yBinNum + idy ] += ( data[ i ] - statisticResutls[ idx * yBinNum + idy ] )
+                                          * ( data[ i ] - statisticResutls[ idx * yBinNum + idy ] );
+        }
+    }
+
+    MPI_Reduce( sum.get(), sumRecv.get(), xBinNum * yBinNum, MPI_DOUBLE, MPI_SUM, 0,
+                MPI_COMM_WORLD );
+
+    if ( rank == 0 )
+    {
+        for ( auto i = 0U; i < xBinNum * yBinNum; ++i )
+        {
+            if ( count[ i ] != 0 )
+            {
+                statisticResutls[ i ] = sqrt( sumRecv[ i ] / countRecv[ i ] );
+            }
         }
     }
 
