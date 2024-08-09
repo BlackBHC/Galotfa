@@ -85,6 +85,19 @@ target_link_options(
 )
 add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
 
+add_executable(bin1d ./validation/test_bin1d.cpp ./src/statistic.cpp)
+target_link_libraries(bin1d PRIVATE gsl gslcblas)
+find_package(MPI REQUIRED) # first: find the package
+target_link_libraries(bin1d PUBLIC MPI::MPI_CXX)
+target_link_options(
+    bin1d
+    PRIVATE
+        -fsanitize=address
+        # -fsanitize=leak
+        -fsanitize=undefined
+)
+add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
+
 add_executable(eigen ./validation/test_eigen.cpp ./src/eigen.cpp)
 target_link_libraries(eigen PRIVATE gsl gslcblas)
 target_link_options(

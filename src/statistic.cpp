@@ -1,7 +1,7 @@
 /**
  * @file
- * @brief This file includes a class as a wrapper for statistic functions. At now, mainly the 2D
- * evenly binning statistics for some methods.
+ * @brief This file includes a class as a wrapper for statistic functions. At now, mainly the 1D/2D
+ * evenly binning statistics for limited methods.
  */
 
 #include "../include/statistic.hpp"
@@ -359,4 +359,225 @@ auto statistic::find_index( double lowerBound, double upperBound, const unsigned
                             double value ) -> unsigned long
 {
     return ( value - lowerBound ) / ( upperBound - lowerBound ) * binNum;
+}
+
+auto statistic::bin1d( int mpiRank, const double* coord, const double lowerBound,
+                       const double upperBound, const unsigned long& binNum,
+                       statistic_method method, const unsigned long& dataNum,
+                       const double* data ) -> std::unique_ptr< double[] >
+{
+    switch ( method )
+    {
+    case statistic_method::COUNT: {
+        return bin1dcount( mpiRank, coord, lowerBound, upperBound, binNum, dataNum );
+    }
+    case statistic_method::SUM: {
+        return bin1dsum( mpiRank, coord, lowerBound, upperBound, binNum, dataNum, data );
+    }
+    case statistic_method::MEAN: {
+        return bin1dmean( mpiRank, coord, lowerBound, upperBound, binNum, dataNum, data );
+    }
+    case statistic_method::STD: {
+        return bin1dstd( mpiRank, coord, lowerBound, upperBound, binNum, dataNum, data );
+    }
+    default: {
+        ERROR( "Get an unsupported statistic method!" );
+        return nullptr;
+    }
+    }
+
+    return nullptr;
+}
+
+auto statistic::bin1dcount( int mpiRank, const double* coord, const double lowerBound,
+                            const double upperBound, const unsigned long& binNum,
+                            const unsigned long& dataNum ) -> std::unique_ptr< double[] >
+{
+    unsigned long                      idx = 0;
+    unique_ptr< double[] >             statisticResutls( new double[ binNum ]() );
+    const unique_ptr< unsigned int[] > count( new unsigned int[ binNum ]() );
+    unique_ptr< unsigned int[] >       countRecv = nullptr;
+
+    if ( mpiRank == 0 )
+    {
+        countRecv = make_unique< unsigned int[] >( binNum );
+    }
+
+    for ( auto i = 0UL; i < dataNum; ++i )
+    {
+        if ( coord[ i ] >= lowerBound and coord[ i ] < upperBound )
+        {
+            idx = find_index( lowerBound, upperBound, binNum, coord[ i ] );
+            ++count[ idx ];
+        }
+    }
+
+    MPI_Reduce( count.get(), countRecv.get(), binNum, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    if ( mpiRank == 0 )  // effectively update the results in the root process
+    {
+        for ( auto i = 0U; i < binNum; ++i )
+        {
+            statisticResutls[ i ] = ( double )countRecv[ i ];
+        }
+    }
+    return statisticResutls;
+}
+
+auto statistic::bin1dsum( int mpiRank, const double* coord, const double lowerBound,
+                          const double upperBound, const unsigned long& binNum,
+                          const unsigned long& dataNum,
+                          const double*        data ) -> std::unique_ptr< double[] >
+{
+    unsigned long                idx = 0;
+    unique_ptr< double[] >       statisticResutls( new double[ binNum ]() );
+    const unique_ptr< double[] > sum( new double[ binNum ]() );
+    unique_ptr< double[] >       sumRecv = nullptr;
+
+    if ( mpiRank == 0 )
+    {
+        sumRecv = make_unique< double[] >( binNum );
+    }
+
+    for ( auto i = 0UL; i < dataNum; ++i )
+    {
+        if ( coord[ i ] >= lowerBound and coord[ i ] < upperBound )
+        {
+            idx = find_index( lowerBound, upperBound, binNum, coord[ i ] );
+            sum[ idx ] += data[ i ];
+        }
+    }
+
+    MPI_Reduce( sum.get(), sumRecv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    if ( mpiRank == 0 )  // effectively update the results in the root process
+    {
+        for ( auto i = 0U; i < binNum; ++i )
+        {
+            statisticResutls[ i ] = ( double )sumRecv[ i ];
+        }
+    }
+    return statisticResutls;
+}
+
+auto statistic::bin1dmean( int mpiRank, const double* coord, const double lowerBound,
+                           const double upperBound, const unsigned long& binNum,
+                           const unsigned long& dataNum,
+                           const double*        data ) -> std::unique_ptr< double[] >
+{
+    unsigned long                      idx = 0;
+    unique_ptr< double[] >             statisticResutls( new double[ binNum ]() );
+    const unique_ptr< unsigned int[] > count( new unsigned int[ binNum ]() );
+    unique_ptr< unsigned int[] >       countRecv = nullptr;
+    const unique_ptr< double[] >       sum( new double[ binNum ]() );
+    unique_ptr< double[] >             sumRecv = nullptr;
+
+    if ( mpiRank == 0 )
+    {
+        sumRecv   = make_unique< double[] >( binNum );
+        countRecv = make_unique< unsigned int[] >( binNum );
+    }
+
+    for ( auto i = 0UL; i < dataNum; ++i )
+    {
+        if ( coord[ i ] >= lowerBound and coord[ i ] < upperBound )
+        {
+            idx = find_index( lowerBound, upperBound, binNum, coord[ i ] );
+            ++count[ idx ];
+            sum[ idx ] += data[ i ];
+        }
+    }
+
+    MPI_Reduce( count.get(), countRecv.get(), binNum, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Reduce( sum.get(), sumRecv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    if ( mpiRank == 0 )  // effectively update the results in the root process
+    {
+        for ( auto i = 0U; i < binNum; ++i )
+        {
+            if ( count[ i ] != 0 )
+            {
+                statisticResutls[ i ] = sumRecv[ i ] / countRecv[ i ];
+            }
+            else
+            {
+                statisticResutls[ i ] = nan( "" );
+            }
+        }
+    }
+    return statisticResutls;
+}
+
+auto statistic::bin1dstd( int mpiRank, const double* coord, const double lowerBound,
+                          const double upperBound, const unsigned long& binNum,
+                          const unsigned long& dataNum,
+                          const double*        data ) -> std::unique_ptr< double[] >
+{
+    unsigned long                      idx = 0;
+    unique_ptr< double[] >             statisticResutls( new double[ binNum ]() );
+    const unique_ptr< unsigned int[] > count( new unsigned int[ binNum ]() );
+    unique_ptr< unsigned int[] >       countRecv = nullptr;
+    const unique_ptr< double[] >       sum( new double[ binNum ]() );
+    unique_ptr< double[] >             sumRecv = nullptr;
+
+    if ( mpiRank == 0 )
+    {
+        sumRecv   = make_unique< double[] >( binNum );
+        countRecv = make_unique< unsigned int[] >( binNum );
+    }
+
+    for ( auto i = 0UL; i < dataNum; ++i )
+    {
+        if ( coord[ i ] >= lowerBound and coord[ i ] < upperBound )
+        {
+            idx = find_index( lowerBound, upperBound, binNum, coord[ i ] );
+            ++count[ idx ];
+            sum[ idx ] += data[ i ];
+        }
+    }
+
+    MPI_Reduce( count.get(), countRecv.get(), binNum, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Reduce( sum.get(), sumRecv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    if ( mpiRank == 0 )  // effectively update the results in the root process
+    {
+        for ( auto i = 0U; i < binNum; ++i )
+        {
+            if ( count[ i ] != 0 )
+            {
+                statisticResutls[ i ] = sumRecv[ i ] / countRecv[ i ];
+            }
+            else
+            {
+                statisticResutls[ i ] = nan( "" );
+            }
+        }
+    }
+
+    MPI_Bcast( statisticResutls.get(), binNum, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+    std::memset( sum.get(), 0, sizeof( double ) * binNum );  // reset the sum to 0
+    for ( auto i = 0UL; i < dataNum; ++i )
+    {
+        if ( coord[ i ] >= lowerBound and coord[ i ] < upperBound )
+        {
+            idx = find_index( lowerBound, upperBound, binNum, coord[ i ] );
+            sum[ idx ] +=
+                ( data[ i ] - statisticResutls[ idx ] ) * ( data[ i ] - statisticResutls[ idx ] );
+        }
+    }
+
+    MPI_Reduce( sum.get(), sumRecv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    if ( mpiRank == 0 )
+    {
+        for ( auto i = 0U; i < binNum; ++i )
+        {
+            if ( count[ i ] != 0 )
+            {
+                statisticResutls[ i ] = sqrt( sumRecv[ i ] / countRecv[ i ] );
+            }
+        }
+    }
+
+    return statisticResutls;
 }

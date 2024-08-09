@@ -12,6 +12,10 @@ public:
                        const unsigned long& yBinNum, statistic_method method,
                        const unsigned long& dataNum,
                        const double*        data = nullptr ) -> std::unique_ptr< double[] >;
+    static auto bin1d( int mpiRank, const double* coord, const double lowerBound,
+                       const double upperBound, const unsigned long& binNum,
+                       statistic_method method, const unsigned long& dataNum,
+                       const double* data = nullptr ) -> std::unique_ptr< double[] >;
 
 #ifdef DEBUG
 public:
@@ -41,5 +45,20 @@ private:
                           const double* yData, const double yLowerBound, const double yUpperBound,
                           const unsigned long& yBinNum, const unsigned long& dataNum,
                           const double* data ) -> std::unique_ptr< double[] >;
+    static auto bin1dcount( int mpiRank, const double* coord, const double lowerBound,
+                            const double upperBound, const unsigned long& binNum,
+                            const unsigned long& dataNum ) -> std::unique_ptr< double[] >;
+    static auto bin1dsum( int mpiRank, const double* coord, const double lowerBound,
+                          const double upperBound, const unsigned long& binNum,
+                          const unsigned long& dataNum,
+                          const double*        data = nullptr ) -> std::unique_ptr< double[] >;
+    static auto bin1dmean( int mpiRank, const double* coord, const double lowerBound,
+                           const double upperBound, const unsigned long& binNum,
+                           const unsigned long& dataNum,
+                           const double*        data = nullptr ) -> std::unique_ptr< double[] >;
+    static auto bin1dstd( int mpiRank, const double* coord, const double lowerBound,
+                          const double upperBound, const unsigned long& binNum,
+                          const unsigned long& dataNum,
+                          const double*        data = nullptr ) -> std::unique_ptr< double[] >;
 };
 #endif
