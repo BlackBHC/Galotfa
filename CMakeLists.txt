@@ -18,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # COMPILATION FLAGS PART
 # customized debug flags: default one only includes -g
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC -DDEBUG")
 # print fundamental flags: -g, -O, and whether -DNDEBUG
 message(STATUS "C++ flags, Debug configuration: ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "C++ flags, Release configuration: ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -38,6 +38,7 @@ endif()
 
 # TARGET PART
 add_library(galotfa SHARED include/galotfa.hpp src/galotfa.cpp)
+# TODO: link the functional components
 target_link_libraries(galotfa PRIVATE gsl gslcblas hdf5)
 # Library with the same name
 #[[ add_library(message-shared
@@ -75,6 +76,24 @@ target_link_options(
 )
 add_test(NAME test_coordinate COMMAND $<TARGET_FILE:coordinate>)
 
+add_executable(eigen ./validation/test_eigen.cpp ./src/eigen.cpp)
+target_link_libraries(eigen PRIVATE gsl gslcblas)
+target_link_options(
+    eigen
+    PRIVATE
+        ${sanitizer_flags}
+)
+add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
+
+add_executable(h5out ./validation/test_h5out.cpp ./src/h5out.cpp)
+target_link_libraries(h5out PRIVATE hdf5)
+target_link_options(
+    h5out
+    PRIVATE
+        ${sanitizer_flags}
+)
+add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
+
 add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
 target_link_libraries(bin2d PRIVATE gsl gslcblas)
 find_package(MPI REQUIRED) # first: find the package
@@ -97,23 +116,15 @@ target_link_options(
 )
 add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
 
-add_executable(eigen ./validation/test_eigen.cpp ./src/eigen.cpp)
-target_link_libraries(eigen PRIVATE gsl gslcblas)
+add_executable(recenter ./validation/test_recenter.cpp ./src/recenter.cpp)
+find_package(MPI REQUIRED) # first: find the package
+target_link_libraries(recenter PUBLIC MPI::MPI_CXX)
 target_link_options(
-    eigen
+    recenter
     PRIVATE
         ${sanitizer_flags}
 )
-add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
-
-add_executable(h5out ./validation/test_h5out.cpp ./src/h5out.cpp)
-target_link_libraries(h5out PRIVATE hdf5)
-target_link_options(
-    h5out
-    PRIVATE
-        ${sanitizer_flags}
-)
-add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
+add_test(NAME recenter COMMAND mpirun -np 4 $<TARGET_FILE:recenter>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

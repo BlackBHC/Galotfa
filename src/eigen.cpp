@@ -1,8 +1,3 @@
-/**
- * @file
- * @brief Calculate the eigenvalue and eigenvectors of a matrix.
- */
-
 #include "../include/eigen.hpp"
 #include "gsl/gsl_matrix_double.h"
 #include "gsl/gsl_vector_double.h"

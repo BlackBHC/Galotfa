@@ -1,9 +1,8 @@
 /**
- * @file
+ * @file test_bin2d.cpp
  * @brief Compare the results with the output of python
  */
 
-#define DEBUG
 #define THRESHOLD 1e-6  // the equal threshold of floating numbers
 #include "../include/myprompt.hpp"
 #include "../include/statistic.hpp"
