@@ -64,6 +64,7 @@ set_target_properties(message-static
 # UNIT TESTS
 # C++ programes
 enable_testing()
+find_package(MPI REQUIRED)
 add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
@@ -96,7 +97,6 @@ add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
 
 add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
 target_link_libraries(bin2d PRIVATE gsl gslcblas)
-find_package(MPI REQUIRED) # first: find the package
 target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
 target_link_options(
     bin2d
@@ -117,7 +117,6 @@ target_link_options(
 add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
 
 add_executable(recenter ./validation/test_recenter.cpp ./src/recenter.cpp)
-find_package(MPI REQUIRED) # first: find the package
 target_link_libraries(recenter PUBLIC MPI::MPI_CXX)
 target_link_options(
     recenter

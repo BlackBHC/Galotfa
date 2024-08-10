@@ -59,16 +59,18 @@
         fprint( stderr, "[ERROR]: " __VA_ARGS__ );                             \
     }
 #define MPI_INFO( rank, ... ) mpi_print( rank, "[INFO]: " __VA_ARGS__ );
-#define MPI_WARN( rank, ... )                                                                 \
-    {                                                                                         \
-        mpi_fprint( rank, stderr, "Rank [%d]: Call from file [%s] line[%d].", rank, __FILE__, \
-                    __LINE__ );                                                               \
-        mpi_fprint( rank, stderr, "[WARN]: " __VA_ARGS__ );                                   \
+#define MPI_WARN( rank, ... )                                                             \
+    if ( rank == 0 )                                                                      \
+    {                                                                                     \
+        std::fprintf( stderr, "Rank [%d]: Call from file [%s] line[%d].", rank, __FILE__, \
+                      __LINE__ );                                                         \
+        std::fprintf( stderr, "[WARN]: " __VA_ARGS__ "\n" );                              \
     }
-#define MPI_ERROR( rank, ... )                                                                \
-    {                                                                                         \
-        mpi_fprint( rank, stderr, "Rank [%d]: Call from file [%s] line[%d].", rank, __FILE__, \
-                    __LINE__ );                                                               \
-        mpi_fprint( rank, stderr, "[ERROR]: " __VA_ARGS__ );                                  \
+#define MPI_ERROR( rank, ... )                                                            \
+    if ( rank == 0 )                                                                      \
+    {                                                                                     \
+        std::fprintf( stderr, "Rank [%d]: Call from file [%s] line[%d].", rank, __FILE__, \
+                      __LINE__ );                                                         \
+        std::fprintf( stderr, "[ERROR]: " __VA_ARGS__ "\n" );                             \
     }
 #endif

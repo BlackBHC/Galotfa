@@ -24,14 +24,16 @@ recenter.enable = true
 # Available values:
 # mbp: most bound particle, define the component's center as the
 #      position of particle with minimal potential in such group.
-# dp: densest pixel, define the component's center as the center of
-#     the denest pixel in the cartesian projection, see image and note
-#     that this option requires the parameters for image calculation,
-#     and force image.enable=true, please refer to later parameters.
-# com: define ... as the center of mass.
-# auto: automatically determine the center of mass, a mixture of the
-#       most bound particle and densest pixel.
-recenter.method = "mbp"
+# com: define ... as the center of mass. For better performance, the
+#      program calculate the com through iteration: 100 times, 10
+#      times, 1 times, and 0.5 times radius.
+recenter.method = "com"
+# Enclose radius of the sphere used in recenter, a value closing to
+# twice disk/galactic radius is recommended.
+recenter.r = 10
+# Initial guess of the center position, aiming to avoid the system 
+# center is always outside of the box.
+recenter.iguess = [0, 0, 0]
 # The coordinate frame used for analyses.
 # Available values:
 # cyl: cylindrical, recommended for disk-like components, including
@@ -44,7 +46,11 @@ frame = "cyl"
 # tensor or not. The calculation of the inertial tensor is based on
 # the image parameters. Again,  align=true requires the parameters
 # for image calculation and force image.enable=true.
-align = true
+align.enable = true
+# Enclose radius for calculation of inertial tensor. For example, to
+# align the x,y,z axes with the bar principal axes, a value closing
+# to the bar radius is recommended.
+align.r = true
 # Parameters for calculations of x-y, x-z, and y-z projections. Must
 # be given if recenter.enable=true and method="dp", or if align=true.
 image.enable = true
