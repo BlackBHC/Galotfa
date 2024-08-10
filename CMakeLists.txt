@@ -33,7 +33,11 @@ message(
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(sanitizer_flags "-fsanitize=undefined" "-fsanitize=address")
 else()
-    set(sanitizer_flags "-fsanitize=undefined" "-fsanitize=address" "-fsanitize=leak")
+    set(sanitizer_flags
+        "-fsanitize=undefined"
+        "-fsanitize=address"
+        "-fsanitize=leak"
+    )
 endif()
 
 # TARGET PART
@@ -70,59 +74,35 @@ add_executable(
     ./validation/test_coordTrans.cpp
     ./src/coordinates.cpp
 )
-target_link_options(
-    coordinate
-    PRIVATE
-        ${sanitizer_flags}
-)
+target_link_options(coordinate PRIVATE ${sanitizer_flags})
 add_test(NAME test_coordinate COMMAND $<TARGET_FILE:coordinate>)
 
 add_executable(eigen ./validation/test_eigen.cpp ./src/eigen.cpp)
 target_link_libraries(eigen PRIVATE gsl gslcblas)
-target_link_options(
-    eigen
-    PRIVATE
-        ${sanitizer_flags}
-)
+target_link_options(eigen PRIVATE ${sanitizer_flags})
 add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
 
 add_executable(h5out ./validation/test_h5out.cpp ./src/h5out.cpp)
 target_link_libraries(h5out PRIVATE hdf5)
-target_link_options(
-    h5out
-    PRIVATE
-        ${sanitizer_flags}
-)
+target_link_options(h5out PRIVATE ${sanitizer_flags})
 add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
 
 add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
 target_link_libraries(bin2d PRIVATE gsl gslcblas)
 target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
-target_link_options(
-    bin2d
-    PRIVATE
-        ${sanitizer_flags}
-)
+target_link_options(bin2d PRIVATE ${sanitizer_flags})
 add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
 
 add_executable(bin1d ./validation/test_bin1d.cpp ./src/statistic.cpp)
 target_link_libraries(bin1d PRIVATE gsl gslcblas)
 find_package(MPI REQUIRED) # first: find the package
 target_link_libraries(bin1d PUBLIC MPI::MPI_CXX)
-target_link_options(
-    bin1d
-    PRIVATE
-        ${sanitizer_flags}
-)
+target_link_options(bin1d PRIVATE ${sanitizer_flags})
 add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
 
 add_executable(recenter ./validation/test_recenter.cpp ./src/recenter.cpp)
 target_link_libraries(recenter PUBLIC MPI::MPI_CXX)
-target_link_options(
-    recenter
-    PRIVATE
-        ${sanitizer_flags}
-)
+target_link_options(recenter PRIVATE ${sanitizer_flags})
 add_test(NAME recenter COMMAND mpirun -np 4 $<TARGET_FILE:recenter>)
 
 # INSTALL PART
