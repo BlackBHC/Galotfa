@@ -28,8 +28,8 @@ recenter.enable = true
 #      program calculate the com through iteration: 100 times, 10
 #      times, 1 times, and 0.5 times radius.
 recenter.method = "com"
-# Enclose radius of the sphere used in recenter, a value closing to
-# twice disk/galactic radius is recommended.
+# Enclose radius of the sphere used in center of mass calculation, a
+# value closing to twice disk/galactic radius is recommended.
 recenter.r = 10
 # Initial guess of the center position, aiming to avoid the system 
 # center is always outside of the box.

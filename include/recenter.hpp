@@ -27,8 +27,7 @@ private:
     static auto center_of_mass( const double* mass, const double* coordinates,
                                 const unsigned int& partNum,
                                 const double        rangeSize ) -> std::unique_ptr< double[] >;
-    static auto most_bound_particle( const double* mass, const double* coordinates,
-                                     const unsigned int& partNum,
-                                     const double        rangeSize ) -> std::unique_ptr< double[] >;
+    static auto most_bound_particle( const double* potential, const double* coordinates,
+                                     const unsigned int& partNum ) -> std::unique_ptr< double[] >;
 };
 #endif
