@@ -1,4 +1,8 @@
-#define DEBUG
+/**
+ * @file test_coordTrans.cpp
+ * @brief Test the coordinate transformation class.
+ */
+
 #include "../include/coordinate.hpp"
 #include <iostream>
 #include <vector>

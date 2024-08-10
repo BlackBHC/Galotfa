@@ -1,3 +1,7 @@
+/**
+ * @file h5out.hpp
+ * @brief Organizer of the hdf5 output.
+ */
 #ifndef MY_H5_OUTPUT_HEADER
 #define MY_H5_OUTPUT_HEADER
 #include <H5Fpublic.h>
@@ -12,7 +16,6 @@
 #else
 #define CHUCK_SIZE 1024
 #endif
-
 /**
  * @class dataset_handle
  * @brief The class that handles the basic operations of a dataset, including memory space, chuck
@@ -25,7 +28,7 @@ public:
     dataset_handle( hid_t& parent, const std::string& datasetName,
                     const std::vector< unsigned int >& sizeInEachDim, hid_t& dataType );
     ~dataset_handle();
-    auto flush_single_block( void* dataBuffer ) -> int;
+    auto flush_single_block( const void* dataBuffer ) -> int;
 
 #ifdef DEBUG
 public:
@@ -77,7 +80,7 @@ public:
                                   const std::vector< unsigned int >& sizeInEachDim,
                                   hid_t                              dataType ) -> int;
     auto flush_single_block( const std::string& groupName, const std::string& datasetName,
-                             void* dataBuffer ) -> int;
+                             const void* dataBuffer ) -> int;
 };
 
 

@@ -1,4 +1,8 @@
-#define DEBUG
+/**
+ * @file test_h5out.cpp
+ * @brief Test the hdf5 output class.
+ */
+
 #include "../include/h5out.hpp"
 #include "H5Tpublic.h"
 #include <hdf5.h>

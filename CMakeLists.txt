@@ -18,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # COMPILATION FLAGS PART
 # customized debug flags: default one only includes -g
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC -DDEBUG")
 # print fundamental flags: -g, -O, and whether -DNDEBUG
 message(STATUS "C++ flags, Debug configuration: ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "C++ flags, Release configuration: ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -30,9 +30,15 @@ message(
     STATUS
     "C++ flags, minimal Release configuration: ${CMAKE_CXX_FLAGS_MINSIZEREL}"
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(sanitizer_flags "-fsanitize=undefined" "-fsanitize=address")
+else()
+    set(sanitizer_flags "-fsanitize=undefined" "-fsanitize=address" "-fsanitize=leak")
+endif()
 
 # TARGET PART
 add_library(galotfa SHARED include/galotfa.hpp src/galotfa.cpp)
+# TODO: link the functional components
 target_link_libraries(galotfa PRIVATE gsl gslcblas hdf5)
 # Library with the same name
 #[[ add_library(message-shared
@@ -58,6 +64,7 @@ set_target_properties(message-static
 # UNIT TESTS
 # C++ programes
 enable_testing()
+find_package(MPI REQUIRED)
 add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
@@ -66,33 +73,16 @@ add_executable(
 target_link_options(
     coordinate
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_coordinate COMMAND $<TARGET_FILE:coordinate>)
-
-add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
-target_link_libraries(bin2d PRIVATE gsl gslcblas)
-find_package(MPI REQUIRED) # first: find the package
-target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
-target_link_options(
-    bin2d
-    PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
-)
-add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
 
 add_executable(eigen ./validation/test_eigen.cpp ./src/eigen.cpp)
 target_link_libraries(eigen PRIVATE gsl gslcblas)
 target_link_options(
     eigen
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
 
@@ -101,11 +91,39 @@ target_link_libraries(h5out PRIVATE hdf5)
 target_link_options(
     h5out
     PRIVATE
-        -fsanitize=address
-        # -fsanitize=leak
-        -fsanitize=undefined
+        ${sanitizer_flags}
 )
 add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
+
+add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
+target_link_libraries(bin2d PRIVATE gsl gslcblas)
+target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
+target_link_options(
+    bin2d
+    PRIVATE
+        ${sanitizer_flags}
+)
+add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
+
+add_executable(bin1d ./validation/test_bin1d.cpp ./src/statistic.cpp)
+target_link_libraries(bin1d PRIVATE gsl gslcblas)
+find_package(MPI REQUIRED) # first: find the package
+target_link_libraries(bin1d PUBLIC MPI::MPI_CXX)
+target_link_options(
+    bin1d
+    PRIVATE
+        ${sanitizer_flags}
+)
+add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
+
+add_executable(recenter ./validation/test_recenter.cpp ./src/recenter.cpp)
+target_link_libraries(recenter PUBLIC MPI::MPI_CXX)
+target_link_options(
+    recenter
+    PRIVATE
+        ${sanitizer_flags}
+)
+add_test(NAME recenter COMMAND mpirun -np 4 $<TARGET_FILE:recenter>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

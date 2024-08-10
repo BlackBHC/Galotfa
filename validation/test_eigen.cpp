@@ -1,4 +1,8 @@
-#define DEBUG
+/**
+ * @file test_eigen.cpp
+ * @brief Test the eigenvalue, eigenvector calculations.
+ */
+
 #include "../include/eigen.hpp"
 #include <iostream>
 using namespace std;
