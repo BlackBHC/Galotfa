@@ -27,7 +27,7 @@ int main( int argc, char* argv[] )
     MPI_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
-    assert( size = 4 );  // check the mpi size
+    assert( size == 4 );  // check the mpi size
 
     // TEST: center of mass calculation
     // TEST: trival case, all==0
