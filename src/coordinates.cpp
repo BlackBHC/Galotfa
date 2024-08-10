@@ -135,8 +135,8 @@ void coordinate_transformer::cyl2sph( double data[ 3 ] )
  * @param from: original frame type
  * @param to: target frame type
  */
-void coordinate_transformer::transform( unsigned int& num, double* data, coordate_type& from,
-                                        coordate_type& to )
+void coordinate_transformer::transform( const unsigned int& num, double* data,
+                                        const coordate_type& from, const coordate_type& to )
 {
     if ( from == to )
     {

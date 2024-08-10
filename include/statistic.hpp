@@ -21,12 +21,12 @@ public:
     static auto bin2d( int mpiRank, const double* xData, const double xLowerBound,
                        const double xUpperBound, const unsigned long& xBinNum, const double* yData,
                        const double yLowerBound, const double yUpperBound,
-                       const unsigned long& yBinNum, statistic_method method,
+                       const unsigned long& yBinNum, const statistic_method method,
                        const unsigned long& dataNum,
                        const double*        data = nullptr ) -> std::unique_ptr< double[] >;
     static auto bin1d( int mpiRank, const double* coord, const double lowerBound,
                        const double upperBound, const unsigned long& binNum,
-                       statistic_method method, const unsigned long& dataNum,
+                       const statistic_method method, const unsigned long& dataNum,
                        const double* data = nullptr ) -> std::unique_ptr< double[] >;
 
 #ifdef DEBUG

@@ -244,7 +244,7 @@ dataset_handle::dataset_handle( hid_t& parent, const string& datasetName,
  * @return
  */
 auto h5_out::flush_single_block( const string& groupName, const string& datasetName,
-                                 void* dataBuffer ) -> int
+                                 const void* dataBuffer ) -> int
 {
     if ( static_cast< unsigned int >( groups.contains( groupName ) ) == 0U )
     {
@@ -295,7 +295,7 @@ dataset_handle::~dataset_handle()
  * @param dataBuffer: pointer to the data buffer, which includes the data in a single-step.
  * @return
  */
-auto dataset_handle::flush_single_block( void* dataBuffer ) -> int
+auto dataset_handle::flush_single_block( const void* dataBuffer ) -> int
 {
     // static variables
     static herr_t status    = -1;

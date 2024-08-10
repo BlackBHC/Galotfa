@@ -28,7 +28,7 @@ public:
     dataset_handle( hid_t& parent, const std::string& datasetName,
                     const std::vector< unsigned int >& sizeInEachDim, hid_t& dataType );
     ~dataset_handle();
-    auto flush_single_block( void* dataBuffer ) -> int;
+    auto flush_single_block( const void* dataBuffer ) -> int;
 
 #ifdef DEBUG
 public:
@@ -80,7 +80,7 @@ public:
                                   const std::vector< unsigned int >& sizeInEachDim,
                                   hid_t                              dataType ) -> int;
     auto flush_single_block( const std::string& groupName, const std::string& datasetName,
-                             void* dataBuffer ) -> int;
+                             const void* dataBuffer ) -> int;
 };
 
 

@@ -26,7 +26,7 @@ using namespace std;
 auto statistic::bin2d( int mpiRank, const double* xData, const double xLowerBound,
                        const double xUpperBound, const unsigned long& xBinNum, const double* yData,
                        const double yLowerBound, const double yUpperBound,
-                       const unsigned long& yBinNum, statistic_method method,
+                       const unsigned long& yBinNum, const statistic_method method,
                        const unsigned long& dataNum, const double* data ) -> unique_ptr< double[] >
 {
     switch ( method )
@@ -369,7 +369,7 @@ auto statistic::find_index( double lowerBound, double upperBound, const unsigned
  */
 auto statistic::bin1d( int mpiRank, const double* coord, const double lowerBound,
                        const double upperBound, const unsigned long& binNum,
-                       statistic_method method, const unsigned long& dataNum,
+                       const statistic_method method, const unsigned long& dataNum,
                        const double* data ) -> std::unique_ptr< double[] >
 {
     switch ( method )
