@@ -13,10 +13,10 @@
 class bar_info
 {
 public:
-    static auto A0( const unsigned int partNum, const double* mass ) -> double;
-    static auto A2( const unsigned int partNum, const double* mass, const double* phi ) -> double;
-    static auto Sbar( const unsigned int partNum, const double* mass, const double* phi ) -> double;
-    static auto Sbuckle( const unsigned int partNum, const double* mass, const double* phi,
+    static auto A0( unsigned int partNum, const double* mass ) -> double;
+    static auto A2( unsigned int partNum, const double* mass, const double* phi ) -> double;
+    static auto Sbar( unsigned int partNum, const double* mass, const double* phi ) -> double;
+    static auto Sbuckle( unsigned int partNum, const double* mass, const double* phi,
                          const double* zed ) -> double;
 };
 #endif

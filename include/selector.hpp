@@ -9,8 +9,7 @@
 class id_organizer
 {
 public:
-    static auto select( const std::vector< int >& raw,
-                        const double              fraction ) -> std::vector< int >;
+    static auto select( const std::vector< int >& raw, double fraction ) -> std::vector< int >;
     static auto read( const std::string& idFilename ) -> std::vector< int >;
 };
 #endif

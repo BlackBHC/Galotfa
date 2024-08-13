@@ -20,7 +20,7 @@ public:
                            const coordate_type& to );
 
 #ifdef DEBUG
-public:
+
 #else
 private:
 #endif

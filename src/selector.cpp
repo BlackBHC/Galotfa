@@ -1,11 +1,14 @@
 #include "../include/selector.hpp"
 #include "../include/myprompt.hpp"
+#include "mpi.h"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
+#include <ios>
 #include <random>
 #include <set>
-#include <sys/stat.h>
+#include <string>
 #include <sys/unistd.h>
 #include <unistd.h>
 #include <vector>
@@ -29,7 +32,7 @@ auto id_organizer::select( const vector< int >& raw, const double fraction ) -> 
         return raw;
     }
 
-    size_t        selectNum = ( size_t )( raw.size() * fraction );
+    auto        const selectNum = ( size_t )( raw.size() * fraction );
     vector< int > res;
     sample( raw.begin(), raw.end(), back_inserter( res ), selectNum, mt19937{ random_device{}() } );
     return res;
@@ -60,11 +63,11 @@ auto id_organizer::read( const string& idFilename ) -> vector< int >
     {
         string lineStr;
         getline( fp, lineStr );
-        if ( lineStr.length() != 0 )
+        if ( !lineStr.empty() )
         {
             try
             {
-                ids.push_back( ( int )std::stoi( lineStr ) );
+                ids.push_back( std::stoi( lineStr ) );
             }
             catch ( ... )
             {

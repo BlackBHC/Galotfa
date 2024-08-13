@@ -24,10 +24,10 @@ using namespace std;
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2d( const int mpiRank, const double* xData, const double xLowerBound,
-                       const double xUpperBound, const unsigned long& xBinNum, const double* yData,
+                       const double xUpperBound, const unsigned long xBinNum, const double* yData,
                        const double yLowerBound, const double yUpperBound,
-                       const unsigned long& yBinNum, const statistic_method method,
-                       const unsigned long& dataNum, const double* data ) -> unique_ptr< double[] >
+                       const unsigned long yBinNum, const statistic_method method,
+                       const unsigned long dataNum, const double* data ) -> unique_ptr< double[] >
 {
     switch ( method )
     {
@@ -71,10 +71,10 @@ auto statistic::bin2d( const int mpiRank, const double* xData, const double xLow
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dcount( const int mpiRank, const double* xData, const double xLowerBound,
-                            const double xUpperBound, const unsigned long& xBinNum,
+                            const double xUpperBound, const unsigned long xBinNum,
                             const double* yData, const double yLowerBound, const double yUpperBound,
-                            const unsigned long& yBinNum,
-                            const unsigned long& dataNum ) -> unique_ptr< double[] >
+                            const unsigned long yBinNum,
+                            const unsigned long dataNum ) -> unique_ptr< double[] >
 
 {
     static unsigned long         idx = 0;
@@ -128,9 +128,9 @@ auto statistic::bin2dcount( const int mpiRank, const double* xData, const double
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dsum( const int mpiRank, const double* xData, const double xLowerBound,
-                          const double xUpperBound, const unsigned long& xBinNum,
+                          const double xUpperBound, const unsigned long xBinNum,
                           const double* yData, const double yLowerBound, const double yUpperBound,
-                          const unsigned long& yBinNum, const unsigned long& dataNum,
+                          const unsigned long yBinNum, const unsigned long dataNum,
                           const double* data ) -> unique_ptr< double[] >
 
 {
@@ -185,9 +185,9 @@ auto statistic::bin2dsum( const int mpiRank, const double* xData, const double x
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dmean( const int mpiRank, const double* xData, const double xLowerBound,
-                           const double xUpperBound, const unsigned long& xBinNum,
+                           const double xUpperBound, const unsigned long xBinNum,
                            const double* yData, const double yLowerBound, const double yUpperBound,
-                           const unsigned long& yBinNum, const unsigned long& dataNum,
+                           const unsigned long yBinNum, const unsigned long dataNum,
                            const double* data ) -> unique_ptr< double[] >
 {
     static unsigned long idx = 0;
@@ -255,9 +255,9 @@ auto statistic::bin2dmean( const int mpiRank, const double* xData, const double 
  * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dstd( const double* xData, const double xLowerBound, const double xUpperBound,
-                          const unsigned long& xBinNum, const double* yData,
+                          const unsigned long xBinNum, const double* yData,
                           const double yLowerBound, const double yUpperBound,
-                          const unsigned long& yBinNum, const unsigned long& dataNum,
+                          const unsigned long yBinNum, const unsigned long dataNum,
                           const double* data ) -> unique_ptr< double[] >
 
 {
@@ -333,8 +333,8 @@ auto statistic::bin2dstd( const double* xData, const double xLowerBound, const d
  * @param value the value of the data point
  * @return
  */
-auto statistic::find_index( double lowerBound, double upperBound, const unsigned long& binNum,
-                            double value ) -> unsigned long
+auto statistic::find_index( const double lowerBound, const double upperBound,
+                            const unsigned long binNum, const double value ) -> unsigned long
 {
     return ( value - lowerBound ) / ( upperBound - lowerBound ) * binNum;
 }
@@ -352,8 +352,8 @@ auto statistic::find_index( double lowerBound, double upperBound, const unsigned
  * @return a unique_ptr pointing to the 1D array of resutls
  */
 auto statistic::bin1d( const int mpiRank, const double* coord, const double lowerBound,
-                       const double upperBound, const unsigned long& binNum,
-                       const statistic_method method, const unsigned long& dataNum,
+                       const double upperBound, const unsigned long binNum,
+                       const statistic_method method, const unsigned long dataNum,
                        const double* data ) -> std::unique_ptr< double[] >
 {
     switch ( method )
@@ -383,8 +383,8 @@ auto statistic::bin1d( const int mpiRank, const double* coord, const double lowe
  * @brief Similar to bin2dcount but for 1D case.
  */
 auto statistic::bin1dcount( const int mpiRank, const double* coord, const double lowerBound,
-                            const double upperBound, const unsigned long& binNum,
-                            const unsigned long& dataNum ) -> std::unique_ptr< double[] >
+                            const double upperBound, const unsigned long binNum,
+                            const unsigned long dataNum ) -> std::unique_ptr< double[] >
 {
     static unsigned long idx = 0;
     auto                 statisticResutls( make_unique< double[] >( binNum ) );
@@ -421,9 +421,9 @@ auto statistic::bin1dcount( const int mpiRank, const double* coord, const double
  * @brief Similar to bin2dsum but for 1D case.
  */
 auto statistic::bin1dsum( const int mpiRank, const double* coord, const double lowerBound,
-                          const double upperBound, const unsigned long& binNum,
-                          const unsigned long& dataNum,
-                          const double*        data ) -> std::unique_ptr< double[] >
+                          const double upperBound, const unsigned long binNum,
+                          const unsigned long dataNum,
+                          const double*       data ) -> std::unique_ptr< double[] >
 {
     static unsigned long idx = 0;
     auto                 statisticResutls( make_unique< double[] >( binNum ) );
@@ -460,9 +460,9 @@ auto statistic::bin1dsum( const int mpiRank, const double* coord, const double l
  * @brief Similar to bin2dmean but for 1D case.
  */
 auto statistic::bin1dmean( const int mpiRank, const double* coord, const double lowerBound,
-                           const double upperBound, const unsigned long& binNum,
-                           const unsigned long& dataNum,
-                           const double*        data ) -> std::unique_ptr< double[] >
+                           const double upperBound, const unsigned long binNum,
+                           const unsigned long dataNum,
+                           const double*       data ) -> std::unique_ptr< double[] >
 {
     static unsigned long idx = 0;
     auto                 statisticResutls( make_unique< double[] >( binNum ) );
@@ -511,7 +511,7 @@ auto statistic::bin1dmean( const int mpiRank, const double* coord, const double 
  * @brief Similar to bin2dstd but for 1D case.
  */
 auto statistic::bin1dstd( const double* coord, const double lowerBound, const double upperBound,
-                          const unsigned long& binNum, const unsigned long& dataNum,
+                          const unsigned long binNum, const unsigned long dataNum,
                           const double* data ) -> std::unique_ptr< double[] >
 {
     static unsigned long idx = 0;
