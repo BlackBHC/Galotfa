@@ -11,11 +11,44 @@ using namespace std;
     sqrt( *( vec3ptr ) * *( vec3ptr ) + *( ( vec3ptr ) + 1 ) * *( ( vec3ptr ) + 1 ) \
           + *( ( vec3ptr ) + 2 ) * *( ( vec3ptr ) + 2 ) )
 
-void recenter::run()
+/**
+ * @brief Calculate the center of a system.
+ *
+ * @param method method used to calculate the center
+ * @param partNum particle number
+ * @param coordinate coordinates of particles
+ * @param mass masses of particles
+ * @param potential potentials of particles
+ * @param rangeSize enclose radius of the region used for calculation
+ * @return uniqure_ptr to the gotten center of mass
+ */
+auto recenter::run( const recenter_method method, const unsigned int& partNum,
+                    const double* coordinate, const double* mass, const double* potential,
+                    const double rangeSize ) -> unique_ptr< double[] >
 {
-    ;
+    switch ( method )
+    {
+    case recenter_method::COM:
+        return center_of_mass( mass, coordinate, partNum, rangeSize );
+        break;
+    case recenter_method::MBP:
+        return most_bound_particle( potential, coordinate, partNum );
+        break;
+    default:
+        ERROR( "Get into an unexpected branch!" );
+        return nullptr;
+    }
 }
 
+/**
+ * @brief Calculate the center of mass in specified range.
+ *
+ * @param mass masses of particles
+ * @param coordinates coordinates of particles
+ * @param partNum particle number
+ * @param rangeSize enclose radius of the chosen range
+ * @return uniqure_ptr to the gotten center of mass
+ */
 auto recenter::center_of_mass( const double* mass, const double* coordinates,
                                const unsigned int& partNum,
                                const double        rangeSize ) -> unique_ptr< double[] >
@@ -57,6 +90,14 @@ auto recenter::center_of_mass( const double* mass, const double* coordinates,
     return com;
 }
 
+/**
+ * @brief Calculate the position of the most bound particle.
+ *
+ * @param potential potential of particles
+ * @param coordinates coordinates of particles
+ * @param partNum particle number
+ * @return the coordinates of the most bound particle
+ */
 auto recenter::most_bound_particle( const double* potential, const double* coordinates,
                                     const unsigned int& partNum ) -> std::unique_ptr< double[] >
 {

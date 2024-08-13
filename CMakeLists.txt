@@ -105,6 +105,11 @@ target_link_libraries(recenter PUBLIC MPI::MPI_CXX)
 target_link_options(recenter PRIVATE ${sanitizer_flags})
 add_test(NAME recenter COMMAND mpirun -np 4 $<TARGET_FILE:recenter>)
 
+add_executable(barinfo ./validation/test_barinfo.cpp ./src/barinfo.cpp)
+target_link_libraries(barinfo PUBLIC MPI::MPI_CXX)
+target_link_options(barinfo PRIVATE ${sanitizer_flags})
+add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>)
+
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "~/.local" CACHE PATH "install prefix" FORCE)

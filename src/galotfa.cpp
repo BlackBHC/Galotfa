@@ -1,6 +1,6 @@
 #include "../include/galotfa.hpp"
 /**
- * @brief api for n body simulation, without sub-grid physics parameters and redshifts.
+ * @brief API for n body simulation, without sub-grid physics parameters and redshifts.
  *
  * @param currentTime simulation time, in simulation unit.
  * @param particleNumber number of particles in this mpi.

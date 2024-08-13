@@ -1,6 +1,6 @@
 /**
  * @file coordinate.hpp
- * @brief define some functions of coordinate transformation.
+ * @brief Some functions of coordinate transformation.
  */
 
 #ifndef COORDINATES_HEADER

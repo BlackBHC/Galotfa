@@ -31,7 +31,7 @@ recenter.method = "com"
 # Enclose radius of the sphere used in center of mass calculation, a
 # value closing to twice disk/galactic radius is recommended.
 recenter.r = 10
-# Initial guess of the center position, aiming to avoid the system 
+# Initial guess of the center position, aiming to avoid the system
 # center is always outside of the box.
 recenter.iguess = [0, 0, 0]
 # The coordinate frame used for analyses.
