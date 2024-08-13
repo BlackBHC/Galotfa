@@ -21,8 +21,8 @@ using namespace std;
 /**
  * @brief Make backups of previous on-the-fly logs under the same directory.
  *
- * @param dir: path the output, for which do not add a "/" at the end
- * @param filename: hdf5 filename of the logs
+ * @param dir path the output, for which do not add a "/" at the end
+ * @param filename hdf5 filename of the logs
  */
 void Backup_Old_Logs_If_Necessary( const string& dir, const string& filename )
 {
@@ -68,17 +68,6 @@ h5_out::h5_out( const string& dir, const string& filename )
 
 h5_out::~h5_out()
 {
-    // First: close the datasets
-    /* for ( auto groupDatasetPair = datasetPtrs.begin(); groupDatasetPair != datasetPtrs.end();
-          ++groupDatasetPair )
-    {
-        for ( auto datasetPair = groupDatasetPair->second.begin();
-              datasetPair != groupDatasetPair->second.end(); ++datasetPair )
-        {
-            delete datasetPair->second;
-            datasetPair->second = nullptr;
-        }
-    } */
     datasetPtrs.clear();
 
     // Second: close the groups
@@ -95,9 +84,9 @@ h5_out::~h5_out()
 /**
  * @brief Create the dataset in a group, based on the give parameters.
  *
- * @param datasetName: string to the name of the dataset, including no "/"
- * @param groupName: similar to datasetName but for the group name.
- * @param sizeInEachDim: the length of each dimension in the dataset, except the first extensible
+ * @param datasetName string to the name of the dataset, including no "/"
+ * @param groupName similar to datasetName but for the group name.
+ * @param sizeInEachDim the length of each dimension in the dataset, except the first extensible
  * one.
  * @param dataType
  * @return
@@ -240,7 +229,7 @@ dataset_handle::dataset_handle( hid_t& parent, const string& datasetName,
  *
  * @param datasetName
  * @param groupName
- * @param dataBuffer: pointer to the data buffer.
+ * @param dataBuffer pointer to the data buffer.
  * @return
  */
 auto h5_out::flush_single_block( const string& groupName, const string& datasetName,
@@ -292,7 +281,7 @@ dataset_handle::~dataset_handle()
 /**
  * @brief A wrapper to log the analyses results to the log file, without boundary check.
  *
- * @param dataBuffer: pointer to the data buffer, which includes the data in a single-step.
+ * @param dataBuffer pointer to the data buffer, which includes the data in a single-step.
  * @return
  */
 auto dataset_handle::flush_single_block( const void* dataBuffer ) -> int

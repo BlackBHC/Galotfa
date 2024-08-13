@@ -5,9 +5,9 @@
 using namespace std;
 
 /**
- * @brief transform the coordinate from cartesian to spherical.
+ * @brief Transform the coordinate from cartesian to spherical.
  *
- * @param data: double[3] for x, y, z to r, theta, phi
+ * @param data double[3] for x, y, z to r, theta, phi
  */
 void coordinate_transformer::car2sph( double data[ 3 ] )
 {
@@ -38,9 +38,9 @@ void coordinate_transformer::car2sph( double data[ 3 ] )
 }
 
 /**
- * @brief transform the coordinate from spherical to cartesian.
+ * @brief Transform the coordinate from spherical to cartesian.
  *
- * @param data: double[3] for r, theta (latitude), phi (longitude) to x, y, z
+ * @param data double[3] for r, theta (latitude), phi (longitude) to x, y, z
  */
 void coordinate_transformer::sph2car( double data[ 3 ] )
 {
@@ -56,9 +56,9 @@ void coordinate_transformer::sph2car( double data[ 3 ] )
 }
 
 /**
- * @brief transform the coordinate from cartesian to cylindrical.
+ * @brief Transform the coordinate from cartesian to cylindrical.
  *
- * @param data: double[3] for x, y, z to R, phi, z
+ * @param data double[3] for x, y, z to R, phi, z
  */
 void coordinate_transformer::car2cyl( double data[ 3 ] )
 {
@@ -72,9 +72,9 @@ void coordinate_transformer::car2cyl( double data[ 3 ] )
 }
 
 /**
- * @brief transform the coordinate from cylindrical to cartesian.
+ * @brief Transform the coordinate from cylindrical to cartesian.
  *
- * @param data: double[3] for R, phi, z to x, y, z
+ * @param data double[3] for R, phi, z to x, y, z
  */
 void coordinate_transformer::cyl2car( double data[ 3 ] )
 {
@@ -88,9 +88,9 @@ void coordinate_transformer::cyl2car( double data[ 3 ] )
 }
 
 /**
- * @brief transform the coordinate from cartesian to cylindrical.
+ * @brief Transform the coordinate from cartesian to cylindrical.
  *
- * @param data: double[3] for r, theta, phi to R, phi, z
+ * @param data double[3] for r, theta, phi to R, phi, z
  */
 void coordinate_transformer::sph2cyl( double data[ 3 ] )
 {
@@ -106,9 +106,9 @@ void coordinate_transformer::sph2cyl( double data[ 3 ] )
 }
 
 /**
- * @brief transform the coordinate from cylindrical to cartesian.
+ * @brief Transform the coordinate from cylindrical to cartesian.
  *
- * @param data: double[3] for R, phi, z to r, theta, phi
+ * @param data double[3] for R, phi, z to r, theta, phi
  */
 void coordinate_transformer::cyl2sph( double data[ 3 ] )
 {
@@ -130,10 +130,10 @@ void coordinate_transformer::cyl2sph( double data[ 3 ] )
 /**
  * @brief Transform the array of coordinates into other frame.
  *
- * @param num: array length (array is <num>x3)
- * @param data: the pointer to the array
- * @param from: original frame type
- * @param to: target frame type
+ * @param num array length (array is <num>x3)
+ * @param data the pointer to the array
+ * @param from original frame type
+ * @param to target frame type
  */
 void coordinate_transformer::transform( const unsigned int& num, double* data,
                                         const coordate_type& from, const coordate_type& to )

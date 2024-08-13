@@ -10,18 +10,18 @@ using namespace std;
 /**
  * @brief 2D binning statistics with chosen method, support count, sum, mean and standard deviation.
  *
- * @param xData: pointing to the first coordinates
- * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
- * @param xUpperBound: the upper exclusive limit of the first coordinates to be analyzed
- * @param xBinNum: binnum of the first coordinate
- * @param yData: pointing to the second coordinates
- * @param yLowerBound: the lower inclusive limit of the second coordinates to be analyzed
- * @param yUpperBound: the upper exclusive limit of the second coordinates to be analyzed
- * @param yBinNum: binnum of the second coordinate
- * @param method: statistic method
- * @param dataNum: number of data points to be analyzed
- * @param data: pointing to target data points
- * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
+ * @param xData pointing to the first coordinates
+ * @param xLowerBound the lower inclusive limit of the first coordinates to be analyzed
+ * @param xUpperBound the upper exclusive limit of the first coordinates to be analyzed
+ * @param xBinNum binnum of the first coordinate
+ * @param yData pointing to the second coordinates
+ * @param yLowerBound the lower inclusive limit of the second coordinates to be analyzed
+ * @param yUpperBound the upper exclusive limit of the second coordinates to be analyzed
+ * @param yBinNum binnum of the second coordinate
+ * @param method statistic method
+ * @param dataNum number of data points to be analyzed
+ * @param data pointing to target data points
+ * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2d( const int mpiRank, const double* xData, const double xLowerBound,
                        const double xUpperBound, const unsigned long& xBinNum, const double* yData,
@@ -57,18 +57,18 @@ auto statistic::bin2d( const int mpiRank, const double* xData, const double xLow
 }
 
 /**
- * @brief 2D binning statistics for count
+ * @brief 2D binning statistics for count.
  *
- * @param xData: pointing to the first coordinates
- * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
- * @param xUpperBound: the upper exclusive limit of the first coordinates to be analyzed
- * @param xBinNum: binnum of the first coordinate
- * @param yData: pointing to the second coordinates
- * @param yLowerBound: the lower inclusive limit of the second coordinates to be analyzed
- * @param yUpperBound: the upper exclusive limit of the second coordinates to be analyzed
- * @param yBinNum: binnum of the second coordinate
- * @param dataNum: number of data points to be analyzed
- * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
+ * @param xData pointing to the first coordinates
+ * @param xLowerBound the lower inclusive limit of the first coordinates to be analyzed
+ * @param xUpperBound the upper exclusive limit of the first coordinates to be analyzed
+ * @param xBinNum binnum of the first coordinate
+ * @param yData pointing to the second coordinates
+ * @param yLowerBound the lower inclusive limit of the second coordinates to be analyzed
+ * @param yUpperBound the upper exclusive limit of the second coordinates to be analyzed
+ * @param yBinNum binnum of the second coordinate
+ * @param dataNum number of data points to be analyzed
+ * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dcount( const int mpiRank, const double* xData, const double xLowerBound,
                             const double xUpperBound, const unsigned long& xBinNum,
@@ -113,19 +113,19 @@ auto statistic::bin2dcount( const int mpiRank, const double* xData, const double
 }
 
 /**
- * @brief 2D binning statistics for summation
+ * @brief 2D binning statistics for summation.
  *
- * @param xData: pointing to the first coordinates
- * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
- * @param xUpperBound: the upper exclusive limit of the first coordinates to be analyzed
- * @param xBinNum: binnum of the first coordinate
- * @param yData: pointing to the second coordinates
- * @param yLowerBound: the lower inclusive limit of the second coordinates to be analyzed
- * @param yUpperBound: the upper exclusive limit of the second coordinates to be analyzed
- * @param yBinNum: binnum of the second coordinate
- * @param dataNum: number of data points to be analyzed
- * @param data: pointing to target data points
- * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
+ * @param xData pointing to the first coordinates
+ * @param xLowerBound the lower inclusive limit of the first coordinates to be analyzed
+ * @param xUpperBound the upper exclusive limit of the first coordinates to be analyzed
+ * @param xBinNum binnum of the first coordinate
+ * @param yData pointing to the second coordinates
+ * @param yLowerBound the lower inclusive limit of the second coordinates to be analyzed
+ * @param yUpperBound the upper exclusive limit of the second coordinates to be analyzed
+ * @param yBinNum binnum of the second coordinate
+ * @param dataNum number of data points to be analyzed
+ * @param data pointing to target data points
+ * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dsum( const int mpiRank, const double* xData, const double xLowerBound,
                           const double xUpperBound, const unsigned long& xBinNum,
@@ -170,19 +170,19 @@ auto statistic::bin2dsum( const int mpiRank, const double* xData, const double x
 }
 
 /**
- * @brief 2D binning statistics for mean values
+ * @brief 2D binning statistics for mean values.
  *
- * @param xData: pointing to the first coordinates
- * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
- * @param xUpperBound: the upper exclusive limit of the first coordinates to be analyzed
- * @param xBinNum: binnum of the first coordinate
- * @param yData: pointing to the second coordinates
- * @param yLowerBound: the lower inclusive limit of the second coordinates to be analyzed
- * @param yUpperBound: the upper exclusive limit of the second coordinates to be analyzed
- * @param yBinNum: binnum of the second coordinate
- * @param dataNum: number of data points to be analyzed
- * @param data: pointing to target data points
- * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
+ * @param xData pointing to the first coordinates
+ * @param xLowerBound the lower inclusive limit of the first coordinates to be analyzed
+ * @param xUpperBound the upper exclusive limit of the first coordinates to be analyzed
+ * @param xBinNum binnum of the first coordinate
+ * @param yData pointing to the second coordinates
+ * @param yLowerBound the lower inclusive limit of the second coordinates to be analyzed
+ * @param yUpperBound the upper exclusive limit of the second coordinates to be analyzed
+ * @param yBinNum binnum of the second coordinate
+ * @param dataNum number of data points to be analyzed
+ * @param data pointing to target data points
+ * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dmean( const int mpiRank, const double* xData, const double xLowerBound,
                            const double xUpperBound, const unsigned long& xBinNum,
@@ -242,17 +242,17 @@ auto statistic::bin2dmean( const int mpiRank, const double* xData, const double 
 /**
  * @brief 2D binning statistics for standard deviation, without Bessel correction.
  *
- * @param xData: pointing to the first coordinates
- * @param xLowerBound: the lower inclusive limit of the first coordinates to be analyzed
- * @param xUpperBound: the upper exclusive limit of the first coordinates to be analyzed
- * @param xBinNum: binnum of the first coordinate
- * @param yData: pointing to the second coordinates
- * @param yLowerBound: the lower inclusive limit of the second coordinates to be analyzed
- * @param yUpperBound: the upper exclusive limit of the second coordinates to be analyzed
- * @param yBinNum: binnum of the second coordinate
- * @param dataNum: number of data points to be analyzed
- * @param data: pointing to target data points
- * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order.
+ * @param xData pointing to the first coordinates
+ * @param xLowerBound the lower inclusive limit of the first coordinates to be analyzed
+ * @param xUpperBound the upper exclusive limit of the first coordinates to be analyzed
+ * @param xBinNum binnum of the first coordinate
+ * @param yData pointing to the second coordinates
+ * @param yLowerBound the lower inclusive limit of the second coordinates to be analyzed
+ * @param yUpperBound the upper exclusive limit of the second coordinates to be analyzed
+ * @param yBinNum binnum of the second coordinate
+ * @param dataNum number of data points to be analyzed
+ * @param data pointing to target data points
+ * @return a unique_ptr pointing to the 1D array of the 2D resutls, in row-major order
  */
 auto statistic::bin2dstd( const double* xData, const double xLowerBound, const double xUpperBound,
                           const unsigned long& xBinNum, const double* yData,
@@ -327,10 +327,10 @@ auto statistic::bin2dstd( const double* xData, const double xLowerBound, const d
  * @brief function that determines the bin a data point should be located, for evenly distributed
  * bins only and there is no boundary check!
  *
- * @param lowerBound: the lower boundary of the data range.
- * @param upperBound: the upper boundary of the data range.
- * @param binNum: the number of bins.
- * @param value: the value of the data point.
+ * @param lowerBound the lower boundary of the data range
+ * @param upperBound the upper boundary of the data range
+ * @param binNum the number of bins
+ * @param value the value of the data point
  * @return
  */
 auto statistic::find_index( double lowerBound, double upperBound, const unsigned long& binNum,
@@ -342,14 +342,14 @@ auto statistic::find_index( double lowerBound, double upperBound, const unsigned
 /**
  * @brief Similar to bin2d but for 1D case.
  *
- * @param coord: pointing to the coordinates
- * @param lowerBound: the lower inclusive limit of the first coordinates to be analyzed
- * @param upperBound: the upper exclusive limit of the first coordinates to be analyzed
- * @param binNum: binnum of the first coordinate
- * @param method: statistic method
- * @param dataNum: number of data points to be analyzed
- * @param data: pointing to target data points
- * @return a unique_ptr pointing to the 1D array of resutls.
+ * @param coord pointing to the coordinates
+ * @param lowerBound the lower inclusive limit of the first coordinates to be analyzed
+ * @param upperBound the upper exclusive limit of the first coordinates to be analyzed
+ * @param binNum binnum of the first coordinate
+ * @param method statistic method
+ * @param dataNum number of data points to be analyzed
+ * @param data pointing to target data points
+ * @return a unique_ptr pointing to the 1D array of resutls
  */
 auto statistic::bin1d( const int mpiRank, const double* coord, const double lowerBound,
                        const double upperBound, const unsigned long& binNum,
@@ -380,7 +380,7 @@ auto statistic::bin1d( const int mpiRank, const double* coord, const double lowe
 }
 
 /**
- * @brief similar to bin2dcount but for 1D case.
+ * @brief Similar to bin2dcount but for 1D case.
  */
 auto statistic::bin1dcount( const int mpiRank, const double* coord, const double lowerBound,
                             const double upperBound, const unsigned long& binNum,
@@ -418,7 +418,7 @@ auto statistic::bin1dcount( const int mpiRank, const double* coord, const double
 }
 
 /**
- * @brief similar to bin2dsum but for 1D case.
+ * @brief Similar to bin2dsum but for 1D case.
  */
 auto statistic::bin1dsum( const int mpiRank, const double* coord, const double lowerBound,
                           const double upperBound, const unsigned long& binNum,
@@ -457,7 +457,7 @@ auto statistic::bin1dsum( const int mpiRank, const double* coord, const double l
 }
 
 /**
- * @brief similar to bin2dmean but for 1D case.
+ * @brief Similar to bin2dmean but for 1D case.
  */
 auto statistic::bin1dmean( const int mpiRank, const double* coord, const double lowerBound,
                            const double upperBound, const unsigned long& binNum,
@@ -508,7 +508,7 @@ auto statistic::bin1dmean( const int mpiRank, const double* coord, const double 
 }
 
 /**
- * @brief similar to bin2dstd but for 1D case.
+ * @brief Similar to bin2dstd but for 1D case.
  */
 auto statistic::bin1dstd( const double* coord, const double lowerBound, const double upperBound,
                           const unsigned long& binNum, const unsigned long& dataNum,

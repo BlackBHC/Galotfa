@@ -13,9 +13,18 @@ using namespace std;
 
 void recenter::run()
 {
-    ;
+    // TODO:
 }
 
+/**
+ * @brief Calculate the center of mass in specified range.
+ *
+ * @param mass masses of particles
+ * @param coordinates coordinates of particles
+ * @param partNum particle number
+ * @param rangeSize enclose radius of the chosen range
+ * @return uniqure_ptr to the gotton center of mass
+ */
 auto recenter::center_of_mass( const double* mass, const double* coordinates,
                                const unsigned int& partNum,
                                const double        rangeSize ) -> unique_ptr< double[] >
@@ -57,6 +66,14 @@ auto recenter::center_of_mass( const double* mass, const double* coordinates,
     return com;
 }
 
+/**
+ * @brief Calculate the position of the most bound particle.
+ *
+ * @param potential potential of particles
+ * @param coordinates coordinates of particles
+ * @param partNum particle number
+ * @return the coordinates of the most bound particle
+ */
 auto recenter::most_bound_particle( const double* potential, const double* coordinates,
                                     const unsigned int& partNum ) -> std::unique_ptr< double[] >
 {

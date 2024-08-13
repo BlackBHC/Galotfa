@@ -8,9 +8,9 @@
 /**
  * @brief Calculate the eigenvalues and eigenvectors of a 3x3 symmetric marix
  *
- * @paramin matrixData: 1D array of the 3x3 matrix data, in row-major order
- * @paramout eigenValues: the eigenvalues of the given array, sorted by their absolute value.
- * @param eigenVectors: 1D array of the 3x3 eigenmatrix of the corresponding eigenvectors, in
+ * @paramin matrixData 1D array of the 3x3 matrix data, in row-major order
+ * @paramout eigenValues the eigenvalues of the given array, sorted by their absolute value.
+ * @param eigenVectors 1D array of the 3x3 eigenmatrix of the corresponding eigenvectors, in
  * row-major order and each column is an eigenvector.
  * @return
  */
