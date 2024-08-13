@@ -101,7 +101,7 @@ idfile = "./idlists.txt"
 random.enable = false
 # The array of particle types for random selection.
 random.ids = [1]
-# The fraction to be randomly selected, must be in [0, 1]
+# The fraction to be randomly selected, must be in (0, 1]
 random.frac = 0.05
 # The component used for recenter and alignment during orbital log,
 # which is needed only when recenter.enable=true or align=true.
