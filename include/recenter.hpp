@@ -17,7 +17,10 @@ enum class recenter_method : std::uint8_t { COM = 0, MBP = 1 };
 class recenter
 {
 public:
-    static void run();
+    static auto run( const recenter_method method, const unsigned int& partNum,
+                     const double* coordinate = nullptr, const double* mass = nullptr,
+                     const double* potential = nullptr,
+                     const double  rangeSize = -1 ) -> std::unique_ptr< double[] >;
 
 #ifdef DEBUG
 public:
