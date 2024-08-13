@@ -6,6 +6,11 @@
 #define SELECTOR_HEADER
 #include <string>
 #include <vector>
-auto id_selector( const std::vector< int >& raw, const double fraction ) -> std::vector< int >;
-auto id_reader( const std::string& idFilename ) -> std::vector< int >;
+class id_organizer
+{
+public:
+    static auto select( const std::vector< int >& raw,
+                        const double              fraction ) -> std::vector< int >;
+    static auto read( const std::string& idFilename ) -> std::vector< int >;
+};
 #endif

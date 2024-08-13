@@ -18,7 +18,7 @@ using namespace std;
  * @param fraction fraction
  * @return a vector<unsigned int> of the selected id list
  */
-auto id_selector( const vector< int >& raw, const double fraction ) -> vector< int >
+auto id_organizer::select( const vector< int >& raw, const double fraction ) -> vector< int >
 {
     if ( fraction <= 0 or fraction > 1 )
     {
@@ -42,7 +42,7 @@ auto id_selector( const vector< int >& raw, const double fraction ) -> vector< i
  * @param idFilename filename of the id list file (in ASCII txt format)
  * @return std::vector<int> of the ids.
  */
-auto id_reader( const string& idFilename ) -> vector< int >
+auto id_organizer::read( const string& idFilename ) -> vector< int >
 {
     // check the availability of the file
     if ( access( idFilename.c_str(), F_OK ) != 0 )
