@@ -5,6 +5,9 @@
 
 #ifndef BARINFO_HEADER
 #define BARINFO_HEADER
+
+namespace otf {
+
 /**
  * @class bar_info
  * @brief A0, A2, Sbar, Sbuckle, bar length (to be implemented), bar ellipticity (to be implemented)
@@ -19,4 +22,6 @@ public:
     static auto Sbuckle( unsigned int partNum, const double* mass, const double* phi,
                          const double* zed ) -> double;
 };
+
+}  // namespace otf
 #endif

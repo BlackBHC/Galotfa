@@ -8,6 +8,9 @@
 #include "../include/para.hpp"
 #include <memory>
 #include <string_view>
+
+namespace otf {
+
 /**
  * @class monitor
  * @brief The main server of the on-the-fly analysis, which organize the other modules to work
@@ -37,4 +40,6 @@ private:
     void                            bar_info();
     void                            image();
 };
+
+}  // namespace otf
 #endif

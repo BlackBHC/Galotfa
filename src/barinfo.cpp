@@ -3,6 +3,8 @@
 #include <mpi.h>
 using namespace std;
 
+namespace otf {
+
 /**
  * @brief Calculate the A0 Fourier coefficient
  *
@@ -82,3 +84,5 @@ auto bar_info::Sbuckle( const unsigned int partNum, const double* mass, const do
     MPI_Allreduce( MPI_IN_PLACE, &numeratorIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     return sqrt( numeratorRe * numeratorRe + numeratorIm * numeratorIm ) / A0value;
 }
+
+}  // namespace otf

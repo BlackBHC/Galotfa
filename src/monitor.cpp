@@ -11,6 +11,8 @@
 #include <memory>
 using namespace std;
 
+namespace otf {
+
 monitor::monitor( const std::string_view& tomlParaFile )
     : mpiRank( -1 ), stepCounter( 0 ), mpiInitialzedByMonitor( false ),
       para( make_unique< runtime_para >( tomlParaFile ) )
@@ -38,3 +40,5 @@ monitor::~monitor()
         MPI_Finalize();
     }
 }
+
+}  // namespace otf

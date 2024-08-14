@@ -9,22 +9,10 @@
 #include "recenter.hpp"
 #include <cstdint>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
-/**
- * @class runtime_para
- * @brief Container of the runtime parameter, designed to be work in each mpi rank.
- *
- */
-class runtime_para
-{
-public:
-    runtime_para( const std::string_view& tomlParaFile );
-    toml::table paraTable;
-
-private:
-    void read_one_by_one();
-};
+namespace otf {
 
 /**
  * @class recenter_para
@@ -33,13 +21,10 @@ private:
  */
 struct recenter_para
 {
-    bool   enable;
-    double radius;
-    double initialGuess[ 3 ];
-
-    // From include/recenter.hpp:
-    // enum class recenter_method : std::uint8_t { COM = 0, MBP = 1 };
-    recenter_method method;
+    bool                 enable;
+    double               radius;
+    double               initialGuess[ 3 ];
+    otf::recenter_method method;
 };
 
 /**
@@ -143,4 +128,22 @@ public:
     orbit_random_selection_para random;
     orbit_recenter_para         recenter;
 };
+
+/**
+ * @class runtime_para
+ * @brief Container of the runtime parameter, designed to be work in each mpi rank.
+ *
+ */
+class runtime_para
+{
+public:
+    runtime_para( const std::string_view& tomlParaFile );
+    std::unordered_map< std::string_view, otf::component > comps;
+    otf::orbit                                             orbit;
+
+private:
+    void read_one_by_one();
+};
+
+}  // namespace otf
 #endif

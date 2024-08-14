@@ -3,11 +3,11 @@
 #include <string_view>
 using namespace std;
 
+namespace otf {
 
 runtime_para::runtime_para( const std::string_view& tomlParaFile )
-    : paraTable( toml::parse_file( tomlParaFile ) )
 {
-    ;
+    toml::table paraTable = toml::parse_file( tomlParaFile );
 }
 
 void runtime_para::read_one_by_one()
@@ -246,3 +246,5 @@ orbit::orbit( toml::table& para )
             recenter.initialGuess[ i ] = *iguess[ i ].value< double >();
     }
 }
+
+}  // namespace otf

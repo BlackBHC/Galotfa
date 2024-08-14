@@ -6,6 +6,8 @@
 #include <mpi.h>
 using namespace std;
 
+namespace otf {
+
 // Calculate the norm of the coordinate 1x3 vector.
 #define NORM( vec3ptr )                                                             \
     sqrt( *( vec3ptr ) * *( vec3ptr ) + *( ( vec3ptr ) + 1 ) * *( ( vec3ptr ) + 1 ) \
@@ -126,3 +128,5 @@ auto recenter::most_bound_particle( const double* potential, const double* coord
 
     return minPotPosition;
 }
+
+}  // namespace otf

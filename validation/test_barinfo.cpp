@@ -11,6 +11,7 @@
 #include <cstring>
 #include <mpi.h>
 using namespace std;
+using namespace otf;
 #define THRESHOLD 1e-6  // the equal threshold of floating numbers
 
 int main( int argc, char* argv[] )
