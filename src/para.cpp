@@ -65,70 +65,92 @@ component::component( string_view& compName, toml::table& para ) : compName( com
 
     // recenter parameters
     recenter.enable = *compNode[ "recenter" ][ "enable" ].value< bool >();
-    recenter.radius = *compNode[ "recenter" ][ "radius" ].value< bool >();
-    auto str        = *compNode[ "recenter" ][ "method" ].value< string_view >();
-    if ( str == "com" )
+    if ( recenter.enable )
     {
-        recenter.method = recenter_method::COM;
+        recenter.radius = *compNode[ "recenter" ][ "radius" ].value< bool >();
+        auto str        = *compNode[ "recenter" ][ "method" ].value< string_view >();
+        if ( str == "com" )
+        {
+            recenter.method = recenter_method::COM;
+        }
+        else if ( str == "mbp" )
+        {
+            recenter.method = recenter_method::MBP;
+        }
+        else
+        {
+            ERROR( "Get an unknown value for [recenter method] of component [%s]: [%s]",
+                   compName.data(), str.data() );
+            ERROR( "Must be 'com' (for center of mass) or 'mbp' (for most bound particle)." );
+            exit( -1 );
+        }
+        auto iguess = compNode[ "recenter" ][ "iguess" ];
+        for ( auto i = 0; i < 3; ++i )
+            recenter.initialGuess[ i ] = *iguess[ i ].value< double >();
     }
-    else if ( str == "mbp" )
-    {
-        recenter.method = recenter_method::MBP;
-    }
-    else
-    {
-        ERROR( "Get an unknown value for [recenter method] of component [%s]: [%s]",
-               compName.data(), str.data() );
-        ERROR( "Must be 'com' (for center of mass) or 'mbp' (for most bound particle)." );
-        exit( -1 );
-    }
-    auto iguess = compNode[ "recenter" ][ "iguess" ];
-    for ( auto i = 0; i < 3; ++i )
-        recenter.initialGuess[ i ] = *iguess[ i ].value< double >();
 
-
-    // frame
-    str = *compNode[ "frame" ].value< string_view >();
-    if ( str == "cyl" )
-    {
-        frame = coordinate_frame::CYLINDRICAL;
-    }
-    else if ( str == "sph" )
-    {
-        frame = coordinate_frame::SPHERICAL;
-    }
-    else if ( str == "car" )
-    {
-        frame = coordinate_frame::CARTESIAN;
-    }
-    else
-    {
-        ERROR( "Get an unknown value for [coordinate frame] of component [%s]: [%s]",
-               compName.data(), str.data() );
-        ERROR( "Must be one of 'cyl' (for cylindrical), 'car' (for Cartesian), or 'sph' (for "
-               "spherical)." );
-        exit( -1 );
-    }
+    // NOTE: the frame parameter is unused at present
+    //
+    // // frame
+    // auto str = *compNode[ "frame" ].value< string_view >();
+    // if ( str == "cyl" )
+    // {
+    //     frame = coordinate_frame::CYLINDRICAL;
+    // }
+    // else if ( str == "sph" )
+    // {
+    //     frame = coordinate_frame::SPHERICAL;
+    // }
+    // else if ( str == "car" )
+    // {
+    //     frame = coordinate_frame::CARTESIAN;
+    // }
+    // else
+    // {
+    //     ERROR( "Get an unknown value for [coordinate frame] of component [%s]: [%s]",
+    //            compName.data(), str.data() );
+    //     ERROR( "Must be one of 'cyl' (for cylindrical), 'car' (for Cartesian), or 'sph' (for "
+    //            "spherical)." );
+    //     exit( -1 );
+    // }
 
     // align
     align.enable = *compNode[ "align" ][ "enable" ].value< bool >();
-    align.radius = *compNode[ "align" ][ "radius" ].value< double >();
+    if ( align.enable )
+    {
+        align.radius = *compNode[ "align" ][ "radius" ].value< double >();
+    }
 
     // image
-    image.enable     = *compNode[ "image" ][ "enable" ].value< bool >();
-    image.halfLength = *compNode[ "image" ][ "halflength" ].value< double >();
-    image.binNum     = *compNode[ "image" ][ "binnum" ].value< unsigned int >();
+    image.enable = *compNode[ "image" ][ "enable" ].value< bool >();
+    if ( image.enable )
+    {
+        image.halfLength = *compNode[ "image" ][ "halflength" ].value< double >();
+        image.binNum     = *compNode[ "image" ][ "binnum" ].value< unsigned int >();
+    }
 
     // bar info parameters
-    A2.enable       = *compNode[ "A2" ][ "enable" ].value< bool >();
-    A2.rmin         = *compNode[ "A2" ][ "rmin" ].value< double >();
-    A2.rmax         = *compNode[ "A2" ][ "rmax" ].value< double >();
+    // A2
+    A2.enable = *compNode[ "A2" ][ "enable" ].value< bool >();
+    if ( A2.enable )
+    {
+        A2.rmin = *compNode[ "A2" ][ "rmin" ].value< double >();
+        A2.rmax = *compNode[ "A2" ][ "rmax" ].value< double >();
+    }
+    // bar angle
     barAngle.enable = *compNode[ "barangle" ][ "enable" ].value< bool >();
-    barAngle.rmin   = *compNode[ "barangle" ][ "rmin" ].value< double >();
-    barAngle.rmax   = *compNode[ "barangle" ][ "rmax" ].value< double >();
-    buckle.enable   = *compNode[ "buckle" ][ "enable" ].value< bool >();
-    buckle.rmin     = *compNode[ "buckle" ][ "rmin" ].value< double >();
-    buckle.rmax     = *compNode[ "buckle" ][ "rmax" ].value< double >();
+    if ( barAngle.enable )
+    {
+        barAngle.rmin = *compNode[ "barangle" ][ "rmin" ].value< double >();
+        barAngle.rmax = *compNode[ "barangle" ][ "rmax" ].value< double >();
+    }
+    // buckling strength
+    buckle.enable = *compNode[ "buckle" ][ "enable" ].value< bool >();
+    if ( buckle.enable )
+    {
+        buckle.rmin = *compNode[ "buckle" ][ "rmin" ].value< double >();
+        buckle.rmax = *compNode[ "buckle" ][ "rmax" ].value< double >();
+    }
 }
 
 orbit::orbit( toml::table& para )
