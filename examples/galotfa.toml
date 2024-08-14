@@ -92,6 +92,7 @@ buckle.rmax = 10
 enable = true
 ## Two ways to specify which particles to be logged.
 # The text file name that specifies the particle ids to be logged.
+# In this file, each row is a legal value of a particle id.
 idfile = "./idlists.txt"
 # Another way to specify the logged particles.
 # Whether log the orbits of particles that are randomly selected.

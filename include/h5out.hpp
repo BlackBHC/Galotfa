@@ -34,6 +34,7 @@ public:
 #else
 private:
 #endif
+    // TODO: move to string_view
     std::string datasetName;
     hid_t       singleBlockSpace = H5I_INVALID_HID;  // memory space id for single step
     hid_t       dataset          = H5I_INVALID_HID;
