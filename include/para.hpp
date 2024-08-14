@@ -82,11 +82,21 @@ struct basic_bar_para
  * @brief The parameters used for random selection of particle ids.
  *
  */
-struct id_random_selection_para
+struct orbit_random_selection_para
 {
-    bool                        enable;
-    double                      fraction;
-    std::vector< unsigned int > partTypes;
+    bool   enable;
+    double fraction;
+};
+
+/**
+ * @class orbit_recenter_para
+ * @brief The parameters used for recenter in orbital log.
+ *
+ */
+struct orbit_recenter_para : recenter_para
+{
+    // the anchor type of particles used for recenter
+    std::vector< unsigned int > anchorIds;
 };
 
 enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESIAN };
@@ -100,18 +110,15 @@ class component
 {
 public:
     component( std::string_view& compName, toml::table& para );
-    auto operator[]( std::string_view& key );
-
-private:
     std::string_view compName;
     unsigned int     period;
-    recenter_para    recenterPara;
+    recenter_para    recenter;
     coordinate_frame frame;
-    align_para       alignPara;
-    image_para       imagePara;
-    basic_bar_para   A2Para;
-    basic_bar_para   barAnglePara;
-    basic_bar_para   bucklePara;
+    align_para       align;
+    image_para       image;
+    basic_bar_para   A2;
+    basic_bar_para   barAngle;
+    basic_bar_para   buckle;
 };
 
 /**
@@ -121,7 +128,19 @@ private:
  */
 class orbit
 {
+private:
+    // method for id log: TXTFILE to use a text file of id list, and RANDOM for random selection
+    // according to specified parameters.
+    enum class log_method : std::uint8_t { TXTFILE = 0, RANDOM };
+
 public:
-    unsigned int period;
+    orbit( toml::table& para );
+    bool                        enable;
+    unsigned int                period;
+    std::vector< unsigned int > logTypes;
+    log_method                  method;
+    std::string_view            idfile;
+    orbit_random_selection_para random;
+    orbit_recenter_para         recenter;
 };
 #endif

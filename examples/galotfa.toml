@@ -13,7 +13,6 @@ component1 = [1] # the ids of particle types in the component1
 # You need to specify the following parameters for each component you
 # defined in [components]
 [component1]
-##### Global parameters
 # The period of analyses, in units of syncrhonized time steps in the
 # simulation.
 period = 10
@@ -78,7 +77,7 @@ barangle.rmin = 0.1
 # Maximal radius for bar angle calculation
 barangle.rmax = 10
 # Parameters for buckling strength calculation.
-# Sbuckle:=|\frac{ \sum_k z_k * m_k * exp(2i * phi_k) }{ \sum_k m_k }|,
+# Sbuckle:=|\frac{\sum_k z_k * m_k * exp(2i * phi_k)}{\sum_k m_k}|,
 # where the subscript k is over particles in curtain radial range.
 # Again, the program assumes that the bar is in the X-Y plane.
 buckle.enable = true # if true, require the following 2 parameters
@@ -91,25 +90,27 @@ buckle.rmax = 10
 [orbit]
 # Whether enable the log of orbits.
 enable = true
-## Two ways to specify which particles to be logged.
+# The period of orbital logs, in units of syncrhonized time steps in
+# the simulation.
+period = 10
+# The array of particle types to be logged.
+logtypes = [2]
+# Two ways to specify which particles to be logged: "txtfile" for txt
+# file or "random" for random selection
+method = "txtfile"
 # The text file name that specifies the particle ids to be logged.
 # In this file, each row is a legal value of a particle id.
 idfile = "./idlists.txt"
 # Another way to specify the logged particles.
 # Whether log the orbits of particles that are randomly selected.
-# Note: this is mutually exclusive with the filename option, and if
-# enable=true, at least one of filename or random selection should be
-# specified.
 random.enable = false
-# The array of particle types for random selection.
-random.types = [1]
 # The fraction to be randomly selected, must be in (0, 1]
 random.frac = 0.05
 # The component used for recenter and alignment during orbital log,
 # which is needed only when recenter.enable=true or align=true.
-anchorids = [1]
 # Whether recenter the system before output the orbits or not.
 recenter.enable = true
 recenter.method = "mbp"
 recenter.radius = 10
 recenter.iguess = [0, 0, 0]
+recenter.anchorids = [2]
