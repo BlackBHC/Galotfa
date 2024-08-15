@@ -86,7 +86,7 @@ enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESI
 struct component
 {
     component( std::string_view& compName, toml::table& compNodeTable );
-    std::string_view            compName;
+    std::string                 compName;
     std::vector< unsigned int > types;
     unsigned int                period;
     recenter_para               recenter;
@@ -134,8 +134,8 @@ public:
     unsigned int maxIter;
     double       epsilon;
 
-    std::unordered_map< std::string_view, std::unique_ptr< otf::component > > comps;
-    std::unique_ptr< otf::orbit >                                             orbit;
+    std::unordered_map< std::string, std::unique_ptr< otf::component > > comps;
+    std::unique_ptr< otf::orbit >                                        orbit;
 };
 
 }  // namespace otf

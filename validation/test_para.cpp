@@ -76,6 +76,72 @@ int main()
         INFO( "%d ", id );
     }
 
+    INFO( "COMPONENT PARAMETERS" );
+    for ( auto& comp : para.comps )
+    {
+        INFO( "Get an component: %s", comp.first.c_str() );
+        INFO( "Analysis period of this component: %d", comp.second->period );
+        INFO( "Particle types in this component:" );
+        for ( auto& id : comp.second->types )
+        {
+            INFO( "%d ", id );
+        }
+        if ( comp.second->recenter.enable )
+        {
+            INFO( "Recenter of this component is enabled." );
+        }
+        string method = "";
+        switch ( comp.second->recenter.method )
+        {
+        case otf::recenter_method::COM:
+            method = "center of mass";
+            break;
+        case otf::recenter_method::MBP:
+            method = "most bound particle";
+            break;
+        default:
+            ERROR( "Get into an unexpected branch!" );
+        }
+        INFO( "Potential method for recenter: %s.", method.c_str() );
+        INFO( "Potential enclosed radius for recenter: %g.", comp.second->recenter.radius );
+        INFO( "Initial guess of the recenter:" );
+        for ( auto& coord : para.orbit->recenter.initialGuess )
+        {
+            INFO( "%g ", coord );
+        }
+        if ( comp.second->align.enable )
+        {
+            INFO( "Alignment of this component is enabled." );
+        }
+        INFO( "Initial guess of the recenter:" );
+        INFO( "Potential enclosed radius for align: %g.", comp.second->align.radius );
+        if ( comp.second->image.enable )
+        {
+            INFO( "Image of this component is enabled." );
+        }
+        INFO( "Image half length: %g.", comp.second->image.halfLength );
+        INFO( "Image bin number: %d.", comp.second->image.binNum );
+        if ( comp.second->A2.enable )
+        {
+            INFO( "A2 of this component is enabled." );
+        }
+        INFO( "A2 rmin : %g.", comp.second->A2.rmin );
+        INFO( "A2 rmax : %g.", comp.second->A2.rmax );
+
+        if ( comp.second->barAngle.enable )
+        {
+            INFO( "barAngle of this component is enabled." );
+        }
+        INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
+        INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
+
+        if ( comp.second->buckle.enable )
+        {
+            INFO( "buckle of this component is enabled." );
+        }
+        INFO( "buckle rmin : %g.", comp.second->buckle.rmin );
+        INFO( "buckle rmax : %g.", comp.second->buckle.rmax );
+    }
 
     return 0;
 }
