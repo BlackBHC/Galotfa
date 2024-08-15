@@ -1,7 +1,7 @@
 #include "../include/para.hpp"
 #include "../include/myprompt.hpp"
-#include "/Users/chenbinhui/codes/galotfa/include/recenter.hpp"
-#include "/Users/chenbinhui/codes/galotfa/include/toml.hpp"
+#include "../include/recenter.hpp"
+#include "../include/toml.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <memory>
