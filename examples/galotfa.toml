@@ -109,10 +109,8 @@ method = "txtfile"
 # In this file, each row is a legal value of a particle id.
 idfile = "./idlists.txt"
 # Another way to specify the logged particles.
-# Whether log the orbits of particles that are randomly selected.
-random.enable = false
 # The fraction to be randomly selected, must be in (0, 1]
-random.frac = 0.05
+fraction = 0.05
 # The component used for recenter and alignment during orbital log,
 # which is needed only when recenter.enable=true or align=true.
 # Whether recenter the system before output the orbits or not.

@@ -66,17 +66,6 @@ struct basic_bar_para
 };
 
 /**
- * @class id_random_selection_para
- * @brief The parameters used for random selection of particle ids.
- *
- */
-struct orbit_random_selection_para
-{
-    bool   enable;
-    double fraction;
-};
-
-/**
  * @class orbit_recenter_para
  * @brief The parameters used for recenter in orbital log.
  *
@@ -116,19 +105,17 @@ struct component
  */
 class orbit
 {
-private:
+public:
+    orbit( toml::table& orbitNodeTable );
     // method for id log: TXTFILE to use a text file of id list, and RANDOM for random selection
     // according to specified parameters.
     enum class log_method : std::uint8_t { TXTFILE = 0, RANDOM };
-
-public:
-    orbit( toml::table& orbitNodeTable );
     bool                        enable;
     unsigned int                period;
     std::vector< unsigned int > logTypes;
     log_method                  method;
-    std::string_view            idfile;
-    orbit_random_selection_para random;
+    std::string                 idfile   = "not used";
+    double                      fraction = -1;
     orbit_recenter_para         recenter;
 };
 
@@ -141,11 +128,11 @@ class runtime_para
 {
 public:
     runtime_para( const std::string_view& tomlParaFile );
-    bool             enableOtf;
-    std::string_view outputDir;
-    std::string_view fileName;
-    unsigned int     maxIter;
-    double           epsilon;
+    bool         enableOtf;
+    std::string  outputDir;
+    std::string  fileName;
+    unsigned int maxIter;
+    double       epsilon;
 
     std::unordered_map< std::string_view, std::unique_ptr< otf::component > > comps;
     std::unique_ptr< otf::orbit >                                             orbit;

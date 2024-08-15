@@ -14,16 +14,16 @@
  * row-major order and each column is an eigenvector.
  * @return
  */
-void eigen::eigens_sym_33( double matrixData[ 9 ], double eigenValues[ 3 ],
-                           double eigenVectors[ 9 ] )
+void eigen::eigens_sym_33( double matrixData[ matrixDim ], double eigenValues[ vecDim ],
+                           double eigenVectors[ matrixDim ] )
 {
-    gsl_matrix_view matrixView = gsl_matrix_view_array( matrixData, 3, 3 );
+    gsl_matrix_view matrixView = gsl_matrix_view_array( matrixData, vecDim, vecDim );
 
     // allocate the eigenvalues and the eigenvectors
-    gsl_vector* eval = gsl_vector_alloc( 3 );
-    gsl_matrix* evec = gsl_matrix_alloc( 3, 3 );
+    gsl_vector* eval = gsl_vector_alloc( vecDim );
+    gsl_matrix* evec = gsl_matrix_alloc( vecDim, vecDim );
 
-    gsl_eigen_symmv_workspace* workSpace = gsl_eigen_symmv_alloc( 3 );
+    gsl_eigen_symmv_workspace* workSpace = gsl_eigen_symmv_alloc( vecDim );
     gsl_eigen_symmv( &matrixView.matrix, eval, evec, workSpace );
     gsl_eigen_symmv_free( workSpace );
 

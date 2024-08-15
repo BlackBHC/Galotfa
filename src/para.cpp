@@ -3,8 +3,8 @@
 #include "../include/recenter.hpp"
 #include "../include/toml.hpp"
 #include <cassert>
-#include <cstdlib>
 #include <memory>
+#include <string>
 #include <string_view>
 using namespace std;
 
@@ -12,6 +12,7 @@ namespace otf {
 
 runtime_para::runtime_para( const std::string_view& tomlParaFile )
 {
+    myprint( "Read the toml file [%s]", tomlParaFile.data() );
     toml::table paraTable = toml::parse_file( tomlParaFile );
 
     // check whether enable the on-the-fly analysis
@@ -22,8 +23,11 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
     }
 
     // other global parameters
-    outputDir = *paraTable[ "global" ][ "outdir" ].value< string_view >();
-    fileName  = *paraTable[ "global" ][ "filename" ].value< string_view >();
+    const string tmpFileName( *paraTable[ "global" ][ "filename" ].value< string_view >() );
+    const string tmpDir( *paraTable[ "global" ][ "outdir" ].value< string_view >() );
+    // fileName                              = std::move( tmpFileName );
+    outputDir                             = std::move( tmpDir );
+    fileName                              = std::move( tmpFileName );
     constexpr unsigned int defaultMaxIter = 25;
     constexpr double       defaultEpsilon = 1e-8;  // floating-point number equal threshold
     maxIter = paraTable[ "global" ][ "maxiter" ].value_or( defaultMaxIter );
@@ -37,23 +41,28 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
 
     // orbital log parameters
     orbit = make_unique< otf::orbit >( *paraTable[ "orbit" ].as_table() );
+    // INFO( "Call from inside constructer of [runtime_para]: %s", orbit->idfile.data() );
 
     // parameters of each components
-    paraTable.for_each( [ this, paraTable ]( auto& key, auto& value ) {
+    paraTable.for_each( [ this ]( auto& key, auto& value ) {
         if constexpr ( toml::is_key< decltype( key ) > and toml::is_table< decltype( value ) > )
         {
             auto key_view = string_view( key );
             if ( key_view.substr( 0, 9 ) == "component" )
             {
+                // TEST: test whether the key string_view can work in this way
                 this->comps[ key_view ] =
                     make_unique< otf::component >( key_view, *value.as_table() );
             }
         }
     } );
+    // INFO( "Call from inside constructer of [runtime_para] (end): %s", orbit->idfile.data() );
 }
 
-component::component( string_view& compName, toml::table& compNodeTable ) : compName( compName )
+component::component( string_view& compName, toml::table& compNodeTable )
 {
+    const string tmpStr( compName );
+    this->compName = tmpStr;
     // particle types in this component
     auto typeIDs = compNodeTable[ "types" ];
     if ( toml::array* arr = typeIDs.as_array() )
@@ -74,8 +83,8 @@ component::component( string_view& compName, toml::table& compNodeTable ) : comp
     recenter.enable = *compNodeTable[ "recenter" ][ "enable" ].value< bool >();
     if ( recenter.enable )
     {
-        recenter.radius = *compNodeTable[ "recenter" ][ "radius" ].value< double >();
-        string_view str = *compNodeTable[ "recenter" ][ "method" ].value< string_view >();
+        recenter.radius       = *compNodeTable[ "recenter" ][ "radius" ].value< double >();
+        const string_view str = *compNodeTable[ "recenter" ][ "method" ].value< string_view >();
         if ( str == "com" )
         {
             recenter.method = recenter_method::COM;
@@ -208,13 +217,14 @@ orbit::orbit( toml::table& orbitNode )
     if ( method == log_method::RANDOM )
     {
         // random selection
-        random.enable   = *orbitNode[ "random" ][ "enable" ].value< bool >();
-        random.fraction = *orbitNode[ "random" ][ "frac" ].value< double >();
-        // recenter.partTypes = orbitNode[ "random" ][ "radius" ].value< bool >();
+        fraction = *orbitNode[ "fraction" ].value< double >();
+        assert( fraction > 0 and fraction <= 1 );
     }
     else
     {
-        idfile = *orbitNode[ "idfile" ].value< string_view >();
+        // By a text file
+        const string tmpIdFileName( *orbitNode[ "idfile" ].value< string_view >() );
+        this->idfile = std::move( tmpIdFileName );
     }
 
     // recenter parameters
@@ -233,7 +243,7 @@ orbit::orbit( toml::table& orbitNode )
                 }
             } );
         }
-        recenter.radius = *orbitNode[ "recenter" ][ "radius" ].value< bool >();
+        recenter.radius = *orbitNode[ "recenter" ][ "radius" ].value< double >();
         str             = *orbitNode[ "recenter" ][ "method" ].value< string_view >();
         if ( str == "com" )
         {
