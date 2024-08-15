@@ -8,11 +8,14 @@
 #include "../include/toml.hpp"
 #include "recenter.hpp"
 #include <cstdint>
+#include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
 namespace otf {
+
+constexpr auto vecDim = 3;
 
 /**
  * @class recenter_para
@@ -23,7 +26,7 @@ struct recenter_para
 {
     bool                 enable;
     double               radius;
-    double               initialGuess[ 3 ];
+    double               initialGuess[ vecDim ];
     otf::recenter_method method;
 };
 
@@ -91,19 +94,19 @@ enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESI
  * @brief The wrapper of parameter blocks used for each component.
  *
  */
-class component
+struct component
 {
-public:
-    component( std::string_view& compName, toml::table& para );
-    std::string_view compName;
-    unsigned int     period;
-    recenter_para    recenter;
-    coordinate_frame frame;
-    align_para       align;
-    image_para       image;
-    basic_bar_para   A2;
-    basic_bar_para   barAngle;
-    basic_bar_para   buckle;
+    component( std::string_view& compName, toml::table& compNodeTable );
+    std::string_view            compName;
+    std::vector< unsigned int > types;
+    unsigned int                period;
+    recenter_para               recenter;
+    coordinate_frame            frame;
+    align_para                  align;
+    image_para                  image;
+    basic_bar_para              A2;
+    basic_bar_para              barAngle;
+    basic_bar_para              buckle;
 };
 
 /**
@@ -119,7 +122,7 @@ private:
     enum class log_method : std::uint8_t { TXTFILE = 0, RANDOM };
 
 public:
-    orbit( toml::table& para );
+    orbit( toml::table& orbitNodeTable );
     bool                        enable;
     unsigned int                period;
     std::vector< unsigned int > logTypes;
@@ -138,11 +141,14 @@ class runtime_para
 {
 public:
     runtime_para( const std::string_view& tomlParaFile );
-    std::unordered_map< std::string_view, otf::component > comps;
-    otf::orbit                                             orbit;
+    bool             enableOtf;
+    std::string_view outputDir;
+    std::string_view fileName;
+    unsigned int     maxIter;
+    double           epsilon;
 
-private:
-    void read_one_by_one();
+    std::unordered_map< std::string_view, std::unique_ptr< otf::component > > comps;
+    std::unique_ptr< otf::orbit >                                             orbit;
 };
 
 }  // namespace otf

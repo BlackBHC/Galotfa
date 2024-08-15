@@ -12,10 +12,14 @@
  */
 class eigen
 {
+private:
+    static constexpr auto vecDim    = 3;
+    static constexpr auto matrixDim = 3;
+
 public:
     // calculate the eigenvalues and eigenvectors of a given 3x3 symmetric matrix.
-    static void eigens_sym_33( double matrixData[ 9 ], double eigenValues[ 3 ],
-                               double eigenVectors[ 9 ] );
+    static void eigens_sym_33( double matrixData[ matrixDim ], double eigenValues[ vecDim ],
+                               double eigenVectors[ matrixDim ] );
 };
 
 #endif
