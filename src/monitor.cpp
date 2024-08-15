@@ -55,6 +55,10 @@ void monitor::one_analysis_api( const unsigned int* id, const unsigned int* part
 
     // first: extract the data for orbital log, and the data for each component
 
+    // second: log the orbits
+
+    // third: analyze each component
+
     // increase the synchronized step counter
     stepCounter++;
 }

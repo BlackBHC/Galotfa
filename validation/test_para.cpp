@@ -18,6 +18,10 @@ int main()
     {
         INFO( "On the fly analysis is enabled." );
     }
+    else
+    {
+        INFO( "On the fly analysis is forbidden." );
+    }
 
     INFO( "Output to  [%s]/[%s]", para.outputDir.c_str(), para.fileName.c_str() );
     INFO( "Max iteration [%u], epsilon [%g]", para.maxIter, para.epsilon );

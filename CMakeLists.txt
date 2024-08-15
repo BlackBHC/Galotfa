@@ -68,7 +68,7 @@ set_target_properties(message-static
 # UNIT TESTS
 # C++ programes
 enable_testing()
-#[[ find_package(MPI REQUIRED)
+find_package(MPI REQUIRED)
 add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
@@ -108,7 +108,7 @@ add_test(NAME recenter COMMAND mpirun -np 4 $<TARGET_FILE:recenter>)
 add_executable(barinfo ./validation/test_barinfo.cpp ./src/barinfo.cpp)
 target_link_libraries(barinfo PUBLIC MPI::MPI_CXX)
 target_link_options(barinfo PRIVATE ${sanitizer_flags})
-add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>) ]]
+add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>)
 
 add_executable(para ./validation/test_para.cpp ./src/para.cpp)
 target_link_options(para PRIVATE ${sanitizer_flags})

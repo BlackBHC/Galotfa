@@ -41,7 +41,6 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
 
     // orbital log parameters
     orbit = make_unique< otf::orbit >( *paraTable[ "orbit" ].as_table() );
-    // INFO( "Call from inside constructer of [runtime_para]: %s", orbit->idfile.data() );
 
     // parameters of each components
     paraTable.for_each( [ this ]( auto& key, auto& value ) {
@@ -55,7 +54,14 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
             }
         }
     } );
-    // INFO( "Call from inside constructer of [runtime_para] (end): %s", orbit->idfile.data() );
+
+    // check the number of component(s)
+    INFO( "There are %lu component(s)", comps.size() );
+
+    // if there is no any component and orbital logs are enables, then toggle off the on-the-fly
+    // analysis
+    if ( comps.size() == 0 and ( not orbit->enable ) )
+        enableOtf = false;
 }
 
 component::component( string_view& compName, toml::table& compNodeTable )
