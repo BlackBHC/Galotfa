@@ -110,6 +110,10 @@ target_link_libraries(barinfo PUBLIC MPI::MPI_CXX)
 target_link_options(barinfo PRIVATE ${sanitizer_flags})
 add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>)
 
+add_executable(para ./validation/test_para.cpp ./src/para.cpp)
+target_link_options(para PRIVATE ${sanitizer_flags})
+add_test(NAME para COMMAND $<TARGET_FILE:para>)
+
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "~/.local" CACHE PATH "install prefix" FORCE)

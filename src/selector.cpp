@@ -1,15 +1,20 @@
 #include "../include/selector.hpp"
 #include "../include/myprompt.hpp"
+#include "mpi.h"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
+#include <ios>
+#include <iterator>
 #include <random>
 #include <set>
-#include <sys/stat.h>
+#include <string>
 #include <sys/unistd.h>
 #include <unistd.h>
 #include <vector>
 using namespace std;
+
+namespace otf {
 
 /**
  * @brief Select particle ids with a specified fraction, can be used in any mpi rank.
@@ -18,7 +23,8 @@ using namespace std;
  * @param fraction fraction
  * @return a vector<unsigned int> of the selected id list
  */
-auto id_organizer::select( const vector< int >& raw, const double fraction ) -> vector< int >
+auto id_organizer::select( const vector< unsigned int >& raw,
+                           const double                  fraction ) -> vector< unsigned int >
 {
     if ( fraction <= 0 or fraction > 1 )
     {
@@ -29,8 +35,8 @@ auto id_organizer::select( const vector< int >& raw, const double fraction ) -> 
         return raw;
     }
 
-    size_t        selectNum = ( size_t )( raw.size() * fraction );
-    vector< int > res;
+    auto const             selectNum = ( size_t )( raw.size() * fraction );
+    vector< unsigned int > res;
     sample( raw.begin(), raw.end(), back_inserter( res ), selectNum, mt19937{ random_device{}() } );
     return res;
 }
@@ -42,7 +48,7 @@ auto id_organizer::select( const vector< int >& raw, const double fraction ) -> 
  * @param idFilename filename of the id list file (in ASCII txt format)
  * @return std::vector<int> of the ids.
  */
-auto id_organizer::read( const string& idFilename ) -> vector< int >
+auto id_organizer::read( const string& idFilename ) -> vector< unsigned int >
 {
     // check the availability of the file
     if ( access( idFilename.c_str(), F_OK ) != 0 )
@@ -53,18 +59,18 @@ auto id_organizer::read( const string& idFilename ) -> vector< int >
         exit( -1 );
     }
 
-    ifstream      fp;
-    vector< int > ids;
+    ifstream               fp;
+    vector< unsigned int > ids;
     fp.open( idFilename.c_str(), ios::in );
     while ( !fp.eof() )
     {
         string lineStr;
         getline( fp, lineStr );
-        if ( lineStr.length() != 0 )
+        if ( !lineStr.empty() )
         {
             try
             {
-                ids.push_back( ( int )std::stoi( lineStr ) );
+                ids.push_back( std::stoi( lineStr ) );
             }
             catch ( ... )
             {
@@ -80,3 +86,5 @@ auto id_organizer::read( const string& idFilename ) -> vector< int >
 
     return ids;
 }
+
+}  // namespace otf

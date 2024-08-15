@@ -8,14 +8,14 @@
 #include <mpi.h>
 
 // print with a line break at the end
-#define print( ... )                \
+#define myprint( ... )              \
     {                               \
         std::printf( __VA_ARGS__ ); \
         std::printf( "\n" );        \
     }
 
 // similar but for fprint
-#define fprint( file_ptr, ... )                \
+#define myfprint( file_ptr, ... )              \
     {                                          \
         std::fprintf( file_ptr, __VA_ARGS__ ); \
         std::fprintf( file_ptr, "\n" );        \
@@ -38,7 +38,7 @@
         }                                          \
     }
 
-#define test_reach print( "Call from file [%s] line[%d].", __FILE__, __LINE__ );
+#define test_reach myprint( "Call from file [%s] line[%d].", __FILE__, __LINE__ );
 #define mpi_test_reach                                                                \
     {                                                                                 \
         int rank;                                                                     \
@@ -47,16 +47,16 @@
     }
 
 // for info, warning, and error.
-#define INFO( ... ) print( "[INFO]: " __VA_ARGS__ );
-#define WARN( ... )                                                            \
-    {                                                                          \
-        fprint( stderr, "Call from file [%s] line[%d].", __FILE__, __LINE__ ); \
-        fprint( stderr, "[WARN]: " __VA_ARGS__ );                              \
+#define INFO( ... ) myprint( "[INFO]: " __VA_ARGS__ );
+#define WARN( ... )                                                              \
+    {                                                                            \
+        myfprint( stderr, "Call from file [%s] line[%d].", __FILE__, __LINE__ ); \
+        myfprint( stderr, "[WARN]: " __VA_ARGS__ );                              \
     }
-#define ERROR( ... )                                                           \
-    {                                                                          \
-        fprint( stderr, "Call from file [%s] line[%d].", __FILE__, __LINE__ ); \
-        fprint( stderr, "[ERROR]: " __VA_ARGS__ );                             \
+#define ERROR( ... )                                                             \
+    {                                                                            \
+        myfprint( stderr, "Call from file [%s] line[%d].", __FILE__, __LINE__ ); \
+        myfprint( stderr, "[ERROR]: " __VA_ARGS__ );                             \
     }
 #define MPI_INFO( rank, ... ) mpi_print( rank, "[INFO]: " __VA_ARGS__ );
 #define MPI_WARN( rank, ... )                                                               \

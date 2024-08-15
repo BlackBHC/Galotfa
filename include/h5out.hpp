@@ -4,9 +4,8 @@
  */
 #ifndef MY_H5_OUTPUT_HEADER
 #define MY_H5_OUTPUT_HEADER
-#include <H5Fpublic.h>
-#include <H5Ipublic.h>
-#include <hdf5.h>
+#include "H5Ipublic.h"
+#include "H5public.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -31,7 +30,7 @@ public:
     auto flush_single_block( const void* dataBuffer ) -> int;
 
 #ifdef DEBUG
-public:
+
 #else
 private:
 #endif
@@ -73,7 +72,7 @@ private:
                                       const std::string& datasetName ) -> int;
     std::string filename;
 
-public:
+
     h5_out( const std::string& dir, const std::string& filename );
     ~h5_out();
     auto create_dataset_in_group( const std::string& datasetName, const std::string& groupName,

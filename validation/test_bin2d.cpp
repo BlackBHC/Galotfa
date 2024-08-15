@@ -86,19 +86,19 @@ int main( int argc, char* argv[] )
         MPI_Barrier( MPI_COMM_WORLD );
         if ( rank == i )
         {
-            print( "Values in rank %d:", rank );
+            myprint( "Values in rank %d:", rank );
             for ( int j = 0; j < 100; ++j )
             {
                 printf( "%lf ", valuesRecv[ j ] );
             }
-            print( "\nEnd of values." );
+            myprint( "\nEnd of values." );
 
-            print( "xsRecv in rank %d:", rank );
+            myprint( "xsRecv in rank %d:", rank );
             for ( int j = 0; j < 100; ++j )
             {
                 printf( "%lf ", xsRecv[ j ] );
             }
-            print( "\nEnd of xsRecv." );
+            myprint( "\nEnd of xsRecv." );
         }
     }
     // Scatter the data to 4 ranks
@@ -113,19 +113,19 @@ int main( int argc, char* argv[] )
         MPI_Barrier( MPI_COMM_WORLD );
         if ( rank == i )
         {
-            print( "Values in rank %d:", rank );
+            myprint( "Values in rank %d:", rank );
             for ( int j = 0; j < 100; ++j )
             {
                 printf( "%lf ", valuesRecv[ j ] );
             }
-            print( "\nEnd of values." );
+            myprint( "\nEnd of values." );
 
-            print( "xsRecv in rank %d:", rank );
+            myprint( "xsRecv in rank %d:", rank );
             for ( int j = 0; j < 100; ++j )
             {
                 printf( "%lf ", xsRecv[ j ] );
             }
-            print( "\nEnd of xsRecv." );
+            myprint( "\nEnd of xsRecv." );
         }
     }
     // MPI_Finalize();

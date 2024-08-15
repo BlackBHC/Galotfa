@@ -6,6 +6,8 @@
 #include <mpi.h>
 using namespace std;
 
+namespace otf {
+
 // Calculate the norm of the coordinate 1x3 vector.
 #define NORM( vec3ptr )                                                             \
     sqrt( *( vec3ptr ) * *( vec3ptr ) + *( ( vec3ptr ) + 1 ) * *( ( vec3ptr ) + 1 ) \
@@ -101,9 +103,9 @@ auto recenter::center_of_mass( const double* mass, const double* coordinates,
 auto recenter::most_bound_particle( const double* potential, const double* coordinates,
                                     const unsigned int& partNum ) -> std::unique_ptr< double[] >
 {
-    auto   minPotPosition( make_unique< double[] >( 3 ) );
-    int    minLocateId = min_element( potential, potential + partNum ) - potential;
-    double min         = potential[ minLocateId ];  // local min
+    auto      minPotPosition( make_unique< double[] >( 3 ) );
+    const int minLocateId = min_element( potential, potential + partNum ) - potential;
+    double    min         = potential[ minLocateId ];  // local min
     // global min after reduce
     MPI_Allreduce( MPI_IN_PLACE, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
 
@@ -126,3 +128,5 @@ auto recenter::most_bound_particle( const double* potential, const double* coord
 
     return minPotPosition;
 }
+
+}  // namespace otf
