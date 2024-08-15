@@ -5,6 +5,7 @@
 
 #ifndef MONITOR_HEADER
 #define MONITOR_HEADER
+#include "../include/h5out.hpp"
 #include "../include/para.hpp"
 #include <memory>
 #include <string_view>
@@ -31,6 +32,7 @@ public:
 private:
 #endif
     int                             mpiRank;
+    bool                            isRootRank;
     unsigned long                   stepCounter;
     bool                            mpiInitialzedByMonitor;
     std::unique_ptr< runtime_para > para;
@@ -39,6 +41,7 @@ private:
     void                            data_flush();
     void                            bar_info();
     void                            image();
+    std::unique_ptr< h5_out >       h5Orgnizer;
 };
 
 }  // namespace otf
