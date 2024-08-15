@@ -50,8 +50,7 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
             auto key_view = string_view( key );
             if ( key_view.substr( 0, 9 ) == "component" )
             {
-                // TEST: test whether the key string_view can work in this way
-                this->comps[ key_view ] =
+                this->comps[ string( key_view ) ] =
                     make_unique< otf::component >( key_view, *value.as_table() );
             }
         }
@@ -62,7 +61,7 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
 component::component( string_view& compName, toml::table& compNodeTable )
 {
     const string tmpStr( compName );
-    this->compName = tmpStr;
+    this->compName = std::move( tmpStr );
     // particle types in this component
     auto typeIDs = compNodeTable[ "types" ];
     if ( toml::array* arr = typeIDs.as_array() )

@@ -40,5 +40,23 @@ monitor::~monitor()
         MPI_Finalize();
     }
 }
+void monitor::one_analysis_api( const unsigned int* id, const unsigned int* partType,
+                                const double* mass, const double* coordinate,
+                                const double* velocity )
+{
+    if ( not para->enableOtf )
+        return;
+
+    ( void )id;
+    ( void )partType;
+    ( void )mass;
+    ( void )coordinate;
+    ( void )velocity;
+
+    // first: extract the data for orbital log, and the data for each component
+
+    // increase the synchronized step counter
+    stepCounter++;
+}
 
 }  // namespace otf
