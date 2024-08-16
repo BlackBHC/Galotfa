@@ -7,6 +7,7 @@
 #define MONITOR_HEADER
 #include "../include/h5out.hpp"
 #include "../include/para.hpp"
+#include "../include/selector.hpp"
 #include <memory>
 #include <string_view>
 

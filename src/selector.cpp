@@ -23,8 +23,8 @@ namespace otf {
  * @param fraction fraction
  * @return a vector<unsigned int> of the selected id list
  */
-auto id_organizer::select( const vector< unsigned int >& raw,
-                           const double                  fraction ) -> vector< unsigned int >
+auto orbit_selector::id_select( const vector< unsigned int >& raw,
+                                const double                  fraction ) -> vector< unsigned int >
 {
     if ( fraction <= 0 or fraction > 1 )
     {
@@ -48,7 +48,7 @@ auto id_organizer::select( const vector< unsigned int >& raw,
  * @param idFilename filename of the id list file (in ASCII txt format)
  * @return std::vector<int> of the ids.
  */
-auto id_organizer::read( const string& idFilename ) -> vector< unsigned int >
+auto orbit_selector::id_read( const string& idFilename ) -> vector< unsigned int >
 {
     // check the availability of the file
     if ( access( idFilename.c_str(), F_OK ) != 0 )
