@@ -1,11 +1,13 @@
 #include "../include/selector.hpp"
 #include "../include/myprompt.hpp"
+#include "../include/para.hpp"
 #include "mpi.h"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <ios>
 #include <iterator>
+#include <memory>
 #include <random>
 #include <set>
 #include <string>
@@ -85,6 +87,51 @@ auto orbit_selector::id_read( const string& idFilename ) -> vector< unsigned int
     ids.assign( tmpSet.begin(), tmpSet.end() );
 
     return ids;
+}
+
+orbit_selector::orbit_selector( unique_ptr< runtime_para >& para ) : para( para )
+{
+    ;
+}
+
+auto orbit_selector::select( const unsigned int particleNumber, const unsigned int* particleIDs,
+                             const unsigned int* particleTypes, const double* masses,
+                             const double* coordiantes,
+                             const double* velocities ) -> const std::unique_ptr< dataContainer >
+{
+    if ( not para->orbit->enable )
+    {
+        return nullptr;
+    }
+
+    unsigned int counter = 0;
+
+    vector< double > tmpMass( particleNumber );
+    vector< double > tmpPos( particleNumber );
+    vector< double > tmpVel( particleNumber );
+
+    ( void )particleIDs;
+    ( void )particleTypes;
+    ( void )masses;
+    ( void )coordiantes;
+    ( void )velocities;
+    for ( auto i = 0U; i < particleNumber; ++i )
+    {
+        counter++;
+    }
+
+    tmpMass.resize( counter );
+    tmpPos.resize( counter );
+    tmpVel.resize( counter );
+
+    // get the data container
+    unique_ptr< dataContainer > container;
+    container->count      = counter;
+    container->mass       = std::move( tmpMass );
+    container->coordinate = std::move( tmpPos );
+    container->velocity   = std::move( tmpVel );
+
+    return container;
 }
 
 }  // namespace otf

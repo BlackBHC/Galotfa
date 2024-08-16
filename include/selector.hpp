@@ -4,9 +4,25 @@
  */
 #ifndef SELECTOR_HEADER
 #define SELECTOR_HEADER
+#include "../include/para.hpp"
+#include <memory>
 #include <string>
 #include <vector>
 namespace otf {
+
+/**
+ * @class dataContainer
+ * @brief Collection of points to the data for component-analysis and orbital log, aiming for
+ * convenience of data selection.
+ *
+ */
+struct dataContainer
+{
+    unsigned int          count = 0;
+    std::vector< double > mass;
+    std::vector< double > coordinate;
+    std::vector< double > velocity;
+};
 
 /**
  * @class orbit_selector
@@ -16,42 +32,20 @@ namespace otf {
 class orbit_selector
 {
 public:
-    void select();
+    orbit_selector( std::unique_ptr< runtime_para >& para );
+    auto select( const unsigned int particleNumber, const unsigned int* particleIDs,
+                 const unsigned int* particleTypes, const double* masses, const double* coordiantes,
+                 const double* velocities ) -> const std::unique_ptr< dataContainer >;
 
 #ifdef DEBUG
 
 #else
 private:
 #endif
-    static auto id_select( const std::vector< unsigned int >& raw,
-                           double fraction ) -> std::vector< unsigned int >;
+    std::unique_ptr< runtime_para >& para;
+    static auto                      id_select( const std::vector< unsigned int >& raw,
+                                                double fraction ) -> std::vector< unsigned int >;
     static auto id_read( const std::string& idFilename ) -> std::vector< unsigned int >;
-};
-
-/**
- * @class compDataPtrs
- * @brief Collection of points to the data for component-analysis, aiming for convenience of data
- * selection.
- *
- */
-struct compDataPtrs
-{
-    double* mass       = nullptr;
-    double* coordinate = nullptr;
-    double* velocity   = nullptr;
-};
-
-/**
- * @class orbitDataPtrs
- * @brief Collection of points to the data for orbital log, aiming for convenience of data
- * selection.
- *
- */
-struct orbitDataPtrs
-{
-    double* mass       = nullptr;
-    double* coordinate = nullptr;
-    double* velocity   = nullptr;
 };
 
 }  // namespace otf
