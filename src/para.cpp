@@ -197,7 +197,7 @@ orbit::orbit( toml::table& orbitNode )
         arr->for_each( [ this ]( auto&& el ) {
             if constexpr ( toml::is_number< decltype( el ) > )
             {
-                logTypes.push_back( *el );
+                sampleTypes.push_back( *el );
             }
         } );
     }
@@ -205,11 +205,11 @@ orbit::orbit( toml::table& orbitNode )
     auto str = *orbitNode[ "method" ].value< string_view >();
     if ( str == "txtfile" )
     {
-        method = id_selection_method::TXTFILE;
+        method = id_sample_method::TXTFILE;
     }
     else if ( str == "random" )
     {
-        method = id_selection_method::RANDOM;
+        method = id_sample_method::RANDOM;
     }
     else
     {
@@ -219,7 +219,7 @@ orbit::orbit( toml::table& orbitNode )
         exit( -1 );
     }
 
-    if ( method == id_selection_method::RANDOM )
+    if ( method == id_sample_method::RANDOM )
     {
         // random selection
         fraction = *orbitNode[ "fraction" ].value< double >();

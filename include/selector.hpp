@@ -43,8 +43,9 @@ public:
 private:
 #endif
     std::unique_ptr< runtime_para >& para;
-    static auto                      id_sample( const std::vector< unsigned int >& raw,
-                                                double fraction ) -> std::vector< unsigned int >;
+    static auto id_sample( const std::vector< unsigned int >& raw, const unsigned int* types,
+                           const std::vector< unsigned int >& sampleTypes,
+                           double fraction ) -> std::vector< unsigned int >;
     static auto id_read( const std::string& idFilename ) -> std::vector< unsigned int >;
 };
 

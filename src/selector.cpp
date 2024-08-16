@@ -22,24 +22,41 @@ namespace otf {
  * @brief Select particle ids with a specified fraction, can be used in any mpi rank.
  *
  * @param raw raw id list
- * @param fraction fraction
+ * @param types pointer to the particle types of simulation data
+ * @param sampleTypes vector of the targeted particle types to be sampled
+ * @param fraction sampling fraction
  * @return a vector<unsigned int> of the selected id list
  */
-auto orbit_selector::id_sample( const vector< unsigned int >& raw,
-                                const double                  fraction ) -> vector< unsigned int >
+auto orbit_selector::id_sample( const vector< unsigned int >& raw, const unsigned int* types,
+                                const vector< unsigned int >& sampleTypes,
+                                double                        fraction ) -> vector< unsigned int >
 {
     if ( fraction <= 0 or fraction > 1 )
     {
         ERROR( "Try to select a illegal fraction: [%lf]", fraction );
     }
-    else if ( fraction == 1 )
+
+    auto                   partNum = raw.size();
+    vector< unsigned int > filtered( partNum );
+    auto                   counter = 0UL;  // counter of effective particles in this mpi rank
+    for ( auto i = 0UL; i < partNum; ++i )
     {
-        return raw;
+        if ( find( sampleTypes.begin(), sampleTypes.end(), types[ i ] ) != sampleTypes.end() )
+        {
+            filtered[ counter++ ] = raw[ i ];
+        }
+    }
+    filtered.resize( counter );
+
+    if ( fraction == 1 )
+    {
+        return filtered;
     }
 
-    auto const             selectNum = ( size_t )( raw.size() * fraction );
+    auto const             selectNum = ( size_t )( counter * fraction );
     vector< unsigned int > res;
-    sample( raw.begin(), raw.end(), back_inserter( res ), selectNum, mt19937{ random_device{}() } );
+    sample( filtered.begin(), filtered.end(), back_inserter( res ), selectNum,
+            mt19937{ random_device{}() } );
     return res;
 }
 
@@ -106,14 +123,15 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
 
     vector< unsigned int > targetIDs;
 
-    if ( para->orbit->method == otf::orbit::id_selection_method::RANDOM )
+    if ( para->orbit->method == otf::orbit::id_sample_method::RANDOM )
     {
         vector< double > rawIds( particleNumber );
         for ( auto i = 0U; i < particleNumber; ++i )
         {
             rawIds[ i ] = particleID[ i ];
         }
-        targetIDs = id_sample( targetIDs, para->orbit->fraction );
+        targetIDs =
+            id_sample( targetIDs, particleType, para->orbit->sampleTypes, para->orbit->fraction );
     }
     else
     {
@@ -126,15 +144,13 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     vector< double > tmpPos( particleNumber );
     vector< double > tmpVel( particleNumber );
 
-    ( void )particleID;
     ( void )particleType;
     ( void )mass;
     ( void )coordiante;
     ( void )velocity;
     for ( auto i = 0U; i < particleNumber; ++i )
     {
-        // TODO: assume the ids vector are monotone, this is not implemented yet
-        if ( particleID[ i ] == targetIDs[ counter ] )
+        if ( find( targetIDs.begin(), targetIDs.end(), particleID[ i ] ) != targetIDs.end() )
         {
             tmpMass[ counter ]        = mass[ i ];
             tmpPos[ counter * 3 + 0 ] = coordiante[ i * 3 + 0 ];

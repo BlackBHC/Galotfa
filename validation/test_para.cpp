@@ -33,7 +33,7 @@ int main()
     }
     INFO( "Log period: %d", para.orbit->period );
     INFO( "Particle types to be logged:" );
-    for ( auto& id : para.orbit->logTypes )
+    for ( auto& id : para.orbit->sampleTypes )
     {
         INFO( "%d ", id );
     }
@@ -41,10 +41,10 @@ int main()
     INFO( "Method of id determination: " );
     switch ( para.orbit->method )
     {
-    case orbit::log_method::RANDOM:
+    case orbit::id_sample_method::RANDOM:
         INFO( "Random selection." );
         break;
-    case orbit::log_method::TXTFILE:
+    case orbit::id_sample_method::TXTFILE:
         INFO( "By a text file of id list." );
         break;
     default:

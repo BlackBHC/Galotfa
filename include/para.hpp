@@ -109,13 +109,13 @@ public:
     orbit( toml::table& orbitNodeTable );
     // method for id log: TXTFILE to use a text file of id list, and RANDOM for random selection
     // according to specified parameters.
-    enum class id_selection_method : std::uint8_t { TXTFILE = 0, RANDOM };
+    enum class id_sample_method : std::uint8_t { TXTFILE = 0, RANDOM };
     bool                        enable;
     unsigned int                period;
-    std::vector< unsigned int > logTypes;
-    id_selection_method         method;
+    id_sample_method         method;
     std::string                 idfile   = "not used";
     double                      fraction = -1;
+    std::vector< unsigned int > sampleTypes;
     orbit_recenter_para         recenter;
 };
 

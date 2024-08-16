@@ -26,17 +26,17 @@ enable = false
 # The period of orbital logs, in units of syncrhonized time steps in
 # the simulation.
 period = 10
-# The array of particle types to be logged.
-logtypes = [2]
 # Two ways to specify which particles to be logged: "txtfile" for txt
-# file or "random" for random selection
+# file or "random" for random sampling.
 method = "txtfile"
 # The text file name that specifies the particle ids to be logged.
 # In this file, each row is a legal value of a particle id.
 idfile = "./idlists.txt"
 # Another way to specify the logged particles.
-# The fraction to be randomly selected, must be in (0, 1]
+# The fraction to be randomly sampled, must be in (0, 1]
 fraction = 0.05
+# The array of particle types to be randomly sampled.
+logtypes = [2]
 # The component used for recenter and alignment during orbital log,
 # which is needed only when recenter.enable=true or align=true.
 # Whether recenter the system before output the orbits or not.
