@@ -144,10 +144,6 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     vector< double > tmpPos( particleNumber );
     vector< double > tmpVel( particleNumber );
 
-    ( void )particleType;
-    ( void )mass;
-    ( void )coordiante;
-    ( void )velocity;
     for ( auto i = 0U; i < particleNumber; ++i )
     {
         if ( find( targetIDs.begin(), targetIDs.end(), particleID[ i ] ) != targetIDs.end() )
