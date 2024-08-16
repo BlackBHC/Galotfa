@@ -25,7 +25,7 @@ namespace otf {
  * @param fraction fraction
  * @return a vector<unsigned int> of the selected id list
  */
-auto orbit_selector::id_select( const vector< unsigned int >& raw,
+auto orbit_selector::id_sample( const vector< unsigned int >& raw,
                                 const double                  fraction ) -> vector< unsigned int >
 {
     if ( fraction <= 0 or fraction > 1 )
@@ -94,14 +94,30 @@ orbit_selector::orbit_selector( unique_ptr< runtime_para >& para ) : para( para 
     ;
 }
 
-auto orbit_selector::select( const unsigned int particleNumber, const unsigned int* particleIDs,
-                             const unsigned int* particleTypes, const double* masses,
-                             const double* coordiantes,
-                             const double* velocities ) -> const std::unique_ptr< dataContainer >
+auto orbit_selector::select( const unsigned int particleNumber, const unsigned int* particleID,
+                             const unsigned int* particleType, const double* mass,
+                             const double* coordiante,
+                             const double* velocity ) -> const std::unique_ptr< dataContainer >
 {
     if ( not para->orbit->enable )
     {
         return nullptr;
+    }
+
+    vector< unsigned int > targetIDs;
+
+    if ( para->orbit->method == otf::orbit::id_selection_method::RANDOM )
+    {
+        vector< double > rawIds( particleNumber );
+        for ( auto i = 0U; i < particleNumber; ++i )
+        {
+            rawIds[ i ] = particleID[ i ];
+        }
+        targetIDs = id_sample( targetIDs, para->orbit->fraction );
+    }
+    else
+    {
+        targetIDs = id_read( para->orbit->idfile );
     }
 
     unsigned int counter = 0;
@@ -110,14 +126,25 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     vector< double > tmpPos( particleNumber );
     vector< double > tmpVel( particleNumber );
 
-    ( void )particleIDs;
-    ( void )particleTypes;
-    ( void )masses;
-    ( void )coordiantes;
-    ( void )velocities;
+    ( void )particleID;
+    ( void )particleType;
+    ( void )mass;
+    ( void )coordiante;
+    ( void )velocity;
     for ( auto i = 0U; i < particleNumber; ++i )
     {
-        counter++;
+        // TODO: assume the ids vector are monotone, this is not implemented yet
+        if ( particleID[ i ] == targetIDs[ counter ] )
+        {
+            tmpMass[ counter ]        = mass[ i ];
+            tmpPos[ counter * 3 + 0 ] = coordiante[ i * 3 + 0 ];
+            tmpPos[ counter * 3 + 1 ] = coordiante[ i * 3 + 1 ];
+            tmpPos[ counter * 3 + 2 ] = coordiante[ i * 3 + 2 ];
+            tmpVel[ counter * 3 + 0 ] = velocity[ i * 3 + 0 ];
+            tmpVel[ counter * 3 + 1 ] = velocity[ i * 3 + 1 ];
+            tmpVel[ counter * 3 + 2 ] = velocity[ i * 3 + 2 ];
+            counter++;
+        }
     }
 
     tmpMass.resize( counter );
