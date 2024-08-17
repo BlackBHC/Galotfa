@@ -39,11 +39,11 @@
     }
 
 #define test_reach myprint( "Call from file [%s] line[%d].", __FILE__, __LINE__ );
-#define mpi_test_reach                                                                \
-    {                                                                                 \
-        int rank;                                                                     \
-        MPI_Comm_rank( MPI_COMM_WORLD, &rank );                                       \
-        print( "Rank [%d]: Call from file [%s] line[%d].", rank, __FILE__, __LINE__ ) \
+#define mpi_test_reach                                                                   \
+    {                                                                                    \
+        int rank;                                                                        \
+        MPI_Comm_rank( MPI_COMM_WORLD, &rank );                                          \
+        myprint( "Rank [%d]: Call from file [%s] line[%d].", rank, __FILE__, __LINE__ ); \
     }
 
 // for info, warning, and error.

@@ -6,19 +6,33 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unistd.h>
 using namespace std;
 
 namespace otf {
 
 runtime_para::runtime_para( const std::string_view& tomlParaFile )
 {
-    myprint( "Read the toml file [%s]", tomlParaFile.data() );
+    // int rank;
+    // MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    // mpi_print( rank, "Read the toml file [%s]", tomlParaFile.data() );
+    if ( access( tomlParaFile.data(), F_OK ) != 0 )
+    {
+        ERROR( "The toml file [%s] not found!", tomlParaFile.data() );
+        exit( -1 );
+    }
+    else
+    {
+        myprint( "Read the toml file [%s]", tomlParaFile.data() );
+    }
+
     toml::table paraTable = toml::parse_file( tomlParaFile );
 
     // check whether enable the on-the-fly analysis
     enableOtf = *paraTable[ "global" ][ "enable" ].value< bool >();
     if ( not enableOtf )
     {
+        INFO( "The orbital log is not enabled" );
         return;
     }
 

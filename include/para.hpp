@@ -112,7 +112,7 @@ public:
     enum class id_sample_method : std::uint8_t { TXTFILE = 0, RANDOM };
     bool                        enable;
     unsigned int                period;
-    id_sample_method         method;
+    id_sample_method            method;
     std::string                 idfile   = "not used";
     double                      fraction = -1;
     std::vector< unsigned int > sampleTypes;

@@ -18,6 +18,7 @@ namespace otf {
  */
 struct dataContainer
 {
+public:
     unsigned int          count = 0;
     std::vector< double > mass;
     std::vector< double > coordinate;

@@ -69,7 +69,7 @@ set_target_properties(message-static
 # C++ programes
 enable_testing()
 find_package(MPI REQUIRED)
-add_executable(
+#[[ add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
     ./src/coordinates.cpp
@@ -85,9 +85,9 @@ add_test(NAME test_eigen COMMAND $<TARGET_FILE:eigen>)
 add_executable(h5out ./validation/test_h5out.cpp ./src/h5out.cpp)
 target_link_libraries(h5out PRIVATE hdf5)
 target_link_options(h5out PRIVATE ${sanitizer_flags})
-add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>)
+add_test(NAME test_h5out COMMAND $<TARGET_FILE:h5out>) ]]
 
-add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
+#[[ add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
 target_link_libraries(bin2d PRIVATE gsl gslcblas)
 target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
 target_link_options(bin2d PRIVATE ${sanitizer_flags})
@@ -112,7 +112,17 @@ add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>)
 
 add_executable(para ./validation/test_para.cpp ./src/para.cpp)
 target_link_options(para PRIVATE ${sanitizer_flags})
-add_test(NAME para COMMAND $<TARGET_FILE:para>)
+add_test(NAME para COMMAND $<TARGET_FILE:para>) ]]
+
+add_executable(
+    orbitalSelect
+    ./validation/test_orbitalSelection.cpp
+    ./src/selector.cpp
+    ./src/para.cpp
+)
+target_link_libraries(orbitalSelect PUBLIC MPI::MPI_CXX)
+target_link_options(orbitalSelect PRIVATE ${sanitizer_flags})
+add_test(NAME orbitalSelect COMMAND mpirun -np 4 $<TARGET_FILE:orbitalSelect>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

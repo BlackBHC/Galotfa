@@ -1,0 +1,47 @@
+title = "galotfa runtime parameters"
+# This is a comment line
+
+[global]
+# whether enable the on-the-fly analysis
+enable = true
+# The design purpose is to simplify the closure of the on-the-fly
+# analysis.
+outdir = "./otfLogs"      # path of the log directorys
+filename = "galotfa.hdf5" # filename of the log file
+# maximal iteration times during analysis
+maxiter = 25 # default 25
+# the equal threshold for float numbers
+epsilon = 1e-10 # default 1e-8
+
+# You need to specify the following parameters for each component you
+# want to analysis.
+# You can define many componentXs, X is an identifier of the component
+# that a positive integer is recommended.
+
+
+##### Parameter for orbital logs
+[orbit]
+# Whether enable the log of orbits.
+enable = true
+# The period of orbital logs, in units of syncrhonized time steps in
+# the simulation.
+period = 10
+# Two ways to specify which particles to be logged: "txtfile" for txt
+# file or "random" for random sampling.
+method = "random"
+# The text file name that specifies the particle ids to be logged.
+# In this file, each row is a legal value of a particle id.
+idfile = "./idlists.txt"
+# Another way to specify the logged particles.
+# The fraction to be randomly sampled, must be in (0, 1]
+fraction = 0.9
+# The array of particle types to be randomly sampled.
+logtypes = [2]
+# The component used for recenter and alignment during orbital log,
+# which is needed only when recenter.enable=true or align=true.
+# Whether recenter the system before output the orbits or not.
+recenter.enable = true
+recenter.method = "mbp"
+recenter.radius = 10
+recenter.iguess = [0, 0, 0]
+recenter.anchorids = [2]

@@ -1,13 +1,13 @@
 #include "../include/selector.hpp"
 #include "../include/myprompt.hpp"
 #include "../include/para.hpp"
-#include "mpi.h"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <ios>
 #include <iterator>
 #include <memory>
+#include <mpi.h>
 #include <random>
 #include <set>
 #include <string>
@@ -53,7 +53,10 @@ auto orbit_selector::id_sample( const vector< unsigned int >& raw, const unsigne
         return filtered;
     }
 
-    auto const             selectNum = ( size_t )( counter * fraction );
+    auto const selectNum = ( size_t )( counter * fraction );
+    int        rank      = -1;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    mpi_print( rank, "Get counter: %lu", selectNum );
     vector< unsigned int > res;
     sample( filtered.begin(), filtered.end(), back_inserter( res ), selectNum,
             mt19937{ random_device{}() } );
@@ -164,11 +167,11 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     tmpVel.resize( counter );
 
     // get the data container
-    unique_ptr< dataContainer > container;
-    container->count      = counter;
-    container->mass       = std::move( tmpMass );
-    container->coordinate = std::move( tmpPos );
-    container->velocity   = std::move( tmpVel );
+    unique_ptr< dataContainer > container = make_unique< dataContainer >();
+    container->count                      = counter;
+    container->mass                       = std::move( tmpMass );
+    container->coordinate                 = std::move( tmpPos );
+    container->velocity                   = std::move( tmpVel );
 
     return container;
 }
