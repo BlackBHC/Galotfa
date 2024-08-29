@@ -13,9 +13,6 @@ namespace otf {
 
 runtime_para::runtime_para( const std::string_view& tomlParaFile )
 {
-    // int rank;
-    // MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    // mpi_print( rank, "Read the toml file [%s]", tomlParaFile.data() );
     if ( access( tomlParaFile.data(), F_OK ) != 0 )
     {
         ERROR( "The toml file [%s] not found!", tomlParaFile.data() );

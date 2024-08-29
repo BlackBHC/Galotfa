@@ -13,6 +13,7 @@
 #include <string>
 #include <sys/unistd.h>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 using namespace std;
 
@@ -117,7 +118,7 @@ orbit_selector::orbit_selector( unique_ptr< runtime_para >& para ) : para( para 
 auto orbit_selector::select( const unsigned int particleNumber, const unsigned int* particleID,
                              const unsigned int* particleType, const double* mass,
                              const double* coordiante,
-                             const double* velocity ) -> const std::unique_ptr< dataContainer >
+                             const double* velocity ) const -> std::unique_ptr< dataContainer >
 {
     if ( not para->orbit->enable )
     {
@@ -125,16 +126,15 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     }
 
     vector< unsigned int > targetIDs;
-
     if ( para->orbit->method == otf::orbit::id_sample_method::RANDOM )
     {
-        vector< double > rawIds( particleNumber );
+        vector< unsigned int > rawIds( particleNumber );
         for ( auto i = 0U; i < particleNumber; ++i )
         {
             rawIds[ i ] = particleID[ i ];
         }
         targetIDs =
-            id_sample( targetIDs, particleType, para->orbit->sampleTypes, para->orbit->fraction );
+            id_sample( rawIds, particleType, para->orbit->sampleTypes, para->orbit->fraction );
     }
     else
     {
@@ -144,8 +144,8 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     unsigned int counter = 0;
 
     vector< double > tmpMass( particleNumber );
-    vector< double > tmpPos( particleNumber );
-    vector< double > tmpVel( particleNumber );
+    vector< double > tmpPos( particleNumber * 3 );
+    vector< double > tmpVel( particleNumber * 3 );
 
     for ( auto i = 0U; i < particleNumber; ++i )
     {
