@@ -78,8 +78,8 @@ auto orbit_selector::id_read( const string& idFilename ) -> vector< unsigned int
     {
         int rank;
         MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-        MPI_ERROR( rank, "Particle ID file not found: [%s]!", idFilename.c_str() );
-        exit( -1 );
+        MPI_ERROR( rank, "Particle ID file not found: [%s]", idFilename.c_str() );
+        throw "Particle ID File not found!";
     }
 
     ifstream               fp;
@@ -98,7 +98,7 @@ auto orbit_selector::id_read( const string& idFilename ) -> vector< unsigned int
             catch ( ... )
             {
                 ERROR( "Get an unexpected value: %s", lineStr.c_str() );
-                exit( -1 );
+                throw "Get an unexpected value";
             }
         }
     }
@@ -116,8 +116,8 @@ orbit_selector::orbit_selector( unique_ptr< runtime_para >& para ) : para( para 
 }
 
 auto orbit_selector::select( const unsigned int particleNumber, const unsigned int* particleID,
-                             const unsigned int* particleType, const double* mass,
-                             const double* coordiante,
+                             const unsigned int* partType, const double* mass,
+                             const double* coordinate,
                              const double* velocity ) const -> std::unique_ptr< dataContainer >
 {
     if ( not para->orbit->enable )
@@ -125,43 +125,50 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
         return nullptr;
     }
 
+    // get the target id list based on specified parameters
     vector< unsigned int > targetIDs;
     if ( para->orbit->method == otf::orbit::id_selection_method::RANDOM )
     {
+        // random sampling
         vector< unsigned int > rawIds( particleNumber );
         for ( auto i = 0U; i < particleNumber; ++i )
         {
             rawIds[ i ] = particleID[ i ];
         }
-        targetIDs =
-            id_sample( rawIds, particleType, para->orbit->sampleTypes, para->orbit->fraction );
+        targetIDs = id_sample( rawIds, partType, para->orbit->sampleTypes, para->orbit->fraction );
     }
     else
     {
+        // read from a txt file
         targetIDs = id_read( para->orbit->idfile );
     }
 
+    // count of found particles
     unsigned int counter = 0;
 
+    // temporary variables restoring extracted data
     vector< double > tmpMass( particleNumber );
     vector< double > tmpPos( particleNumber * 3 );
     vector< double > tmpVel( particleNumber * 3 );
 
     for ( auto i = 0U; i < particleNumber; ++i )
     {
+        // check whether the id is in the target id list
         if ( find( targetIDs.begin(), targetIDs.end(), particleID[ i ] ) != targetIDs.end() )
         {
             tmpMass[ counter ]        = mass[ i ];
-            tmpPos[ counter * 3 + 0 ] = coordiante[ i * 3 + 0 ];
-            tmpPos[ counter * 3 + 1 ] = coordiante[ i * 3 + 1 ];
-            tmpPos[ counter * 3 + 2 ] = coordiante[ i * 3 + 2 ];
+            tmpPos[ counter * 3 + 0 ] = coordinate[ i * 3 + 0 ];
+            tmpPos[ counter * 3 + 1 ] = coordinate[ i * 3 + 1 ];
+            tmpPos[ counter * 3 + 2 ] = coordinate[ i * 3 + 2 ];
             tmpVel[ counter * 3 + 0 ] = velocity[ i * 3 + 0 ];
             tmpVel[ counter * 3 + 1 ] = velocity[ i * 3 + 1 ];
             tmpVel[ counter * 3 + 2 ] = velocity[ i * 3 + 2 ];
+            // increase the count of particles found
             counter++;
         }
     }
 
+    // remove the rubish value at the end
     tmpMass.resize( counter );
     tmpPos.resize( counter * 3 );
     tmpVel.resize( counter * 3 );

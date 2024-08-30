@@ -28,14 +28,14 @@ int main()
     cartesians.push_back( car7 );
 
     cout << "--------------" << endl;
-    cout << "Original cartesian coordiantes:" << endl;
+    cout << "Original cartesian coordinates:" << endl;
     for ( auto& array : cartesians )
     {
         cout << array[ 0 ] << " " << array[ 1 ] << " " << array[ 2 ] << " " << endl;
     }
 
     cout << "--------------" << endl;
-    cout << "Spherical coordiantes:" << endl;
+    cout << "Spherical coordinates:" << endl;
     for ( auto& array : cartesians )
     {
         transfer.car2sph( array );
@@ -46,7 +46,7 @@ int main()
     }
 
     cout << "--------------" << endl;
-    cout << "Spherical to cylindrical coordiantes:" << endl;
+    cout << "Spherical to cylindrical coordinates:" << endl;
     for ( auto& array : cartesians )
     {
         transfer.sph2cyl( array );
@@ -57,7 +57,7 @@ int main()
     }
 
     cout << "--------------" << endl;
-    cout << "Restored spherical coordiantes:" << endl;
+    cout << "Restored spherical coordinates:" << endl;
     for ( auto& array : cartesians )
     {
         transfer.cyl2sph( array );

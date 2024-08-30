@@ -35,7 +35,7 @@ class orbit_selector
 public:
     orbit_selector( std::unique_ptr< runtime_para >& para );
     auto select( unsigned int particleNumber, const unsigned int* particleID,
-                 const unsigned int* particleType, const double* mass, const double* coordiante,
+                 const unsigned int* partType, const double* mass, const double* coordinate,
                  const double* velocity ) const -> std::unique_ptr< dataContainer >;
 
 #ifdef DEBUG

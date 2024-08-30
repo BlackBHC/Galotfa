@@ -6,10 +6,13 @@
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
 #endif
+#include "../include/h5out.hpp"
 #include "../include/monitor.hpp"
 #include "../include/para.hpp"
+#include "../include/recenter.hpp"
 #include <memory>
 #include <mpi.h>
+#include <string_view>
 using namespace std;
 
 void print_para_info( otf::runtime_para& para )
@@ -34,7 +37,7 @@ void print_para_info( otf::runtime_para& para )
     }
     INFO( "Log period: %d", para.orbit->period );
     INFO( "Particle types to be logged:" );
-    for ( auto& id : para.orbit->logTypes )
+    for ( auto& id : para.orbit->sampleTypes )
     {
         INFO( "%d ", id );
     }
@@ -42,10 +45,10 @@ void print_para_info( otf::runtime_para& para )
     INFO( "Method of id determination: " );
     switch ( para.orbit->method )
     {
-    case otf::orbit::log_method::RANDOM:
+    case otf::orbit::id_selection_method::RANDOM:
         INFO( "Random selection." );
         break;
-    case otf::orbit::log_method::TXTFILE:
+    case otf::orbit::id_selection_method::TXTFILE:
         INFO( "By a text file of id list." );
         break;
     default:
@@ -95,7 +98,7 @@ void print_para_info( otf::runtime_para& para )
         {
             INFO( "Recenter of this component is enabled." );
         }
-        string method = "";
+        string method;
         switch ( comp.second->recenter.method )
         {
         case otf::recenter_method::COM:
@@ -153,16 +156,16 @@ namespace otf {
 
 monitor::monitor( const std::string_view& tomlParaFile )
     : mpiRank( -1 ), isRootRank( false ), stepCounter( 0 ), mpiInitialzedByMonitor( false ),
-      para( make_unique< runtime_para >( tomlParaFile ) ), h5Orgnizer( nullptr )
+      para( make_unique< runtime_para >( tomlParaFile ) ), h5Organizer( nullptr )
 
 {
     // check whether in mpi environment, if not, call MPI_Init
     int initialzed;
     MPI_Initialized( &initialzed );
-    if ( not initialzed )
+    if ( initialzed == 0 )
     {
         mpiInitialzedByMonitor = true;
-        MPI_Init( NULL, NULL );
+        MPI_Init( nullptr, nullptr );
     }
 
     // get the rank id
@@ -177,7 +180,7 @@ monitor::monitor( const std::string_view& tomlParaFile )
     if ( isRootRank )
     {
         print_para_info( *para );
-        h5Orgnizer = make_unique< h5_out >( para->outputDir, para->fileName );
+        h5Organizer = make_unique< h5_out >( para->outputDir, para->fileName );
     }
 }
 
@@ -189,22 +192,20 @@ monitor::~monitor()
     }
 }
 
-void monitor::one_analysis_api( const unsigned int* id, const unsigned int* partType,
-                                const double* mass, const double* coordinate,
-                                const double* velocity )
+void monitor::one_analysis_api( const unsigned particleNumber, const unsigned int* id,
+                                const unsigned int* partType, const double* mass,
+                                const double* coordinate, const double* velocity )
 {
     if ( not para->enableOtf )
+    {
         return;
-
-    ( void )id;
-    ( void )partType;
-    ( void )mass;
-    ( void )coordinate;
-    ( void )velocity;
+    }
 
     // first: extract the data for orbital log, and the data for each component
+    auto orbitalData = id_data_process( particleNumber, id, partType, mass, coordinate, velocity );
+    // TODO: selection of each component
 
-    // second: log the orbits
+    // second: log the orbits,
 
     // third: analyze each component
 
