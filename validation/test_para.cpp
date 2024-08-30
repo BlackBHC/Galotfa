@@ -40,10 +40,10 @@ int main()
     INFO( "Method of id determination: " );
     switch ( para.orbit->method )
     {
-    case orbit::id_sample_method::RANDOM:
+    case orbit::id_selection_method::RANDOM:
         INFO( "Random selection." );
         break;
-    case orbit::id_sample_method::TXTFILE:
+    case orbit::id_selection_method::TXTFILE:
         INFO( "By a text file of id list." );
         break;
     default:

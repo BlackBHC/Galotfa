@@ -126,7 +126,7 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     }
 
     vector< unsigned int > targetIDs;
-    if ( para->orbit->method == otf::orbit::id_sample_method::RANDOM )
+    if ( para->orbit->method == otf::orbit::id_selection_method::RANDOM )
     {
         vector< unsigned int > rawIds( particleNumber );
         for ( auto i = 0U; i < particleNumber; ++i )
@@ -163,8 +163,8 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     }
 
     tmpMass.resize( counter );
-    tmpPos.resize( counter );
-    tmpVel.resize( counter );
+    tmpPos.resize( counter * 3 );
+    tmpVel.resize( counter * 3 );
 
     // get the data container
     unique_ptr< dataContainer > container = make_unique< dataContainer >();

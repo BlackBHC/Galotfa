@@ -28,10 +28,11 @@ enable = true
 period = 10
 # Two ways to specify which particles to be logged: "txtfile" for txt
 # file or "random" for random sampling.
-method = "random"
+method = "txtfile"
+# method = "random"
 # The text file name that specifies the particle ids to be logged.
 # In this file, each row is a legal value of a particle id.
-idfile = "./idlists.txt"
+idfile = "../validation/idlist.txt"
 # Another way to specify the logged particles.
 # The fraction to be randomly sampled, must be in (0, 1]
 fraction = 0.9
