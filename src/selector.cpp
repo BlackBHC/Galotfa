@@ -129,6 +129,7 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     static vector< unsigned int > targetIDs;
     // BUG: the selected ids may be move to other mpi by Gadget4!
     // reduce them into a static vector!
+    // Devide the target id determination and the runtime selection into 2 independent functions!
     static bool firstCall = true;
     if ( firstCall )
     {
