@@ -34,12 +34,9 @@ in C++ and offers C API. It uses `HDF5` for data storage, and `MPI` for parallel
 The structure of the HDF5 log file:
 
 - Orbit:
-  Restore several orbits information:
-  - Times: m by 1 (m: number of log steps)
-  - Masses: m by n by 1 (n: number of orbits)
-  - ParticleIDs: m by n by 1
-  - Coordinates: m by n by 3
-  - Velocities: m by n by 3
+  Restore several orbits as datasets, each names as "Particle-X", where X is the id of the particle.
+  Each dataset has N x 7 numbers: N is the number of logged steps, 7 for 1 time, 3 coordinates, and
+  3 velocities in Cartesian coordinate frame.
 
 ---
 

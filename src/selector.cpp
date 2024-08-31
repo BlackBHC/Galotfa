@@ -110,7 +110,7 @@ auto orbit_selector::id_read( const string& idFilename ) -> vector< unsigned int
     return ids;
 }
 
-orbit_selector::orbit_selector( unique_ptr< runtime_para >& para ) : para( para )
+orbit_selector::orbit_selector( const runtime_para& para ) : para( para )
 {
     ;
 }
@@ -120,36 +120,45 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
                              const double* coordinate,
                              const double* velocity ) const -> std::unique_ptr< dataContainer >
 {
-    if ( not para->orbit->enable )
+    if ( not para.orbit->enable )
     {
         return nullptr;
     }
 
     // get the target id list based on specified parameters
-    vector< unsigned int > targetIDs;
-    if ( para->orbit->method == otf::orbit::id_selection_method::RANDOM )
+    static vector< unsigned int > targetIDs;
+    // BUG: the selected ids may be move to other mpi by Gadget4!
+    // reduce them into a static vector!
+    static bool firstCall = true;
+    if ( firstCall )
     {
-        // random sampling
-        vector< unsigned int > rawIds( particleNumber );
-        for ( auto i = 0U; i < particleNumber; ++i )
+        if ( para.orbit->method == otf::orbit::id_selection_method::RANDOM )
         {
-            rawIds[ i ] = particleID[ i ];
+            // random sampling
+            vector< unsigned int > rawIds( particleNumber );
+            for ( auto i = 0U; i < particleNumber; ++i )
+            {
+                rawIds[ i ] = particleID[ i ];
+            }
+            targetIDs =
+                id_sample( rawIds, partType, para.orbit->sampleTypes, para.orbit->fraction );
         }
-        targetIDs = id_sample( rawIds, partType, para->orbit->sampleTypes, para->orbit->fraction );
-    }
-    else
-    {
-        // read from a txt file
-        targetIDs = id_read( para->orbit->idfile );
+        else
+        {
+            // read from a txt file
+            targetIDs = id_read( para.orbit->idfile );
+        }
+        firstCall = false;
     }
 
     // count of found particles
     unsigned int counter = 0;
 
     // temporary variables restoring extracted data
-    vector< double > tmpMass( particleNumber );
-    vector< double > tmpPos( particleNumber * 3 );
-    vector< double > tmpVel( particleNumber * 3 );
+    vector< double >       tmpMass( particleNumber );
+    vector< unsigned int > tmpId( particleNumber );
+    vector< double >       tmpPos( particleNumber * 3 );
+    vector< double >       tmpVel( particleNumber * 3 );
 
     for ( auto i = 0U; i < particleNumber; ++i )
     {
@@ -157,6 +166,7 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
         if ( find( targetIDs.begin(), targetIDs.end(), particleID[ i ] ) != targetIDs.end() )
         {
             tmpMass[ counter ]        = mass[ i ];
+            tmpId[ counter ]          = particleID[ i ];
             tmpPos[ counter * 3 + 0 ] = coordinate[ i * 3 + 0 ];
             tmpPos[ counter * 3 + 1 ] = coordinate[ i * 3 + 1 ];
             tmpPos[ counter * 3 + 2 ] = coordinate[ i * 3 + 2 ];
@@ -170,6 +180,7 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
 
     // remove the rubish value at the end
     tmpMass.resize( counter );
+    tmpId.resize( counter );
     tmpPos.resize( counter * 3 );
     tmpVel.resize( counter * 3 );
 
@@ -177,6 +188,7 @@ auto orbit_selector::select( const unsigned int particleNumber, const unsigned i
     unique_ptr< dataContainer > container = make_unique< dataContainer >();
     container->count                      = counter;
     container->mass                       = std::move( tmpMass );
+    container->id                         = std::move( tmpId );
     container->coordinate                 = std::move( tmpPos );
     container->velocity                   = std::move( tmpVel );
 

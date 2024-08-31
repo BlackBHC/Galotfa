@@ -10,6 +10,7 @@
 #include "../include/monitor.hpp"
 #include "../include/para.hpp"
 #include "../include/recenter.hpp"
+#include "../include/selector.hpp"
 #include <memory>
 #include <mpi.h>
 #include <string_view>
@@ -156,7 +157,7 @@ namespace otf {
 
 monitor::monitor( const std::string_view& tomlParaFile )
     : mpiRank( -1 ), isRootRank( false ), stepCounter( 0 ), mpiInitialzedByMonitor( false ),
-      para( make_unique< runtime_para >( tomlParaFile ) ), h5Organizer( nullptr )
+      para( runtime_para( tomlParaFile ) ), h5Organizer( nullptr )
 
 {
     // check whether in mpi environment, if not, call MPI_Init
@@ -179,8 +180,8 @@ monitor::monitor( const std::string_view& tomlParaFile )
     MPI_INFO( mpiRank, "Read in parameter from %s", tomlParaFile.data() );
     if ( isRootRank )
     {
-        print_para_info( *para );
-        h5Organizer = make_unique< h5_out >( para->outputDir, para->fileName );
+        print_para_info( para );
+        h5Organizer = make_unique< h5_out >( para.outputDir, para.fileName );
     }
 }
 
@@ -196,21 +197,40 @@ void monitor::one_analysis_api( const unsigned particleNumber, const unsigned in
                                 const unsigned int* partType, const double* mass,
                                 const double* coordinate, const double* velocity )
 {
-    if ( not para->enableOtf )
+    if ( not para.enableOtf )
     {
         return;
     }
 
-    // first: extract the data for orbital log, and the data for each component
+    // First: extract the data for orbital log, and the data for each component
     auto orbitalData = id_data_process( particleNumber, id, partType, mass, coordinate, velocity );
+    // if it's the first extraction, create the datasets in the root rank
+    if ( isRootRank and stepCounter == 0 )
+    {
+        // TODO: do something here
+    }
     // TODO: selection of each component
 
-    // second: log the orbits,
+    // Second: log the orbits,
+    // TODO: log the orbits
 
-    // third: analyze each component
+    // Third: analyze each component
+    // TODO: analyze each component
 
-    // increase the synchronized step counter
+    // Last: increase the synchronized step counter
     stepCounter++;
+}
+
+auto monitor::id_data_process( unsigned int particleNumber, const unsigned int* particleID,
+                               const unsigned int* particleType, const double* mass,
+                               const double* coordinate,
+                               const double* velocity ) const -> std::unique_ptr< dataContainer >
+{
+    static otf::orbit_selector orbitSelector( para );
+    auto getData = orbitSelector.select( particleNumber, particleID, particleType, mass, coordinate,
+                                         velocity );
+    // TODO: MPI collection
+    return getData;
 }
 
 }  // namespace otf

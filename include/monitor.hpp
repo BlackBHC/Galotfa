@@ -37,7 +37,7 @@ private:
     bool          isRootRank;
     unsigned long stepCounter;             // counter of the synchronized time step
     bool          mpiInitialzedByMonitor;  // whether the MPI_init is called by the monitor object
-    std::unique_ptr< runtime_para > para;  // ptr to the runtime paramter
+    runtime_para  para;                    // ptr to the runtime paramter
 
     // extract the data used for orbital log
     auto id_data_process( unsigned int particleNumber, const unsigned int* particleID,

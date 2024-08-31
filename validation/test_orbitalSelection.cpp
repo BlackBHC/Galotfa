@@ -51,9 +51,8 @@ int main( int argc, char* argv[] )
         mockVel[ i ] = pow( -1, i ) * ( ( double )i + 0.3 );
     }
 
-    unique_ptr< runtime_para > para =
-        make_unique< runtime_para >( "../validation/test_orbit_random.toml" );
-    if ( not para->orbit->enable )
+    runtime_para para( "../validation/orbit_test.toml" );
+    if ( not para.orbit->enable )
     {
         MPI_Finalize();
         return 0;
@@ -98,7 +97,7 @@ int main( int argc, char* argv[] )
     auto           getData =
         orbitSelector.select( 10, mockIDs + 10 * rank, mockTypes + 10 * rank, mockMass + 10 * rank,
                               mockPos + 3 * 10 * rank, mockVel + 3 * 10 * rank );
-    if ( para->orbit->method == otf::orbit::id_selection_method::RANDOM )
+    if ( para.orbit->method == otf::orbit::id_selection_method::RANDOM )
     {
         assert( getData->count == 9 );
         for ( auto i = 0U; i < getData->count; ++i )

@@ -19,10 +19,11 @@ namespace otf {
 struct dataContainer
 {
 public:
-    unsigned int          count = 0;
-    std::vector< double > mass;
-    std::vector< double > coordinate;
-    std::vector< double > velocity;
+    unsigned int                count = 0;
+    std::vector< unsigned int > id;
+    std::vector< double >       mass;
+    std::vector< double >       coordinate;
+    std::vector< double >       velocity;
 };
 
 /**
@@ -33,7 +34,7 @@ public:
 class orbit_selector
 {
 public:
-    orbit_selector( std::unique_ptr< runtime_para >& para );
+    orbit_selector( const runtime_para& para );
     auto select( unsigned int particleNumber, const unsigned int* particleID,
                  const unsigned int* partType, const double* mass, const double* coordinate,
                  const double* velocity ) const -> std::unique_ptr< dataContainer >;
@@ -43,7 +44,7 @@ public:
 #else
 private:
 #endif
-    std::unique_ptr< runtime_para >& para;
+    const runtime_para& para;
     static auto id_sample( const std::vector< unsigned int >& raw, const unsigned int* types,
                            const std::vector< unsigned int >& sampleTypes,
                            double fraction ) -> std::vector< unsigned int >;
