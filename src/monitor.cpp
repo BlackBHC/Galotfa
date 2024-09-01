@@ -193,9 +193,9 @@ monitor::~monitor()
     }
 }
 
-void monitor::one_analysis_api( const unsigned particleNumber, const unsigned int* id,
-                                const unsigned int* partType, const double* mass,
-                                const double* coordinate, const double* velocity )
+void monitor::one_analysis_api( const unsigned int particleNumber, const int* id,
+                                const int* partType, const double* mass, const double* coordinate,
+                                const double* velocity )
 {
     if ( not para.enableOtf )
     {
@@ -221,8 +221,8 @@ void monitor::one_analysis_api( const unsigned particleNumber, const unsigned in
     stepCounter++;
 }
 
-auto monitor::id_data_process( unsigned int particleNumber, const unsigned int* particleID,
-                               const unsigned int* particleType, const double* mass,
+auto monitor::id_data_process( unsigned int particleNumber, const int* particleID,
+                               const int* particleType, const double* mass,
                                const double* coordinate,
                                const double* velocity ) const -> std::unique_ptr< dataContainer >
 {

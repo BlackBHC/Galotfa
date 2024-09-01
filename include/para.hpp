@@ -111,13 +111,13 @@ public:
     // according to specified parameters.
     enum class id_selection_method : std::uint8_t { TXTFILE = 0, RANDOM };
 
-    bool                        enable;                 // enable orbital log
-    unsigned int                period;                 // log period
-    id_selection_method         method;                 // id determination method
-    std::string                 idfile   = "not used";  // if method is txt file, give the file name
-    double                      fraction = -1;  // if method is random sample, give the fraction
-    std::vector< unsigned int > sampleTypes;    // particle types to be sampled
-    orbit_recenter_para         recenter;       // whether recenter the coordinate of orbits
+    bool                enable;                 // enable orbital log
+    unsigned int        period;                 // log period
+    id_selection_method method;                 // id determination method
+    std::string         idfile   = "not used";  // if method is txt file, give the file name
+    double              fraction = -1;          // if method is random sample, give the fraction
+    std::vector< int >  sampleTypes;            // particle types to be sampled
+    orbit_recenter_para recenter;               // whether recenter the coordinate of orbits
 };
 
 /**

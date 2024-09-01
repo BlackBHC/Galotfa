@@ -21,14 +21,14 @@ int main( int argc, char* argv[] )
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     assert( size == 4 );  // check the mpi size
 
-    unsigned int mockTypes[ 40 ];
+    int mockTypes[ 40 ];
     for ( auto& mockType : mockTypes )
     {
         mockType = 2;
     }
 
-    unsigned int mockIDs[ 40 ];
-    for ( auto i = 0U; i < 40; ++i )
+    int mockIDs[ 40 ];
+    for ( auto i = 0; i < 40; ++i )
     {
         mockIDs[ i ] = i + 1;
     }

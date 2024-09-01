@@ -19,11 +19,11 @@ namespace otf {
 struct dataContainer
 {
 public:
-    unsigned int                count = 0;
-    std::vector< unsigned int > id;
-    std::vector< double >       mass;
-    std::vector< double >       coordinate;
-    std::vector< double >       velocity;
+    unsigned int          count = 0;
+    std::vector< int >    id;
+    std::vector< double > mass;
+    std::vector< double > coordinate;
+    std::vector< double > velocity;
 };
 
 /**
@@ -35,8 +35,8 @@ class orbit_selector
 {
 public:
     orbit_selector( const runtime_para& para );
-    auto select( unsigned int particleNumber, const unsigned int* particleID,
-                 const unsigned int* partType, const double* mass, const double* coordinate,
+    auto select( unsigned int particleNumber, const int* particleID, const int* partType,
+                 const double* mass, const double* coordinate,
                  const double* velocity ) const -> std::unique_ptr< dataContainer >;
 
 #ifdef DEBUG
@@ -45,10 +45,12 @@ public:
 private:
 #endif
     const runtime_para& para;
-    static auto id_sample( const std::vector< unsigned int >& raw, const unsigned int* types,
-                           const std::vector< unsigned int >& sampleTypes,
-                           double fraction ) -> std::vector< unsigned int >;
-    static auto id_read( const std::string& idFilename ) -> std::vector< unsigned int >;
+    static auto         id_sample( const std::vector< int >& rawIds, const int* types,
+                                   const std::vector< int >& sampleTypes,
+                                   double                    fraction ) -> std::vector< int >;
+    static auto         id_read( const std::string& idFilename ) -> std::vector< int >;
+    auto extract_target_ids( const unsigned int particleNumber, const int* particleID,
+                             const int* partType ) const -> std::vector< int >;
 };
 
 }  // namespace otf

@@ -24,9 +24,8 @@ class monitor
 public:
     monitor( const std::string_view& tomlParaFile );  // initialize with the toml file name
     ~monitor();
-    void one_analysis_api( unsigned particleNumber, const unsigned int* id,
-                           const unsigned int* partType, const double* mass,
-                           const double* coordinate, const double* velocity );
+    void one_analysis_api( unsigned int particleNumber, const int* id, const int* partType,
+                           const double* mass, const double* coordinate, const double* velocity );
 
 #ifdef DEBUG
 
@@ -40,9 +39,8 @@ private:
     runtime_para  para;                    // ptr to the runtime paramter
 
     // extract the data used for orbital log
-    auto id_data_process( unsigned int particleNumber, const unsigned int* particleID,
-                          const unsigned int* particleType, const double* mass,
-                          const double* coordinate,
+    auto id_data_process( unsigned int particleNumber, const int* particleID,
+                          const int* particleType, const double* mass, const double* coordinate,
                           const double* velocity ) const -> std::unique_ptr< dataContainer >;
 
     // extract the data of a component
