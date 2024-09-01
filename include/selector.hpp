@@ -49,8 +49,8 @@ private:
                                    const std::vector< int >& sampleTypes,
                                    double                    fraction ) -> std::vector< int >;
     static auto         id_read( const std::string& idFilename ) -> std::vector< int >;
-    auto extract_target_ids( const unsigned int particleNumber, const int* particleID,
-                             const int* partType ) const -> std::vector< int >;
+    auto                extract_target_ids( unsigned int particleNumber, const int* particleID,
+                                            const int* partType ) const -> std::vector< int >;
 };
 
 }  // namespace otf

@@ -116,6 +116,14 @@ orbit_selector::orbit_selector( const runtime_para& para ) : para( para )
     ;
 }
 
+/**
+ * @brief extract the target ids of orbital log based on the specified parameters.
+ *
+ * @param particleNumber the number of particles, which will be used to determine the array length
+ * @param particleID the id of particles
+ * @param partType the PartType of particles
+ * @return a vector of the extracted ids
+ */
 auto orbit_selector::extract_target_ids( const unsigned int particleNumber, const int* particleID,
                                          const int* partType ) const -> vector< int >
 {
@@ -134,14 +142,15 @@ auto orbit_selector::extract_target_ids( const unsigned int particleNumber, cons
             id_sample( rawIds, partType, para.orbit->sampleTypes, para.orbit->fraction );
 
         // gather the target ids in each rank to one vector
-        int rank, size;
+        int rank;
+        int size;
         MPI_Comm_rank( MPI_COMM_WORLD, &rank );
         MPI_Comm_size( MPI_COMM_WORLD, &size );
 
-        int  localLength   = localTargetIDs.size();  // the number of ids in local mpi rank
-        int* numInEachRank = new int[ size ];        // number in each rank
-        // collective communication: gather
-        MPI_Allgather( &localLength, 1, MPI_INT, numInEachRank, 1, MPI_INT, MPI_COMM_WORLD );
+        int localLength = localTargetIDs.size();  // the number of ids in local mpi rank
+        const unique_ptr< int[] > numInEachRank( new int[ size ]() );  // number in each rank
+        // collective communication: gather the number of particles in each rank
+        MPI_Allgather( &localLength, 1, MPI_INT, numInEachRank.get(), 1, MPI_INT, MPI_COMM_WORLD );
 
         // get the global total number
         int totalLength = 0;
@@ -158,13 +167,13 @@ auto orbit_selector::extract_target_ids( const unsigned int particleNumber, cons
         }
 
         // the array of offset values
-        int* globalOffset = new int[ size ];  // 1, 2, 3
-        MPI_Allgather( &localOffset, 1, MPI_INT, globalOffset, 1, MPI_INT, MPI_COMM_WORLD );
+        const unique_ptr< int[] > offsets( new int[ size ]() );
+        MPI_Allgather( &localOffset, 1, MPI_INT, offsets.get(), 1, MPI_INT, MPI_COMM_WORLD );
 
         // the global target ids
         vector< int > globalTargetIds( totalLength );
         MPI_Allgatherv( localTargetIDs.data(), localLength, MPI_INT, globalTargetIds.data(),
-                        numInEachRank, globalOffset, MPI_INT, MPI_COMM_WORLD );
+                        numInEachRank.get(), offsets.get(), MPI_INT, MPI_COMM_WORLD );
         std::swap( globalTargetIds, targetIDs );
     }
     else  // txt file
@@ -175,6 +184,17 @@ auto orbit_selector::extract_target_ids( const unsigned int particleNumber, cons
     return targetIDs;
 }
 
+/**
+ * @brief Extracted the data of orbital logs.
+ *
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID particle ids
+ * @param partType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocity of particles
+ * @return the extracted data, restore in a dataContainer object
+ */
 auto orbit_selector::select( const unsigned int particleNumber, const int* particleID,
                              const int* partType, const double* mass, const double* coordinate,
                              const double* velocity ) const -> unique_ptr< dataContainer >
