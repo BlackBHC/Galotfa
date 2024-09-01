@@ -273,7 +273,7 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
     auto getData = orbitSelector.select( particleNumber, particleID, particleType, mass, coordinate,
                                          velocity );
 
-    // TODO: MPI collection
+    // NOTE: MPI collection
     const int                 localNum = getData->count;  // the number of ids in local mpi rank
     const unique_ptr< int[] > numInEachRank( new int[ mpiSize ]() );  // number in each rank
     // collective communication to gather the number of particles in each rank
@@ -320,7 +320,14 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
     MPI_Allgatherv( getData->velocity.data(), localNum * 3, MPI_DOUBLE, gVelocity.get(),
                     numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, MPI_COMM_WORLD );
 
-    ( void )time;
+    // NOTE: construct the vector of the orbit data points
+    for ( auto i = 0; i < totalNum; ++i )
+    {
+        points.push_back(
+            orbitPoint( gIDs[ i ], { time, gCoordinate[ i * 3 + 0 ], gCoordinate[ i * 3 + 1 ],
+                                     gCoordinate[ i * 3 + 2 ], gVelocity[ i * 3 + 0 ],
+                                     gVelocity[ i * 3 + 1 ], gVelocity[ i * 3 + 2 ] } ) );
+    }
     return points;
 }
 

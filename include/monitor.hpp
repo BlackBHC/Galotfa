@@ -40,7 +40,7 @@ private:
     bool          mpiInitialzedByMonitor;  // whether the MPI_init is called by the monitor object
     runtime_para  para;                    // ptr to the runtime paramter
     static constexpr unsigned int orbitPointDim = 7;
-    using orbitPoint                            = struct wrapper
+    using orbitPoint                            = struct
     {
         int    particleID;
         double data[ orbitPointDim ];
