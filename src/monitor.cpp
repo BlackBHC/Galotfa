@@ -90,10 +90,8 @@ void print_orbital_part( otf::runtime_para& para )
     }
     INFO( "Recenter radius: %g", para.orbit->recenter.radius );
     INFO( "Initial guess of the recenter:" );
-    for ( auto& coord : para.orbit->recenter.initialGuess )
-    {
-        INFO( "%g ", coord );
-    }
+    INFO( "(%g, %g, %g)", para.orbit->recenter.initialGuess[ 0 ],
+          para.orbit->recenter.initialGuess[ 1 ], para.orbit->recenter.initialGuess[ 2 ] );
     INFO( "Particle types to be used as recenter anchors:" );
     for ( auto& id : para.orbit->recenter.anchorIds )
     {
@@ -137,15 +135,12 @@ void print_component_part( otf::runtime_para& para )
         INFO( "Potential method for recenter: %s.", method.c_str() );
         INFO( "Potential enclosed radius for recenter: %g.", comp.second->recenter.radius );
         INFO( "Initial guess of the recenter:" );
-        for ( auto& coord : para.orbit->recenter.initialGuess )
-        {
-            INFO( "%g ", coord );
-        }
+        INFO( "(%g, %g, %g)", para.orbit->recenter.initialGuess[ 0 ],
+              para.orbit->recenter.initialGuess[ 1 ], para.orbit->recenter.initialGuess[ 2 ] );
         if ( comp.second->align.enable )
         {
             INFO( "Alignment of this component is enabled." );
         }
-        INFO( "Initial guess of the recenter:" );
         INFO( "Potential enclosed radius for align: %g.", comp.second->align.radius );
         if ( comp.second->image.enable )
         {
@@ -200,6 +195,11 @@ monitor::monitor( const std::string_view& tomlParaFile )
       mpiInitialzedByMonitor( false ), para( runtime_para( tomlParaFile ) ), h5Organizer( nullptr )
 
 {
+    if ( not para.enableOtf )  // if the on-the-fly analysis is not enabled
+    {
+        return;
+    }
+
     // check whether in mpi environment, if not, call MPI_Init
     int initialzed;
     MPI_Initialized( &initialzed );
@@ -240,7 +240,6 @@ void monitor::one_analysis_api( const double time, const unsigned int particleNu
                                 const int* partType, const double* mass, const double* coordinate,
                                 const double* velocity )
 {
-    ( void )time;
     if ( not para.enableOtf )
     {
         return;
@@ -260,6 +259,9 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
                             const int* partType, const double* mass, const double* coordinate,
                             const double* velocity )
 {
+    if ( stepCounter % para.orbit->period != 0 )  // only log in specified steps
+        return;
+
     // First: extract the data for orbital log, and the data for each component
     auto orbitData =
         id_data_process( time, particleNumber, id, partType, mass, coordinate, velocity );
@@ -270,6 +272,7 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
         {
             // create the datasets of particles' orbit
             const string datasetName = "Particle-" + to_string( data.particleID );
+            INFO( "Get an particle with id=[%d]", data.particleID );
             h5Organizer->create_dataset_in_group( datasetName, "Orbit", { orbitPointDim },
                                                   H5T_NATIVE_DOUBLE );
             // backup the dataset names
@@ -336,7 +339,7 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
 
     // the offset of the local mpi rank, used for variable length mpi gathering
     int localOffset = 0;
-    for ( int i = 0; i < mpiSize; ++i )
+    for ( int i = 0; i < mpiRank; ++i )
     {
         localOffset += numInEachRank[ i ];
     }

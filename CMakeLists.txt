@@ -69,7 +69,7 @@ set_target_properties(message-static
 # C++ programes
 enable_testing()
 find_package(MPI REQUIRED)
-add_executable(
+#[[ add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
     ./src/coordinates.cpp
@@ -91,9 +91,9 @@ add_executable(bin2d ./validation/test_bin2d.cpp ./src/statistic.cpp)
 target_link_libraries(bin2d PRIVATE gsl gslcblas)
 target_link_libraries(bin2d PUBLIC MPI::MPI_CXX)
 target_link_options(bin2d PRIVATE ${sanitizer_flags})
-add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
+add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>) ]]
 
-add_executable(bin1d ./validation/test_bin1d.cpp ./src/statistic.cpp)
+#[[ add_executable(bin1d ./validation/test_bin1d.cpp ./src/statistic.cpp)
 target_link_libraries(bin1d PRIVATE gsl gslcblas)
 find_package(MPI REQUIRED) # first: find the package
 target_link_libraries(bin1d PUBLIC MPI::MPI_CXX)
@@ -122,7 +122,20 @@ add_executable(
 )
 target_link_libraries(orbitalSelect PUBLIC MPI::MPI_CXX)
 target_link_options(orbitalSelect PRIVATE ${sanitizer_flags})
-add_test(NAME orbitalSelect COMMAND mpirun -np 4 $<TARGET_FILE:orbitalSelect>)
+add_test(NAME orbitalSelect COMMAND mpirun -np 4 $<TARGET_FILE:orbitalSelect>) ]]
+
+add_executable(
+    orbitalLog
+    ./validation/test_orbitalLog.cpp
+    ./src/monitor.cpp
+    ./src/para.cpp
+    ./src/h5out.cpp
+    ./src/selector.cpp
+)
+target_link_libraries(orbitalLog PUBLIC MPI::MPI_CXX)
+target_link_libraries(orbitalLog PRIVATE hdf5)
+target_link_options(orbitalLog PRIVATE ${sanitizer_flags})
+add_test(NAME orbitalLog COMMAND mpirun -np 4 $<TARGET_FILE:orbitalLog>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
