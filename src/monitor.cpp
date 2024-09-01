@@ -11,8 +11,11 @@
 #include "../include/para.hpp"
 #include "../include/recenter.hpp"
 #include "../include/selector.hpp"
+#include <H5Tpublic.h>
+#include <algorithm>
 #include <memory>
 #include <mpi.h>
+#include <string>
 #include <string_view>
 #include <vector>
 using namespace std;
@@ -233,7 +236,7 @@ monitor::~monitor()
     }
 }
 
-void monitor::one_analysis_api( double time, const unsigned int particleNumber, const int* id,
+void monitor::one_analysis_api( const double time, const unsigned int particleNumber, const int* id,
                                 const int* partType, const double* mass, const double* coordinate,
                                 const double* velocity )
 {
@@ -243,18 +246,8 @@ void monitor::one_analysis_api( double time, const unsigned int particleNumber, 
         return;
     }
 
-    // First: extract the data for orbital log, and the data for each component
-    auto orbitalData =
-        id_data_process( time, particleNumber, id, partType, mass, coordinate, velocity );
-    // if it's the first extraction, create the datasets in the root rank
-    if ( isRootRank and stepCounter == 0 )
-    {
-        // TODO: do something here
-    }
-    // TODO: selection of each component
-
-    // Second: log the orbits,
-    // TODO: log the orbits
+    // First: orbital logs part
+    orbital_part( time, particleNumber, id, partType, mass, coordinate, velocity );
 
     // Third: analyze each component
     // TODO: analyze each component
@@ -263,6 +256,61 @@ void monitor::one_analysis_api( double time, const unsigned int particleNumber, 
     stepCounter++;
 }
 
+void monitor::orbital_part( const double time, const unsigned int particleNumber, const int* id,
+                            const int* partType, const double* mass, const double* coordinate,
+                            const double* velocity )
+{
+    // First: extract the data for orbital log, and the data for each component
+    auto orbitData =
+        id_data_process( time, particleNumber, id, partType, mass, coordinate, velocity );
+    // if it's the first extraction, create the datasets in the root rank
+    if ( isRootRank and stepCounter == 0 )
+    {
+        for ( auto& data : orbitData )
+        {
+            // create the datasets of particles' orbit
+            const string datasetName = "Particle-" + to_string( data.particleID );
+            h5Organizer->create_dataset_in_group( datasetName, "Orbit", { orbitPointDim },
+                                                  H5T_NATIVE_DOUBLE );
+            // backup the dataset names
+            orbitDatasetNames.push_back( datasetName );
+        }
+    }
+
+    // Second: log the orbits in the root rank
+    if ( isRootRank )
+    {
+        for ( auto i = 0UL; i < orbitDatasetNames.size(); ++i )
+        {
+#ifdef DEBUG
+            auto returnCode = h5Organizer->flush_single_block( "Orbit", orbitDatasetNames[ i ],
+                                                               orbitData[ i ].data );
+            if ( returnCode != 0 )
+            {
+                ERROR( "The dataset [Orbit/%s] written faild!", orbitDatasetNames[ i ].c_str() );
+                throw;
+            }
+#else
+            h5Organizer->flush_single_block( "Orbit", orbitDatasetNames[ i ].c_str(),
+                                             orbitData[ i ].data );
+#endif
+        }
+    }
+}
+
+/**
+ * @brief Extract the orbital data points and sort them based on the particle IDs, only the root
+ * rank will return the effective data.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ * @return the vector of orbitPoint objects
+ */
 auto monitor::id_data_process( const double time, const unsigned int particleNumber,
                                const int* particleID, const int* particleType, const double* mass,
                                const double* coordinate,
@@ -311,23 +359,39 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
     const unique_ptr< double[] > gCoordinate( new double[ totalNum * 3 ]() );
     const unique_ptr< double[] > gVelocity( new double[ totalNum * 3 ]() );
     // gather ids
-    MPI_Allgatherv( getData->id.data(), localNum, MPI_INT, gIDs.get(), numInEachRank.get(),
-                    offsets.get(), MPI_INT, MPI_COMM_WORLD );
+    // MPI_Allgatherv( getData->id.data(), localNum, MPI_INT, gIDs.get(), numInEachRank.get(),
+    //                 offsets.get(), MPI_INT, MPI_COMM_WORLD );
+    MPI_Gatherv( getData->id.data(), localNum, MPI_INT, gIDs.get(), numInEachRank.get(),
+                 offsets.get(), MPI_INT, 0, MPI_COMM_WORLD );
     // gather coordinates
-    MPI_Allgatherv( getData->coordinate.data(), localNum * 3, MPI_DOUBLE, gCoordinate.get(),
-                    numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, MPI_COMM_WORLD );
+    // MPI_Allgatherv( getData->coordinate.data(), localNum * 3, MPI_DOUBLE, gCoordinate.get(),
+    //                 numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, MPI_COMM_WORLD );
+    MPI_Gatherv( getData->coordinate.data(), localNum * 3, MPI_DOUBLE, gCoordinate.get(),
+                 numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, 0, MPI_COMM_WORLD );
     // gather velocities
     MPI_Allgatherv( getData->velocity.data(), localNum * 3, MPI_DOUBLE, gVelocity.get(),
                     numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, MPI_COMM_WORLD );
+    MPI_Gatherv( getData->velocity.data(), localNum * 3, MPI_DOUBLE, gVelocity.get(),
+                 numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, 0, MPI_COMM_WORLD );
+
+    if ( not isRootRank )  // if not root rank, directly return
+    {
+        return points;
+    }
 
     // NOTE: construct the vector of the orbit data points
     for ( auto i = 0; i < totalNum; ++i )
     {
-        points.push_back(
-            orbitPoint( gIDs[ i ], { time, gCoordinate[ i * 3 + 0 ], gCoordinate[ i * 3 + 1 ],
-                                     gCoordinate[ i * 3 + 2 ], gVelocity[ i * 3 + 0 ],
-                                     gVelocity[ i * 3 + 1 ], gVelocity[ i * 3 + 2 ] } ) );
+        points.push_back( orbitPoint(
+            { gIDs[ i ],
+              { time, gCoordinate[ i * 3 + 0 ], gCoordinate[ i * 3 + 1 ], gCoordinate[ i * 3 + 2 ],
+                gVelocity[ i * 3 + 0 ], gVelocity[ i * 3 + 1 ], gVelocity[ i * 3 + 2 ] } } ) );
     }
+
+    // NOTE: sort the orbit points based on their id
+    static auto cmp = []( orbitPoint p1, orbitPoint p2 ) { return p1.particleID < p2.particleID; };
+    std::sort( points.begin(), points.end(), cmp );
+    // TEST: the validation of the sort
     return points;
 }
 
