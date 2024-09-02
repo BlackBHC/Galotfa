@@ -16,11 +16,7 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
     if ( access( tomlParaFile.data(), F_OK ) != 0 )
     {
         ERROR( "The toml file [%s] not found!", tomlParaFile.data() );
-        exit( -1 );
-    }
-    else
-    {
-        myprint( "Read the toml file [%s]", tomlParaFile.data() );
+        throw;
     }
 
     toml::table paraTable = toml::parse_file( tomlParaFile );
@@ -66,11 +62,8 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
         }
     } );
 
-    // check the number of component(s)
-    INFO( "There are %lu component(s)", comps.size() );
-
-    // if there is no any component and orbital logs are enables, then toggle off the on-the-fly
-    // analysis
+    // NOTE: if there is no any component and orbital logs are enables, then toggle off the
+    // on-the-fly analysis
     if ( comps.size() == 0 and ( not orbit->enable ) )
         enableOtf = false;
 }

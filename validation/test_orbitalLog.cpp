@@ -4,9 +4,7 @@
  */
 
 #include "../include/monitor.hpp"
-#include "../include/myprompt.hpp"
 #include <cmath>
-#include <cstdio>
 #include <memory>
 #include <mpi.h>
 using namespace std;
@@ -73,21 +71,8 @@ int main( int argc, char* argv[] )
     const unique_ptr< int[] > offsets( new int[ size ]() );
     MPI_Allgather( &localOffset, 1, MPI_INT, offsets.get(), 1, MPI_INT, MPI_COMM_WORLD );
     const unique_ptr< int[] > offset3s( new int[ size ]() );
-    MPI_Allgather( &localOffset3, 1, MPI_INT, offsets.get(), 1, MPI_INT, MPI_COMM_WORLD );
+    MPI_Allgather( &localOffset3, 1, MPI_INT, offset3s.get(), 1, MPI_INT, MPI_COMM_WORLD );
 
-    // BUG: the next line is correct
-    INFO( "localOffset=[%d] in rank [%d]", localOffset, rank );
-
-    // BUG: but this is wrong!
-    if ( rank == 0 )
-    {
-        myprint( "Offsets:" );
-        for ( int i = 0; i < size; ++i )
-        {
-            printf( "%d\t", offsets[ i ] );
-        }
-        myprint( "" );
-    }
     // types
     MPI_Scatterv( mockTypesG, localNums, offsets.get(), MPI_INT, mockTypes.get(), localNums[ rank ],
                   MPI_INT, 0, MPI_COMM_WORLD );
@@ -101,23 +86,9 @@ int main( int argc, char* argv[] )
     MPI_Scatterv( mockVelG, localNums, offset3s.get(), MPI_DOUBLE, mockVel.get(),
                   localNums[ rank ] * 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-    for ( int i = 0; i < size; ++i )
-    {
-        if ( rank == i )
-        {
-            INFO( "IDs in rank [%d]:", rank );
-            for ( auto j = 0; j < localNums[ rank ]; ++j )
-            {
-                printf( "%d\t", mockIDs[ j ] );
-            }
-            printf( "\n" );
-        }
-        MPI_Barrier( MPI_COMM_WORLD );
-    }
-
     double mockTime   = 0;     // mock the time of the simulation
     double mockDeltaT = 0.13;  // mock the time step of the simulation
-    double mockDrift  = 1.1;   // mock the drift
+    double mockDrift  = 1.2;   // mock the drift
     double mockKick   = -1.7;  // mock the kick
     int    maxStep    = 23;    // mock the number of synchronized steps
 
@@ -128,16 +99,15 @@ int main( int argc, char* argv[] )
                                     mockMass.get(), mockPos.get(), mockVel.get() );
 
         // mock the kick-drift pair
-        for ( auto j = 0; j < 3; ++j )
-        {
-            mockPos[ i * 3 + j ] += mockDrift;
-            mockVel[ i * 3 + j ] += mockKick;
-        }
+        for ( auto j = 0; j < localNums[ rank ]; ++j )
+            for ( auto k = 0; k < 3; ++k )
+            {
+                mockPos[ j * 3 + k ] += mockDrift;
+                mockVel[ j * 3 + k ] += mockKick;
+            }
         // mock the time increment
         mockTime += mockDeltaT;
     }
-
-
 
     MPI_Finalize();
     return 0;

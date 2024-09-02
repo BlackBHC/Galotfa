@@ -108,8 +108,8 @@ auto h5_out::create_dataset_in_group( const string& datasetName, const string& g
     int const setExistsInGroup = ensure_dataset_empty( groupName, datasetName );
     if ( setExistsInGroup != 0 )
     {
-        WARN( "[Warning]: Try to create an existing dataset [%s] in group [%s]!",
-              datasetName.c_str(), groupName.c_str() );
+        WARN( "Try to create an existing dataset [%s] in group [%s]!", datasetName.c_str(),
+              groupName.c_str() );
         return -1;
     }
     unique_ptr< dataset_handle > ptrToHandle =

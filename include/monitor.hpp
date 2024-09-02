@@ -34,12 +34,12 @@ public:
 #else
 private:
 #endif
-    int           mpiRank;
-    int           mpiSize;
-    bool          isRootRank;
-    unsigned long stepCounter;             // counter of the synchronized time step
-    bool          mpiInitialzedByMonitor;  // whether the MPI_init is called by the monitor object
-    runtime_para  para;                    // ptr to the runtime paramter
+    int          mpiRank;
+    int          mpiSize;
+    bool         isRootRank;
+    unsigned int stepCounter;             // counter of the synchronized time step
+    bool         mpiInitialzedByMonitor;  // whether the MPI_init is called by the monitor object
+    runtime_para para;                    // ptr to the runtime paramter
     std::vector< std::string >    orbitDatasetNames;
     static constexpr unsigned int orbitPointDim = 7;
     using orbitPoint                            = struct

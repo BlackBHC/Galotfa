@@ -246,7 +246,10 @@ void monitor::one_analysis_api( const double time, const unsigned int particleNu
     }
 
     // First: orbital logs part
-    orbital_part( time, particleNumber, id, partType, mass, coordinate, velocity );
+    if ( para.orbit->enable )
+    {
+        orbital_part( time, particleNumber, id, partType, mass, coordinate, velocity );
+    }
 
     // Third: analyze each component
     // TODO: analyze each component
@@ -259,8 +262,10 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
                             const int* partType, const double* mass, const double* coordinate,
                             const double* velocity )
 {
-    if ( stepCounter % para.orbit->period != 0 )  // only log in specified steps
+    if ( stepCounter % para.orbit->period != 0 )  // only log in the chosen steps
+    {
         return;
+    }
 
     // First: extract the data for orbital log, and the data for each component
     auto orbitData =
@@ -272,7 +277,6 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
         {
             // create the datasets of particles' orbit
             const string datasetName = "Particle-" + to_string( data.particleID );
-            INFO( "Get an particle with id=[%d]", data.particleID );
             h5Organizer->create_dataset_in_group( datasetName, "Orbit", { orbitPointDim },
                                                   H5T_NATIVE_DOUBLE );
             // backup the dataset names
@@ -362,18 +366,12 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
     const unique_ptr< double[] > gCoordinate( new double[ totalNum * 3 ]() );
     const unique_ptr< double[] > gVelocity( new double[ totalNum * 3 ]() );
     // gather ids
-    // MPI_Allgatherv( getData->id.data(), localNum, MPI_INT, gIDs.get(), numInEachRank.get(),
-    //                 offsets.get(), MPI_INT, MPI_COMM_WORLD );
     MPI_Gatherv( getData->id.data(), localNum, MPI_INT, gIDs.get(), numInEachRank.get(),
                  offsets.get(), MPI_INT, 0, MPI_COMM_WORLD );
     // gather coordinates
-    // MPI_Allgatherv( getData->coordinate.data(), localNum * 3, MPI_DOUBLE, gCoordinate.get(),
-    //                 numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, MPI_COMM_WORLD );
     MPI_Gatherv( getData->coordinate.data(), localNum * 3, MPI_DOUBLE, gCoordinate.get(),
                  numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, 0, MPI_COMM_WORLD );
     // gather velocities
-    MPI_Allgatherv( getData->velocity.data(), localNum * 3, MPI_DOUBLE, gVelocity.get(),
-                    numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, MPI_COMM_WORLD );
     MPI_Gatherv( getData->velocity.data(), localNum * 3, MPI_DOUBLE, gVelocity.get(),
                  numInEachRank3D.get(), offsets3D.get(), MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
@@ -394,7 +392,6 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
     // NOTE: sort the orbit points based on their id
     static auto cmp = []( orbitPoint p1, orbitPoint p2 ) { return p1.particleID < p2.particleID; };
     std::sort( points.begin(), points.end(), cmp );
-    // TEST: the validation of the sort
     return points;
 }
 
