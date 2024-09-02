@@ -72,8 +72,8 @@ private:
                       const double* mass, const double* coordinate, const double* velocity );
     // extract the data of a component
     auto component_data_process(
-        double time, unsigned int particleNumber, const int* id, const int* partType,
-        const double* mass, const double* coordinate, const double* velocity,
+        unsigned int particleNumber, const int* id, const int* partType, const double* mass,
+        const double* coordinate, const double* velocity,
         std::unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer;
     // wrapper of orbital log
     void component_analysis( double time, unsigned int particleNumber, const int* id,

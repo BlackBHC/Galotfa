@@ -347,12 +347,11 @@ void monitor::orbital_log( const double time, const unsigned int particleNumber,
  * result
  */
 auto monitor::component_data_process(
-    double time, unsigned int particleNumber, const int* id, const int* partType,
-    const double* mass, const double* coordinate, const double* velocity,
+    unsigned int particleNumber, const int* id, const int* partType, const double* mass,
+    const double* coordinate, const double* velocity,
     unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer
 {
     compDataContainer compData;
-    ( void )time;
     ( void )particleNumber;
     ( void )id;
     ( void )partType;
@@ -379,8 +378,8 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
                                   const int* partType, const double* mass, const double* coordinate,
                                   const double* velocity, unique_ptr< otf::component >& comp ) const
 {
-    auto compDataContainer = component_data_process( time, particleNumber, id, partType, mass,
-                                                     coordinate, velocity, comp );
+    auto compDataContainer =
+        component_data_process( particleNumber, id, partType, mass, coordinate, velocity, comp );
     // NOTE: output the component data
     // NOTE: create the datasets at the first call
     if ( isRootRank and stepCounter == 0 )
@@ -434,7 +433,9 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
     // NOTE: flush the data
     if ( isRootRank )
     {
+        // time of the current iteration
         h5Organizer->flush_single_block( comp->compName, "Time", &time );
+
         // center positions
         if ( comp->recenter.enable )
         {
