@@ -138,12 +138,12 @@ int main()
         INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
         INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
 
-        if ( comp.second->buckle.enable )
+        if ( comp.second->sBuckle.enable )
         {
             INFO( "buckle of this component is enabled." );
         }
-        INFO( "buckle rmin : %g.", comp.second->buckle.rmin );
-        INFO( "buckle rmax : %g.", comp.second->buckle.rmax );
+        INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
+        INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
     }
 
     return 0;

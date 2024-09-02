@@ -162,12 +162,12 @@ void print_component_part( otf::runtime_para& para )
         INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
         INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
 
-        if ( comp.second->buckle.enable )
+        if ( comp.second->sBuckle.enable )
         {
             INFO( "buckle of this component is enabled." );
         }
-        INFO( "buckle rmin : %g.", comp.second->buckle.rmin );
-        INFO( "buckle rmax : %g.", comp.second->buckle.rmax );
+        INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
+        INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
     }
 }
 
@@ -236,9 +236,20 @@ monitor::~monitor()
     }
 }
 
-void monitor::one_analysis_api( const double time, const unsigned int particleNumber, const int* id,
-                                const int* partType, const double* mass, const double* coordinate,
-                                const double* velocity )
+/**
+ * @brief The main analysis api, which should be called in the main loop of the simulation.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ */
+void monitor::main_analysis_api( const double time, const unsigned int particleNumber,
+                                 const int* id, const int* partType, const double* mass,
+                                 const double* coordinate, const double* velocity )
 {
     if ( not para.enableOtf )
     {
@@ -248,19 +259,35 @@ void monitor::one_analysis_api( const double time, const unsigned int particleNu
     // First: orbital logs part
     if ( para.orbit->enable )
     {
-        orbital_part( time, particleNumber, id, partType, mass, coordinate, velocity );
+        orbital_log( time, particleNumber, id, partType, mass, coordinate, velocity );
     }
 
     // Third: analyze each component
     // TODO: analyze each component
+    for ( auto& comp : para.comps )
+    {
+        component_analysis( time, particleNumber, id, partType, mass, coordinate, velocity,
+                            comp.second );
+    }
 
     // Last: increase the synchronized step counter
     stepCounter++;
 }
 
-void monitor::orbital_part( const double time, const unsigned int particleNumber, const int* id,
-                            const int* partType, const double* mass, const double* coordinate,
-                            const double* velocity )
+/**
+ * @brief The api of orbital log.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ */
+void monitor::orbital_log( const double time, const unsigned int particleNumber, const int* id,
+                           const int* partType, const double* mass, const double* coordinate,
+                           const double* velocity )
 {
     if ( stepCounter % para.orbit->period != 0 )  // only log in the chosen steps
     {
@@ -301,6 +328,145 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
             h5Organizer->flush_single_block( "Orbit", orbitDatasetNames[ i ].c_str(),
                                              orbitData[ i ].data );
 #endif
+        }
+    }
+}
+
+/**
+ * @brief The api of data extraction for component analysis.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ * @param comp otf::component object, a structure of parameters for a component
+ * @return the vector of otf::monitor::compDataContainer objects, which are containers of analysis
+ * result
+ */
+auto monitor::component_data_process(
+    double time, unsigned int particleNumber, const int* id, const int* partType,
+    const double* mass, const double* coordinate, const double* velocity,
+    unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer
+{
+    compDataContainer compData;
+    ( void )time;
+    ( void )particleNumber;
+    ( void )id;
+    ( void )partType;
+    ( void )mass;
+    ( void )coordinate;
+    ( void )velocity;
+    ( void )comp;
+    return compData;
+}
+
+/**
+ * @brief The api of component analysis.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ * @param comp otf::component object, a structure of parameters for a component
+ */
+void monitor::component_analysis( double time, unsigned int particleNumber, const int* id,
+                                  const int* partType, const double* mass, const double* coordinate,
+                                  const double* velocity, unique_ptr< otf::component >& comp ) const
+{
+    auto compDataContainer = component_data_process( time, particleNumber, id, partType, mass,
+                                                     coordinate, velocity, comp );
+    // NOTE: output the component data
+    // NOTE: create the datasets at the first call
+    if ( isRootRank and stepCounter == 0 )
+    {
+        // create the datasets for times
+        if ( comp->recenter.enable )
+        {
+            h5Organizer->create_dataset_in_group( "Time", comp->compName, { 1 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+
+        // create the datasets for center positions
+        if ( comp->recenter.enable )
+        {
+            h5Organizer->create_dataset_in_group( "Center", comp->compName, { 3 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+
+        // create the datasets for bar infos
+        if ( comp->A2.enable )
+        {
+            h5Organizer->create_dataset_in_group( "A2", comp->compName, { 1 }, H5T_NATIVE_DOUBLE );
+        }
+        if ( comp->barAngle.enable )
+        {
+            h5Organizer->create_dataset_in_group( "BarAngle", comp->compName, { 1 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+        if ( comp->sBuckle.enable )
+        {
+            h5Organizer->create_dataset_in_group( "Sbuckle", comp->compName, { 1 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+        // TODO: bar length
+
+        // create the datasets for image
+        if ( comp->image.enable )
+        {
+            // create the datasets for images in x-y, y-z, x-z planes
+            h5Organizer->create_dataset_in_group( "ImageXY", comp->compName,
+                                                  { comp->image.binNum, comp->image.binNum },
+                                                  H5T_NATIVE_DOUBLE );
+            h5Organizer->create_dataset_in_group( "ImageXZ", comp->compName,
+                                                  { comp->image.binNum, comp->image.binNum },
+                                                  H5T_NATIVE_DOUBLE );
+            h5Organizer->create_dataset_in_group( "ImageYZ", comp->compName,
+                                                  { comp->image.binNum, comp->image.binNum },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+    }
+    // NOTE: flush the data
+    if ( isRootRank )
+    {
+        h5Organizer->flush_single_block( comp->compName, "Time", &time );
+        // center positions
+        if ( comp->recenter.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "Center", compDataContainer.center );
+        }
+
+        // bar infos
+        if ( comp->A2.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "A2", &compDataContainer.A2 );
+        }
+        if ( comp->barAngle.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "BarAngle",
+                                             &compDataContainer.barAngle );
+        }
+        if ( comp->sBuckle.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "Sbuckle",
+                                             &compDataContainer.sBuckle );
+        }
+        // TODO: bar length
+
+        // images
+        if ( comp->image.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "ImageXY",
+                                             compDataContainer.imageXZ.get() );
+            h5Organizer->flush_single_block( comp->compName, "ImageXZ",
+                                             compDataContainer.imageXZ.get() );
+            h5Organizer->flush_single_block( comp->compName, "ImageYZ",
+                                             compDataContainer.imageXZ.get() );
         }
     }
 }

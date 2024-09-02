@@ -30,7 +30,7 @@ period = 10
 # sph: spherical, recommended for spherical components such as
 #      classical bulge and dark matter halo.
 # car: cartesian, to be implemented in future versions.
-# NOTE: unused in the programe at current version
+# NOTE: this parameter is unused at present
 frame = "cyl"
 # Whether recenter the component before analyses or not.
 recenter.enable = true
@@ -60,6 +60,7 @@ align.enable = true
 align.radius = true
 # Parameters for calculations of x-y, x-z, and y-z projections. Must
 # be given if recenter.enable=true and method="dp", or if align=true.
+# TODO: images of streaming motion, their dispersion etc.
 image.enable = true
 image.halflength = 10.0 # the half length of the box to be projected.
 image.binnum = 100      # the number of bins in each direction.
@@ -92,6 +93,7 @@ buckle.enable = true # if true, require the following 2 parameters
 buckle.rmin = 0.1
 # Maximal radius for A2 calculation
 buckle.rmax = 10
+# TODO: bar length
 
 ##### Parameter for orbital logs
 [orbit]

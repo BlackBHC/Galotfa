@@ -95,7 +95,7 @@ struct component
     image_para                  image;     // parameter of the spatial image part
     basic_bar_para              A2;        // bar strength parameter
     basic_bar_para              barAngle;  // bar angle parameter
-    basic_bar_para              buckle;    // buckling strength parameter
+    basic_bar_para              sBuckle;   // buckling strength parameter
 };
 
 /**

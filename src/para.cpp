@@ -70,8 +70,7 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
 
 component::component( string_view& compName, toml::table& compNodeTable )
 {
-    const string tmpStr( compName );
-    this->compName = std::move( tmpStr );
+    this->compName = compName;
     // particle types in this component
     auto typeIDs = compNodeTable[ "types" ];
     if ( toml::array* arr = typeIDs.as_array() )
@@ -172,11 +171,11 @@ component::component( string_view& compName, toml::table& compNodeTable )
         barAngle.rmax = *compNodeTable[ "barangle" ][ "rmax" ].value< double >();
     }
     // buckling strength
-    buckle.enable = *compNodeTable[ "buckle" ][ "enable" ].value< bool >();
-    if ( buckle.enable )
+    sBuckle.enable = *compNodeTable[ "buckle" ][ "enable" ].value< bool >();
+    if ( sBuckle.enable )
     {
-        buckle.rmin = *compNodeTable[ "buckle" ][ "rmin" ].value< double >();
-        buckle.rmax = *compNodeTable[ "buckle" ][ "rmax" ].value< double >();
+        sBuckle.rmin = *compNodeTable[ "buckle" ][ "rmin" ].value< double >();
+        sBuckle.rmax = *compNodeTable[ "buckle" ][ "rmax" ].value< double >();
     }
 }
 

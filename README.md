@@ -11,9 +11,13 @@ in C++ and offers C API. It uses `HDF5` for data storage, and `MPI` for parallel
 ## Dependencies
 
 - A C++ compiler that supports C++17.
+
 - [`HDF5`](https://www.hdfgroup.org/solutions/hdf5/)
+
 - [`gsl`](https://www.gnu.org/software/gsl/)
+
 - A `MPI` library (e.g. [`OpenMPI`](https://www.open-mpi.org/)).
+
 - `cmake` >= 3.12
 
 - [`toml++`](https://marzer.github.io/tomlplusplus/#mainpage-example) for `toml`

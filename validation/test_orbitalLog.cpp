@@ -95,8 +95,8 @@ int main( int argc, char* argv[] )
     monitor otfServer( "../validation/orbit_log_test.toml" );
     for ( auto i = 0; i < maxStep; ++i )
     {
-        otfServer.one_analysis_api( mockTime, localNums[ rank ], mockIDs.get(), mockTypes.get(),
-                                    mockMass.get(), mockPos.get(), mockVel.get() );
+        otfServer.main_analysis_api( mockTime, localNums[ rank ], mockIDs.get(), mockTypes.get(),
+                                     mockMass.get(), mockPos.get(), mockVel.get() );
 
         // mock the kick-drift pair
         for ( auto j = 0; j < localNums[ rank ]; ++j )
