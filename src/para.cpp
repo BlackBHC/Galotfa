@@ -6,19 +6,26 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unistd.h>
 using namespace std;
 
 namespace otf {
 
 runtime_para::runtime_para( const std::string_view& tomlParaFile )
 {
-    myprint( "Read the toml file [%s]", tomlParaFile.data() );
+    if ( access( tomlParaFile.data(), F_OK ) != 0 )
+    {
+        ERROR( "The toml file [%s] not found!", tomlParaFile.data() );
+        throw;
+    }
+
     toml::table paraTable = toml::parse_file( tomlParaFile );
 
     // check whether enable the on-the-fly analysis
     enableOtf = *paraTable[ "global" ][ "enable" ].value< bool >();
     if ( not enableOtf )
     {
+        INFO( "The orbital log is not enabled" );
         return;
     }
 
@@ -41,7 +48,6 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
 
     // orbital log parameters
     orbit = make_unique< otf::orbit >( *paraTable[ "orbit" ].as_table() );
-    // INFO( "Call from inside constructer of [runtime_para]: %s", orbit->idfile.data() );
 
     // parameters of each components
     paraTable.for_each( [ this ]( auto& key, auto& value ) {
@@ -55,7 +61,11 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
             }
         }
     } );
-    // INFO( "Call from inside constructer of [runtime_para] (end): %s", orbit->idfile.data() );
+
+    // NOTE: if there is no any component and orbital logs are enables, then toggle off the
+    // on-the-fly analysis
+    if ( comps.size() == 0 and ( not orbit->enable ) )
+        enableOtf = false;
 }
 
 component::component( string_view& compName, toml::table& compNodeTable )
@@ -191,7 +201,7 @@ orbit::orbit( toml::table& orbitNode )
         arr->for_each( [ this ]( auto&& el ) {
             if constexpr ( toml::is_number< decltype( el ) > )
             {
-                logTypes.push_back( *el );
+                sampleTypes.push_back( *el );
             }
         } );
     }
@@ -199,11 +209,11 @@ orbit::orbit( toml::table& orbitNode )
     auto str = *orbitNode[ "method" ].value< string_view >();
     if ( str == "txtfile" )
     {
-        method = log_method::TXTFILE;
+        method = id_selection_method::TXTFILE;
     }
     else if ( str == "random" )
     {
-        method = log_method::RANDOM;
+        method = id_selection_method::RANDOM;
     }
     else
     {
@@ -213,7 +223,7 @@ orbit::orbit( toml::table& orbitNode )
         exit( -1 );
     }
 
-    if ( method == log_method::RANDOM )
+    if ( method == id_selection_method::RANDOM )
     {
         // random selection
         fraction = *orbitNode[ "fraction" ].value< double >();

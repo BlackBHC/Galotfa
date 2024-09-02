@@ -1,11 +1,10 @@
 /**
- * @file
+ * @file test_para.cpp
  * @brief Test the parameter parser.
  */
 
 #include "../include/myprompt.hpp"
 #include "../include/para.hpp"
-#include <hdf5.h>
 using namespace std;
 using namespace otf;
 
@@ -18,6 +17,10 @@ int main()
     {
         INFO( "On the fly analysis is enabled." );
     }
+    else
+    {
+        INFO( "On the fly analysis is forbidden." );
+    }
 
     INFO( "Output to  [%s]/[%s]", para.outputDir.c_str(), para.fileName.c_str() );
     INFO( "Max iteration [%u], epsilon [%g]", para.maxIter, para.epsilon );
@@ -29,7 +32,7 @@ int main()
     }
     INFO( "Log period: %d", para.orbit->period );
     INFO( "Particle types to be logged:" );
-    for ( auto& id : para.orbit->logTypes )
+    for ( auto& id : para.orbit->sampleTypes )
     {
         INFO( "%d ", id );
     }
@@ -37,10 +40,10 @@ int main()
     INFO( "Method of id determination: " );
     switch ( para.orbit->method )
     {
-    case orbit::log_method::RANDOM:
+    case orbit::id_selection_method::RANDOM:
         INFO( "Random selection." );
         break;
-    case orbit::log_method::TXTFILE:
+    case orbit::id_selection_method::TXTFILE:
         INFO( "By a text file of id list." );
         break;
     default:

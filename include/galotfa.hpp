@@ -13,13 +13,14 @@
  * @param particleIDs particle ids.
  * @param particleTypes particle type ids.
  * @param masses particle masses, in simulation units.
- * @param coordiantes coordinates in simulation unit.
+ * @param coordinates coordinates in simulation unit.
  * @param velocities velocities in simulation units.
  * @return
  */
-extern "C" auto OnTheFly_Analysis_Nbody( double currentTime, int particleNumber,
-                                         const int* particleIDs, const int* particleTypes,
-                                         const double* masses, const double* coordiantes,
+extern "C" auto OnTheFly_Analysis_Nbody( const double       currentTime,
+                                         const unsigned int particleNumber, const int* particleIDs,
+                                         const int* particleTypes, const double* masses,
+                                         const double* coordinates,
                                          const double* velocities ) -> int;
 
 #endif

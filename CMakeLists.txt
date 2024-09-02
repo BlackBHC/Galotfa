@@ -68,7 +68,7 @@ set_target_properties(message-static
 # UNIT TESTS
 # C++ programes
 enable_testing()
-#[[ find_package(MPI REQUIRED)
+find_package(MPI REQUIRED)
 add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
@@ -108,11 +108,34 @@ add_test(NAME recenter COMMAND mpirun -np 4 $<TARGET_FILE:recenter>)
 add_executable(barinfo ./validation/test_barinfo.cpp ./src/barinfo.cpp)
 target_link_libraries(barinfo PUBLIC MPI::MPI_CXX)
 target_link_options(barinfo PRIVATE ${sanitizer_flags})
-add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>) ]]
+add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>)
 
 add_executable(para ./validation/test_para.cpp ./src/para.cpp)
 target_link_options(para PRIVATE ${sanitizer_flags})
 add_test(NAME para COMMAND $<TARGET_FILE:para>)
+
+add_executable(
+    orbitalSelect
+    ./validation/test_orbitalSelection.cpp
+    ./src/selector.cpp
+    ./src/para.cpp
+)
+target_link_libraries(orbitalSelect PUBLIC MPI::MPI_CXX)
+target_link_options(orbitalSelect PRIVATE ${sanitizer_flags})
+add_test(NAME orbitalSelect COMMAND mpirun -np 4 $<TARGET_FILE:orbitalSelect>)
+
+add_executable(
+    orbitalLog
+    ./validation/test_orbitalLog.cpp
+    ./src/monitor.cpp
+    ./src/para.cpp
+    ./src/h5out.cpp
+    ./src/selector.cpp
+)
+target_link_libraries(orbitalLog PUBLIC MPI::MPI_CXX)
+target_link_libraries(orbitalLog PRIVATE hdf5)
+target_link_options(orbitalLog PRIVATE ${sanitizer_flags})
+add_test(NAME orbitalLog COMMAND mpirun -np 4 $<TARGET_FILE:orbitalLog>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

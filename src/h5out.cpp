@@ -12,7 +12,6 @@
 #include <memory>
 #include <string>
 #include <sys/stat.h>
-#include <sys/unistd.h>
 #include <unistd.h>
 #include <utility>
 #include <vector>
@@ -82,7 +81,8 @@ h5_out::~h5_out()
 }
 
 /**
- * @brief Create the dataset in a group, based on the give parameters.
+ * @brief Create the dataset in a group, based on the give parameters. Note that the function can
+ * not create a dataset in the root group!
  *
  * @param datasetName string to the name of the dataset, including no "/"
  * @param groupName similar to datasetName but for the group name.
@@ -108,8 +108,8 @@ auto h5_out::create_dataset_in_group( const string& datasetName, const string& g
     int const setExistsInGroup = ensure_dataset_empty( groupName, datasetName );
     if ( setExistsInGroup != 0 )
     {
-        WARN( "[Warning]: Try to create an existing dataset [%s] in group [%s]!",
-              datasetName.c_str(), groupName.c_str() );
+        WARN( "Try to create an existing dataset [%s] in group [%s]!", datasetName.c_str(),
+              groupName.c_str() );
         return -1;
     }
     unique_ptr< dataset_handle > ptrToHandle =

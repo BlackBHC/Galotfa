@@ -25,9 +25,9 @@ constexpr auto vecDim = 3;
 struct recenter_para
 {
     bool                 enable;
-    double               radius;
-    double               initialGuess[ vecDim ];
-    otf::recenter_method method;
+    double               radius;                  // enclose radius used for coordinate recenter
+    double               initialGuess[ vecDim ];  // initial guess of the coordinate center
+    otf::recenter_method method;                  // recenter method
 };
 
 /**
@@ -38,7 +38,7 @@ struct recenter_para
 struct align_para
 {
     bool   enable;
-    double radius;
+    double radius;  // enclosing radius of the inertia tensor calculation
 };
 
 /**
@@ -49,8 +49,8 @@ struct align_para
 struct image_para
 {
     bool         enable;
-    double       halfLength;
-    unsigned int binNum;
+    double       halfLength;  // half length of the box size to be plotted
+    unsigned int binNum;      // binnum of the image
 };
 
 /**
@@ -86,16 +86,16 @@ enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESI
 struct component
 {
     component( std::string_view& compName, toml::table& compNodeTable );
-    std::string                 compName;
-    std::vector< unsigned int > types;
-    unsigned int                period;
-    recenter_para               recenter;
-    coordinate_frame            frame;
-    align_para                  align;
-    image_para                  image;
-    basic_bar_para              A2;
-    basic_bar_para              barAngle;
-    basic_bar_para              buckle;
+    std::string                 compName;  // name of the component
+    std::vector< unsigned int > types;     // particle types in this component
+    unsigned int                period;    // analysis period
+    recenter_para               recenter;  // parameter of coordinate recenter
+    coordinate_frame            frame;     // coordinate frame type
+    align_para                  align;     // whether align coordinates with the inertia tensor
+    image_para                  image;     // parameter of the spatial image part
+    basic_bar_para              A2;        // bar strength parameter
+    basic_bar_para              barAngle;  // bar angle parameter
+    basic_bar_para              buckle;    // buckling strength parameter
 };
 
 /**
@@ -109,14 +109,15 @@ public:
     orbit( toml::table& orbitNodeTable );
     // method for id log: TXTFILE to use a text file of id list, and RANDOM for random selection
     // according to specified parameters.
-    enum class log_method : std::uint8_t { TXTFILE = 0, RANDOM };
-    bool                        enable;
-    unsigned int                period;
-    std::vector< unsigned int > logTypes;
-    log_method                  method;
-    std::string                 idfile   = "not used";
-    double                      fraction = -1;
-    orbit_recenter_para         recenter;
+    enum class id_selection_method : std::uint8_t { TXTFILE = 0, RANDOM };
+
+    bool                enable;                 // enable orbital log
+    unsigned int        period;                 // log period
+    id_selection_method method;                 // id determination method
+    std::string         idfile   = "not used";  // if method is txt file, give the file name
+    double              fraction = -1;          // if method is random sample, give the fraction
+    std::vector< int >  sampleTypes;            // particle types to be sampled
+    orbit_recenter_para recenter;               // whether recenter the coordinate of orbits
 };
 
 /**
@@ -128,14 +129,16 @@ class runtime_para
 {
 public:
     runtime_para( const std::string_view& tomlParaFile );
-    bool         enableOtf;
-    std::string  outputDir;
-    std::string  fileName;
-    unsigned int maxIter;
-    double       epsilon;
+    bool         enableOtf;  // whether enable on-the-fly analysis
+    std::string  outputDir;  // output directory of the logs
+    std::string  fileName;   // prefix of the log file
+    unsigned int maxIter;    // specify the maximal iteration times
+    double       epsilon;    // specify the equal threshold of floating-point numbers
 
+    // hash map of parameter for each component
     std::unordered_map< std::string, std::unique_ptr< otf::component > > comps;
-    std::unique_ptr< otf::orbit >                                        orbit;
+    // parameter pointer of orbital logs
+    std::unique_ptr< otf::orbit > orbit;
 };
 
 }  // namespace otf
