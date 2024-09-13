@@ -80,7 +80,7 @@ enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESI
 
 /**
  * @class component
- * @brief The wrapper of parameter blocks used for each component.
+ * @brief The wrapper of parameters used for each component.
  *
  */
 struct component

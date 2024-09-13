@@ -52,6 +52,15 @@ private:
     // the container of data for a single component
     using compDataContainer = struct compDataStruct
     {
+        unsigned                    partNum     = 0;        // number of particles in this component
+        std::unique_ptr< double[] > masses      = nullptr;  // masses of particles
+        std::unique_ptr< double[] > coordinates = nullptr;  // coordinates of particles
+        std::unique_ptr< double[] > velocities  = nullptr;  // velocities of particles
+    };
+
+    // the container of analysis results for a single component
+    using compResContainer = struct compResStruct
+    {
         double                      center[ vecDim ] = { 0, 0, 0 };  // center of the component
         double                      A2               = 0;            // bar strength parameter
         double                      barAngle         = 0;            // bar angle
@@ -64,21 +73,25 @@ private:
     };
 
     // extract the data used for orbital log
-    auto id_data_process( double time, unsigned int particleNumber, const int* particleID,
-                          const int* particleType, const double* mass, const double* coordinate,
-                          const double* velocity ) const -> std::vector< monitor::orbitPoint >;
+    auto id_data_process( double time, unsigned int particleNumber, const int* particleIDs,
+                          const int* particleTypes, const double* masses, const double* coordinates,
+                          const double* velocities ) const -> std::vector< monitor::orbitPoint >;
     // wrapper of orbital log
-    void orbital_log( double time, unsigned int particleNumber, const int* id, const int* partType,
-                      const double* mass, const double* coordinate, const double* velocity );
-    // extract the data of a component
-    auto component_data_process(
-        unsigned int particleNumber, const int* id, const int* partType, const double* mass,
-        const double* coordinate, const double* velocity,
+    void orbital_log( double time, unsigned int particleNumber, const int* ids,
+                      const int* partTypes, const double* masses, const double* coordinates,
+                      const double* velocities );
+    // api to extract the data of a single component
+    auto component_data_extract(
+        unsigned int particleNumber, const int* partTypes, const double* masses,
+        const double* coordinates, const double* velocities,
         std::unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer;
+    // api to analyze the data of a component
+    auto component_data_analyze( monitor::compDataContainer& dataContainer ) const
+        -> monitor::compResContainer;
     // wrapper of orbital log
-    void component_analysis( double time, unsigned int particleNumber, const int* id,
-                             const int* partType, const double* mass, const double* coordinate,
-                             const double*                      velocity,
+    void component_analysis( double time, unsigned int particleNumber, const int* partTypes,
+                             const double* masses, const double* coordinates,
+                             const double*                      velocities,
                              std::unique_ptr< otf::component >& comp ) const;
 
     void data_flush();  // flush the data to the disk

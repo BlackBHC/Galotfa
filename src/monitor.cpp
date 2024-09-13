@@ -248,8 +248,8 @@ monitor::~monitor()
  * @param velocity velocities of particles
  */
 void monitor::main_analysis_api( const double time, const unsigned int particleNumber,
-                                 const int* id, const int* partType, const double* mass,
-                                 const double* coordinate, const double* velocity )
+                                 const int* ids, const int* partTypes, const double* masses,
+                                 const double* coordinates, const double* velocities )
 {
     if ( not para.enableOtf )
     {
@@ -259,14 +259,14 @@ void monitor::main_analysis_api( const double time, const unsigned int particleN
     // First: orbital logs part
     if ( para.orbit->enable )
     {
-        orbital_log( time, particleNumber, id, partType, mass, coordinate, velocity );
+        orbital_log( time, particleNumber, ids, partTypes, masses, coordinates, velocities );
     }
 
-    // Third: analyze each component
+    // Second: analyze each component
     // TODO: analyze each component
     for ( auto& comp : para.comps )
     {
-        component_analysis( time, particleNumber, id, partType, mass, coordinate, velocity,
+        component_analysis( time, particleNumber, partTypes, masses, coordinates, velocities,
                             comp.second );
     }
 
@@ -285,9 +285,9 @@ void monitor::main_analysis_api( const double time, const unsigned int particleN
  * @param coordinate coordinates of particles
  * @param velocity velocities of particles
  */
-void monitor::orbital_log( const double time, const unsigned int particleNumber, const int* id,
-                           const int* partType, const double* mass, const double* coordinate,
-                           const double* velocity )
+void monitor::orbital_log( const double time, const unsigned int particleNumber, const int* ids,
+                           const int* partTypes, const double* masses, const double* coordinates,
+                           const double* velocities )
 {
     if ( stepCounter % para.orbit->period != 0 )  // only log in the chosen steps
     {
@@ -296,7 +296,7 @@ void monitor::orbital_log( const double time, const unsigned int particleNumber,
 
     // First: extract the data for orbital log, and the data for each component
     auto orbitData =
-        id_data_process( time, particleNumber, id, partType, mass, coordinate, velocity );
+        id_data_process( time, particleNumber, ids, partTypes, masses, coordinates, velocities );
     // if it's the first extraction, create the datasets in the root rank
     if ( isRootRank and stepCounter == 0 )
     {
@@ -337,7 +337,6 @@ void monitor::orbital_log( const double time, const unsigned int particleNumber,
  *
  * @param time time of the simulation
  * @param particleNumber number of particles in the local mpi rank
- * @param particleID ids of particles
  * @param particleType PartTypes of particles
  * @param mass masses of particles
  * @param coordinate coordinates of particles
@@ -346,14 +345,12 @@ void monitor::orbital_log( const double time, const unsigned int particleNumber,
  * @return the vector of otf::monitor::compDataContainer objects, which are containers of analysis
  * result
  */
-auto monitor::component_data_process(
-    unsigned int particleNumber, const int* id, const int* partType, const double* mass,
-    const double* coordinate, const double* velocity,
-    unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer
+auto monitor::component_data_extract(
+    unsigned int particleNumber, const int* partType, const double* mass, const double* coordinate,
+    const double* velocity, unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer
 {
     compDataContainer compData;
     ( void )particleNumber;
-    ( void )id;
     ( void )partType;
     ( void )mass;
     ( void )coordinate;
@@ -363,24 +360,41 @@ auto monitor::component_data_process(
 }
 
 /**
- * @brief The api of component analysis.
+ * @brief The api of analysis part for a single component.
+ *
+ * @param dataContainer reference to the extracted data, in the form of compDataContainer
+ * @return the data container of the analysis results
+ */
+auto monitor::component_data_analyze( monitor::compDataContainer& dataContainer ) const
+    -> monitor::compResContainer
+{
+    compResContainer compRes;
+    ( void )dataContainer;
+    return compRes;
+}
+
+/**
+ * @brief The api of analysis part for a single component
  *
  * @param time time of the simulation
  * @param particleNumber number of particles in the local mpi rank
- * @param particleID ids of particles
  * @param particleType PartTypes of particles
  * @param mass masses of particles
  * @param coordinate coordinates of particles
  * @param velocity velocities of particles
  * @param comp otf::component object, a structure of parameters for a component
  */
-void monitor::component_analysis( double time, unsigned int particleNumber, const int* id,
-                                  const int* partType, const double* mass, const double* coordinate,
+void monitor::component_analysis( double time, unsigned int particleNumber, const int* partType,
+                                  const double* mass, const double* coordinate,
                                   const double* velocity, unique_ptr< otf::component >& comp ) const
 {
+    // NOTE: collect the component data
     auto compDataContainer =
-        component_data_process( particleNumber, id, partType, mass, coordinate, velocity, comp );
-    // NOTE: output the component data
+        component_data_extract( particleNumber, partType, mass, coordinate, velocity, comp );
+
+    // NOTE: get the analysis result
+    auto compResContainer = component_data_analyze( compDataContainer );
+
     // NOTE: create the datasets at the first call
     if ( isRootRank and stepCounter == 0 )
     {
@@ -430,6 +444,7 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
                                                   H5T_NATIVE_DOUBLE );
         }
     }
+
     // NOTE: flush the data
     if ( isRootRank )
     {
@@ -439,23 +454,22 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
         // center positions
         if ( comp->recenter.enable )
         {
-            h5Organizer->flush_single_block( comp->compName, "Center", compDataContainer.center );
+            h5Organizer->flush_single_block( comp->compName, "Center", compResContainer.center );
         }
 
         // bar infos
         if ( comp->A2.enable )
         {
-            h5Organizer->flush_single_block( comp->compName, "A2", &compDataContainer.A2 );
+            h5Organizer->flush_single_block( comp->compName, "A2", &compResContainer.A2 );
         }
         if ( comp->barAngle.enable )
         {
             h5Organizer->flush_single_block( comp->compName, "BarAngle",
-                                             &compDataContainer.barAngle );
+                                             &compResContainer.barAngle );
         }
         if ( comp->sBuckle.enable )
         {
-            h5Organizer->flush_single_block( comp->compName, "Sbuckle",
-                                             &compDataContainer.sBuckle );
+            h5Organizer->flush_single_block( comp->compName, "Sbuckle", &compResContainer.sBuckle );
         }
         // TODO: bar length
 
@@ -463,11 +477,11 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
         if ( comp->image.enable )
         {
             h5Organizer->flush_single_block( comp->compName, "ImageXY",
-                                             compDataContainer.imageXZ.get() );
+                                             compResContainer.imageXZ.get() );
             h5Organizer->flush_single_block( comp->compName, "ImageXZ",
-                                             compDataContainer.imageXZ.get() );
+                                             compResContainer.imageXZ.get() );
             h5Organizer->flush_single_block( comp->compName, "ImageYZ",
-                                             compDataContainer.imageXZ.get() );
+                                             compResContainer.imageXZ.get() );
         }
     }
 }
@@ -486,14 +500,14 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
  * @return the vector of orbitPoint objects
  */
 auto monitor::id_data_process( const double time, const unsigned int particleNumber,
-                               const int* particleID, const int* particleType, const double* mass,
+                               const int* particleIDs, const int* particleType, const double* mass,
                                const double* coordinate,
                                const double* velocity ) const -> vector< orbitPoint >
 {
     vector< orbitPoint >             points;
     static const otf::orbit_selector orbitSelector( para );
-    auto getData = orbitSelector.select( particleNumber, particleID, particleType, mass, coordinate,
-                                         velocity );
+    auto getData = orbitSelector.select( particleNumber, particleIDs, particleType, mass,
+                                         coordinate, velocity );
 
     // NOTE: MPI collection
     const int                 localNum = getData->count;  // the number of ids in local mpi rank
