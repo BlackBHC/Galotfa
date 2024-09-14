@@ -25,9 +25,9 @@ class monitor
 public:
     monitor( const std::string_view& tomlParaFile );  // initialize with the toml file name
     ~monitor();
-    void main_analysis_api( double time, unsigned int particleNumber, const int* id,
-                            const int* partType, const double* mass, const double* coordinate,
-                            const double* velocity );
+    void main_analysis_api( double time, unsigned particleNumber, const int* id,
+                            const int* partTypes, const double* masses, const double* coordinates,
+                            const double* velocities );
 
 #ifdef DEBUG
 
@@ -37,18 +37,18 @@ private:
     int          mpiRank;
     int          mpiSize;
     bool         isRootRank;
-    unsigned int stepCounter;             // counter of the synchronized time step
+    unsigned     stepCounter;             // counter of the synchronized time step
     bool         mpiInitialzedByMonitor;  // whether the MPI_init is called by the monitor object
     runtime_para para;                    // ptr to the runtime paramter
-    std::vector< std::string >    orbitDatasetNames;
-    static constexpr unsigned int orbitPointDim = 7;
-    using orbitPoint                            = struct
+    std::vector< std::string > orbitDatasetNames;
+    static constexpr unsigned  orbitPointDim = 7;
+    using orbitPoint                         = struct
     {
         int    particleID;
         double data[ orbitPointDim ];
     };
 
-    static constexpr unsigned int vecDim = 3;
+    static constexpr unsigned vecDim = 3;
     // the container of data for a single component
     using compDataContainer = struct compDataStruct
     {
@@ -73,23 +73,22 @@ private:
     };
 
     // extract the data used for orbital log
-    auto id_data_process( double time, unsigned int particleNumber, const int* particleIDs,
+    auto id_data_process( double time, unsigned particleNumber, const int* particleIDs,
                           const int* particleTypes, const double* masses, const double* coordinates,
                           const double* velocities ) const -> std::vector< monitor::orbitPoint >;
     // wrapper of orbital log
-    void orbital_log( double time, unsigned int particleNumber, const int* ids,
-                      const int* partTypes, const double* masses, const double* coordinates,
-                      const double* velocities );
+    void orbital_log( double time, unsigned particleNumber, const int* ids, const int* partTypes,
+                      const double* masses, const double* coordinates, const double* velocities );
     // api to extract the data of a single component
-    auto component_data_extract(
-        unsigned int particleNumber, const int* partTypes, const double* masses,
-        const double* coordinates, const double* velocities,
-        std::unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer;
+    static auto
+    component_data_extract( unsigned particleNumber, const int* partTypes, const double* masses,
+                            const double* coordinates, const double* velocities,
+                            std::unique_ptr< otf::component >& comp ) -> monitor::compDataContainer;
     // api to analyze the data of a component
-    auto component_data_analyze( monitor::compDataContainer& dataContainer ) const
+    static auto component_data_analyze( monitor::compDataContainer& dataContainer )
         -> monitor::compResContainer;
     // wrapper of orbital log
-    void component_analysis( double time, unsigned int particleNumber, const int* partTypes,
+    void component_analysis( double time, unsigned particleNumber, const int* partTypes,
                              const double* masses, const double* coordinates,
                              const double*                      velocities,
                              std::unique_ptr< otf::component >& comp ) const;

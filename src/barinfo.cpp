@@ -12,7 +12,7 @@ namespace otf {
  * @param mass masses of partciles
  * @return the A0 value
  */
-auto bar_info::A0( const unsigned int partNum, const double* mass ) -> double
+auto bar_info::A0( const unsigned partNum, const double* mass ) -> double
 {
     double A0sum = 0;
     for ( auto i = 0U; i < partNum; ++i )
@@ -31,7 +31,7 @@ auto bar_info::A0( const unsigned int partNum, const double* mass ) -> double
  * @param phi azimuthal angle of the particles
  * @return the A2 value
  */
-auto bar_info::A2( const unsigned int partNum, const double* mass, const double* phi ) -> double
+auto bar_info::A2( const unsigned partNum, const double* mass, const double* phi ) -> double
 {
     double A2sumRe = 0;  // real part
     double A2sumIm = 0;  // imaginary part
@@ -53,7 +53,7 @@ auto bar_info::A2( const unsigned int partNum, const double* mass, const double*
  * @param phi azimuthal angle of the particles
  * @return the value of bar strength
  */
-auto bar_info::Sbar( const unsigned int partNum, const double* mass, const double* phi ) -> double
+auto bar_info::Sbar( const unsigned partNum, const double* mass, const double* phi ) -> double
 {
     const double A0value = A0( partNum, mass );
     const double A2value = A2( partNum, mass, phi );
@@ -69,7 +69,7 @@ auto bar_info::Sbar( const unsigned int partNum, const double* mass, const doubl
  * @param zed z coordinates of the particles
  * @return the value of buckling strength
  */
-auto bar_info::Sbuckle( const unsigned int partNum, const double* mass, const double* phi,
+auto bar_info::Sbuckle( const unsigned partNum, const double* mass, const double* phi,
                         const double* zed ) -> double
 {
     const double A0value     = A0( partNum, mass );

@@ -92,8 +92,8 @@ h5_out::~h5_out()
  * @return
  */
 auto h5_out::create_dataset_in_group( const string& datasetName, const string& groupName,
-                                      const vector< unsigned int >& sizeInEachDim,
-                                      hid_t                         dataType ) -> int
+                                      const vector< unsigned >& sizeInEachDim,
+                                      hid_t                     dataType ) -> int
 {
     // ensure the parent group exists
     int const returnCode = create_group_if_necessary( groupName );
@@ -148,7 +148,7 @@ auto h5_out::ensure_dataset_empty( const string& groupName, const string& datase
 auto h5_out::create_group_if_necessary( const string& groupName ) -> int
 {
     // check whether the group already exists, if exists then return
-    if ( static_cast< unsigned int >( groups.contains( groupName ) ) != 0U )
+    if ( static_cast< unsigned >( groups.contains( groupName ) ) != 0U )
     {
         return 0;
     }
@@ -168,7 +168,7 @@ auto h5_out::create_group_if_necessary( const string& groupName ) -> int
 }
 
 dataset_handle::dataset_handle( hid_t& parent, const string& datasetName,
-                                const vector< unsigned int >& sizeInEachDim, hid_t& dataType )
+                                const vector< unsigned >& sizeInEachDim, hid_t& dataType )
     : datasetName( datasetName ), dataType( dataType ), sizeInEachDim( sizeInEachDim )
 {
     // set the chunk size and compression at here
@@ -235,14 +235,14 @@ dataset_handle::dataset_handle( hid_t& parent, const string& datasetName,
 auto h5_out::flush_single_block( const string& groupName, const string& datasetName,
                                  const void* dataBuffer ) -> int
 {
-    if ( static_cast< unsigned int >( groups.contains( groupName ) ) == 0U )
+    if ( static_cast< unsigned >( groups.contains( groupName ) ) == 0U )
     {
         ERROR( "Flushing to a non existent group [%s]!", groupName.c_str() )
         return -1;
     }
 
     hid_t const group = groups[ groupName ];
-    if ( static_cast< unsigned int >( datasetPtrs[ group ].contains( datasetName ) ) == 0U )
+    if ( static_cast< unsigned >( datasetPtrs[ group ].contains( datasetName ) ) == 0U )
     {
         ERROR( "Flushing to a non existent dataset [%s] in group [%s]!", datasetName.c_str(),
                groupName.c_str() )

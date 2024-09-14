@@ -77,15 +77,15 @@ auto statistic::bin2dcount( const int mpiRank, const double* xData, const double
                             const unsigned long dataNum ) -> unique_ptr< double[] >
 
 {
-    static unsigned long         idx = 0;
-    static unsigned long         idy = 0;
-    auto                         statisticResutls( make_unique< double[] >( xBinNum * yBinNum ) );
-    auto                         count( make_unique< unsigned int[] >( xBinNum * yBinNum ) );
-    unique_ptr< unsigned int[] > countRecv = nullptr;
+    static unsigned long     idx = 0;
+    static unsigned long     idy = 0;
+    auto                     statisticResutls( make_unique< double[] >( xBinNum * yBinNum ) );
+    auto                     count( make_unique< unsigned[] >( xBinNum * yBinNum ) );
+    unique_ptr< unsigned[] > countRecv = nullptr;
 
     if ( mpiRank == 0 )
     {
-        countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
+        countRecv = make_unique< unsigned[] >( xBinNum * yBinNum );
     }
 
     for ( auto i = 0UL; i < dataNum; ++i )
@@ -194,14 +194,14 @@ auto statistic::bin2dmean( const int mpiRank, const double* xData, const double 
     static unsigned long idy = 0;
     auto                 statisticResutls( make_unique< double[] >( xBinNum * yBinNum ) );
     auto                 sum( make_unique< double[] >( xBinNum * yBinNum ) );
-    auto                 count( make_unique< unsigned int[] >( xBinNum * yBinNum ) );
+    auto                 count( make_unique< unsigned[] >( xBinNum * yBinNum ) );
     auto                 sumRecv( make_unique< double[] >( xBinNum * yBinNum ) );
-    auto                 countRecv( make_unique< unsigned int[] >( xBinNum * yBinNum ) );
+    auto                 countRecv( make_unique< unsigned[] >( xBinNum * yBinNum ) );
 
     if ( mpiRank == 0 )
     {
         sumRecv   = make_unique< double[] >( xBinNum * yBinNum );
-        countRecv = make_unique< unsigned int[] >( xBinNum * yBinNum );
+        countRecv = make_unique< unsigned[] >( xBinNum * yBinNum );
     }
 
     for ( auto i = 0UL; i < dataNum; ++i )
@@ -265,7 +265,7 @@ auto statistic::bin2dstd( const double* xData, const double xLowerBound, const d
     static unsigned long idy = 0;
     auto                 statisticResutls( make_unique< double[] >( xBinNum * yBinNum ) );
     auto                 sum( make_unique< double[] >( xBinNum * yBinNum ) );
-    auto                 count( make_unique< unsigned int[] >( xBinNum * yBinNum ) );
+    auto                 count( make_unique< unsigned[] >( xBinNum * yBinNum ) );
 
     for ( auto i = 0UL; i < dataNum; ++i )
     {
@@ -388,12 +388,12 @@ auto statistic::bin1dcount( const int mpiRank, const double* coord, const double
 {
     static unsigned long idx = 0;
     auto                 statisticResutls( make_unique< double[] >( binNum ) );
-    auto                 count( make_unique< unsigned int[] >( binNum ) );
-    auto                 countRecv( make_unique< unsigned int[] >( binNum ) );
+    auto                 count( make_unique< unsigned[] >( binNum ) );
+    auto                 countRecv( make_unique< unsigned[] >( binNum ) );
 
     if ( mpiRank == 0 )
     {
-        countRecv = make_unique< unsigned int[] >( binNum );
+        countRecv = make_unique< unsigned[] >( binNum );
     }
 
     for ( auto i = 0UL; i < dataNum; ++i )
@@ -467,14 +467,14 @@ auto statistic::bin1dmean( const int mpiRank, const double* coord, const double 
     static unsigned long idx = 0;
     auto                 statisticResutls( make_unique< double[] >( binNum ) );
     auto                 sum( make_unique< double[] >( binNum ) );
-    auto                 count( make_unique< unsigned int[] >( binNum ) );
+    auto                 count( make_unique< unsigned[] >( binNum ) );
     auto                 sumRecv( make_unique< double[] >( binNum ) );
-    auto                 countRecv( make_unique< unsigned int[] >( binNum ) );
+    auto                 countRecv( make_unique< unsigned[] >( binNum ) );
 
     if ( mpiRank == 0 )
     {
         sumRecv   = make_unique< double[] >( binNum );
-        countRecv = make_unique< unsigned int[] >( binNum );
+        countRecv = make_unique< unsigned[] >( binNum );
     }
 
     for ( auto i = 0UL; i < dataNum; ++i )
@@ -517,7 +517,7 @@ auto statistic::bin1dstd( const double* coord, const double lowerBound, const do
     static unsigned long idx = 0;
     auto                 statisticResutls( make_unique< double[] >( binNum ) );
     auto                 sum( make_unique< double[] >( binNum ) );
-    auto                 count( make_unique< unsigned int[] >( binNum ) );
+    auto                 count( make_unique< unsigned[] >( binNum ) );
 
 
     for ( auto i = 0UL; i < dataNum; ++i )

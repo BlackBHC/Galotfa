@@ -24,8 +24,8 @@ namespace otf {
  * @param rangeSize enclose radius of the region used for calculation
  * @return uniqure_ptr to the gotten center of mass
  */
-auto recenter::run( const recenter_method method, const unsigned int& partNum,
-                    const double* coordinate, const double* mass, const double* potential,
+auto recenter::run( const recenter_method method, const unsigned& partNum, const double* coordinate,
+                    const double* mass, const double* potential,
                     const double rangeSize ) -> unique_ptr< double[] >
 {
     switch ( method )
@@ -52,15 +52,15 @@ auto recenter::run( const recenter_method method, const unsigned int& partNum,
  * @return uniqure_ptr to the gotten center of mass
  */
 auto recenter::center_of_mass( const double* mass, const double* coordinates,
-                               const unsigned int& partNum,
-                               const double        rangeSize ) -> unique_ptr< double[] >
+                               const unsigned& partNum,
+                               const double    rangeSize ) -> unique_ptr< double[] >
 {
     auto   com( make_unique< double[] >( 3 ) );
     double massSum           = 0;
     double coordMassSum[ 3 ] = { 0, 0, 0 };
 
-    static unsigned int i = 0;
-    static unsigned int j = 0;
+    static unsigned i = 0;
+    static unsigned j = 0;
     for ( i = 0; i < partNum; ++i )
     {
         if ( NORM( coordinates + 3 * i ) < rangeSize )
@@ -101,7 +101,7 @@ auto recenter::center_of_mass( const double* mass, const double* coordinates,
  * @return the coordinates of the most bound particle
  */
 auto recenter::most_bound_particle( const double* potential, const double* coordinates,
-                                    const unsigned int& partNum ) -> std::unique_ptr< double[] >
+                                    const unsigned& partNum ) -> std::unique_ptr< double[] >
 {
     auto      minPotPosition( make_unique< double[] >( 3 ) );
     const int minLocateId = min_element( potential, potential + partNum ) - potential;

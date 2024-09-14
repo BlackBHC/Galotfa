@@ -26,7 +26,7 @@ namespace otf {
  * @param types pointer to the particle types of simulation data
  * @param sampleTypes vector of the targeted particle types to be sampled
  * @param fraction sampling fraction
- * @return a vector<unsigned int> of the selected id list
+ * @return a vector<unsigned> of the selected id list
  */
 auto orbit_selector::id_sample( const vector< int >& rawIds, const int* types,
                                 const vector< int >& sampleTypes, double fraction ) -> vector< int >
@@ -124,7 +124,7 @@ orbit_selector::orbit_selector( const runtime_para& para ) : para( para )
  * @param partType the PartType of particles
  * @return a vector of the extracted ids
  */
-auto orbit_selector::extract_target_ids( const unsigned int particleNumber, const int* particleID,
+auto orbit_selector::extract_target_ids( const unsigned particleNumber, const int* particleID,
                                          const int* partType ) const -> vector< int >
 {
     // get the target id list based on specified parameters
@@ -195,7 +195,7 @@ auto orbit_selector::extract_target_ids( const unsigned int particleNumber, cons
  * @param velocity velocity of particles
  * @return the extracted data, restore in a dataContainer object
  */
-auto orbit_selector::select( const unsigned int particleNumber, const int* particleID,
+auto orbit_selector::select( const unsigned particleNumber, const int* particleID,
                              const int* partType, const double* mass, const double* coordinate,
                              const double* velocity ) const -> unique_ptr< dataContainer >
 {
@@ -208,7 +208,7 @@ auto orbit_selector::select( const unsigned int particleNumber, const int* parti
     static vector< int > targetIDs = extract_target_ids( particleNumber, particleID, partType );
 
     // count of found particles
-    unsigned int counter = 0;
+    unsigned counter = 0;
 
     // temporary variables restoring extracted data
     vector< double > tmpMass( particleNumber );

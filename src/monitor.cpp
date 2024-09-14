@@ -3,6 +3,7 @@
  * @brief The organizer of other components to work together.
  */
 
+#include <utility>
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
 #endif
@@ -190,7 +191,7 @@ void print_para_info( otf::runtime_para& para )
 
 namespace otf {
 
-monitor::monitor( const std::string_view& tomlParaFile )
+monitor::monitor( const string_view& tomlParaFile )
     : mpiRank( -1 ), mpiSize( 0 ), isRootRank( false ), stepCounter( 0 ),
       mpiInitialzedByMonitor( false ), para( runtime_para( tomlParaFile ) ), h5Organizer( nullptr )
 
@@ -247,8 +248,8 @@ monitor::~monitor()
  * @param coordinate coordinates of particles
  * @param velocity velocities of particles
  */
-void monitor::main_analysis_api( const double time, const unsigned int particleNumber,
-                                 const int* ids, const int* partTypes, const double* masses,
+void monitor::main_analysis_api( const double time, const unsigned particleNumber, const int* ids,
+                                 const int* partTypes, const double* masses,
                                  const double* coordinates, const double* velocities )
 {
     if ( not para.enableOtf )
@@ -285,7 +286,7 @@ void monitor::main_analysis_api( const double time, const unsigned int particleN
  * @param coordinate coordinates of particles
  * @param velocity velocities of particles
  */
-void monitor::orbital_log( const double time, const unsigned int particleNumber, const int* ids,
+void monitor::orbital_log( const double time, const unsigned particleNumber, const int* ids,
                            const int* partTypes, const double* masses, const double* coordinates,
                            const double* velocities )
 {
@@ -342,20 +343,72 @@ void monitor::orbital_log( const double time, const unsigned int particleNumber,
  * @param coordinate coordinates of particles
  * @param velocity velocities of particles
  * @param comp otf::component object, a structure of parameters for a component
- * @return the vector of otf::monitor::compDataContainer objects, which are containers of analysis
- * result
+ * @return an object of otf::monitor::compDataContainer, which is the container of the extracted
+ * data
  */
 auto monitor::component_data_extract(
-    unsigned int particleNumber, const int* partType, const double* mass, const double* coordinate,
-    const double* velocity, unique_ptr< otf::component >& comp ) const -> monitor::compDataContainer
+    unsigned particleNumber, const int* partType, const double* masses, const double* coordinates,
+    const double* velocities, unique_ptr< otf::component >& comp ) -> monitor::compDataContainer
 {
+    unsigned         count = 0;
+    vector< double > extractedMasses;
+    vector< double > extractedCoordinates;
+    vector< double > extractedVelocities;
+    extractedMasses.resize( particleNumber );
+    extractedCoordinates.resize( particleNumber * 3 );
+    extractedVelocities.resize( particleNumber * 3 );
+    for ( unsigned i = 0; i < particleNumber; ++i )
+    {
+        // check whether it's a particle with the specified id
+        auto find_res = find( comp->types.begin(), comp->types.end(), partType[ i ] );
+        // if not found, go to the next loop
+        if ( find_res == comp->types.end() )
+        {
+            continue;
+        }
+
+        // get the extracted data
+        extractedMasses[ count ]              = masses[ i ];
+        extractedCoordinates[ count * 3 + 0 ] = coordinates[ i * 3 + 0 ];
+        extractedCoordinates[ count * 3 + 1 ] = coordinates[ i * 3 + 1 ];
+        extractedCoordinates[ count * 3 + 2 ] = coordinates[ i * 3 + 2 ];
+        extractedVelocities[ count * 3 + 0 ]  = velocities[ i * 3 + 0 ];
+        extractedVelocities[ count * 3 + 1 ]  = velocities[ i * 3 + 1 ];
+        extractedVelocities[ count * 3 + 2 ]  = velocities[ i * 3 + 2 ];
+
+        // increase the particle count
+        ++count;
+    }
+
+    // remove the tail garbage values
+    extractedMasses.resize( count );
+    extractedCoordinates.resize( count * 3 );
+    extractedVelocities.resize( count * 3 );
+
     compDataContainer compData;
-    ( void )particleNumber;
-    ( void )partType;
-    ( void )mass;
-    ( void )coordinate;
-    ( void )velocity;
-    ( void )comp;
+    compData.partNum = count;
+    unique_ptr< double[] > massPtr( new double[ count ]() );
+    unique_ptr< double[] > posPtr( new double[ count * 3 ]() );
+    unique_ptr< double[] > velPtr( new double[ count * 3 ]() );
+
+    // get the extracted data
+    for ( unsigned i = 0; i < count; ++i )
+    {
+        massPtr[ i ]        = extractedMasses[ i ];
+        posPtr[ i * 3 + 0 ] = extractedCoordinates[ i * 3 + 0 ];
+        posPtr[ i * 3 + 1 ] = extractedCoordinates[ i * 3 + 1 ];
+        posPtr[ i * 3 + 2 ] = extractedCoordinates[ i * 3 + 2 ];
+        velPtr[ i * 3 + 0 ] = extractedVelocities[ i * 3 + 0 ];
+        velPtr[ i * 3 + 1 ] = extractedVelocities[ i * 3 + 1 ];
+        velPtr[ i * 3 + 2 ] = extractedVelocities[ i * 3 + 2 ];
+    }
+
+    // move the data to the container
+    compData.masses      = std::move( massPtr );
+    compData.coordinates = std::move( posPtr );
+    compData.velocities  = std::move( velPtr );
+
+    // TODO: test whether this retern can work correctly
     return compData;
 }
 
@@ -365,7 +418,7 @@ auto monitor::component_data_extract(
  * @param dataContainer reference to the extracted data, in the form of compDataContainer
  * @return the data container of the analysis results
  */
-auto monitor::component_data_analyze( monitor::compDataContainer& dataContainer ) const
+auto monitor::component_data_analyze( monitor::compDataContainer& dataContainer )
     -> monitor::compResContainer
 {
     compResContainer compRes;
@@ -384,13 +437,14 @@ auto monitor::component_data_analyze( monitor::compDataContainer& dataContainer 
  * @param velocity velocities of particles
  * @param comp otf::component object, a structure of parameters for a component
  */
-void monitor::component_analysis( double time, unsigned int particleNumber, const int* partType,
-                                  const double* mass, const double* coordinate,
-                                  const double* velocity, unique_ptr< otf::component >& comp ) const
+void monitor::component_analysis( double time, unsigned particleNumber, const int* partTypes,
+                                  const double* masses, const double* coordinates,
+                                  const double*                 velocities,
+                                  unique_ptr< otf::component >& comp ) const
 {
     // NOTE: collect the component data
     auto compDataContainer =
-        component_data_extract( particleNumber, partType, mass, coordinate, velocity, comp );
+        component_data_extract( particleNumber, partTypes, masses, coordinates, velocities, comp );
 
     // NOTE: get the analysis result
     auto compResContainer = component_data_analyze( compDataContainer );
@@ -499,15 +553,15 @@ void monitor::component_analysis( double time, unsigned int particleNumber, cons
  * @param velocity velocities of particles
  * @return the vector of orbitPoint objects
  */
-auto monitor::id_data_process( const double time, const unsigned int particleNumber,
-                               const int* particleIDs, const int* particleType, const double* mass,
-                               const double* coordinate,
-                               const double* velocity ) const -> vector< orbitPoint >
+auto monitor::id_data_process( const double time, const unsigned particleNumber,
+                               const int* particleIDs, const int* particleTypes,
+                               const double* masses, const double* coordinates,
+                               const double* velocities ) const -> vector< orbitPoint >
 {
     vector< orbitPoint >             points;
     static const otf::orbit_selector orbitSelector( para );
-    auto getData = orbitSelector.select( particleNumber, particleIDs, particleType, mass,
-                                         coordinate, velocity );
+    auto getData = orbitSelector.select( particleNumber, particleIDs, particleTypes, masses,
+                                         coordinates, velocities );
 
     // NOTE: MPI collection
     const int                 localNum = getData->count;  // the number of ids in local mpi rank
@@ -572,7 +626,7 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
 
     // NOTE: sort the orbit points based on their id
     static auto cmp = []( orbitPoint p1, orbitPoint p2 ) { return p1.particleID < p2.particleID; };
-    std::sort( points.begin(), points.end(), cmp );
+    sort( points.begin(), points.end(), cmp );
     return points;
 }
 

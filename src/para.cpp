@@ -33,10 +33,10 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
     const string tmpFileName( *paraTable[ "global" ][ "filename" ].value< string_view >() );
     const string tmpDir( *paraTable[ "global" ][ "outdir" ].value< string_view >() );
     // fileName                              = std::move( tmpFileName );
-    outputDir                             = std::move( tmpDir );
-    fileName                              = std::move( tmpFileName );
-    constexpr unsigned int defaultMaxIter = 25;
-    constexpr double       defaultEpsilon = 1e-8;  // floating-point number equal threshold
+    outputDir                         = std::move( tmpDir );
+    fileName                          = std::move( tmpFileName );
+    constexpr unsigned defaultMaxIter = 25;
+    constexpr double   defaultEpsilon = 1e-8;  // floating-point number equal threshold
     maxIter = paraTable[ "global" ][ "maxiter" ].value_or( defaultMaxIter );
     epsilon = paraTable[ "global" ][ "outdir" ].value_or( defaultEpsilon );
     assert( maxIter > 0 );
@@ -152,7 +152,7 @@ component::component( string_view& compName, toml::table& compNodeTable )
     if ( image.enable )
     {
         image.halfLength = *compNodeTable[ "image" ][ "halflength" ].value< double >();
-        image.binNum     = *compNodeTable[ "image" ][ "binnum" ].value< unsigned int >();
+        image.binNum     = *compNodeTable[ "image" ][ "binnum" ].value< unsigned >();
     }
 
     // bar info parameters
