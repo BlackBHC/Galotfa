@@ -48,9 +48,9 @@ struct align_para
  */
 struct image_para
 {
-    bool         enable;
-    double       halfLength;  // half length of the box size to be plotted
-    unsigned int binNum;      // binnum of the image
+    bool     enable;
+    double   halfLength;  // half length of the box size to be plotted
+    unsigned binNum;      // binnum of the image
 };
 
 /**
@@ -73,7 +73,7 @@ struct basic_bar_para
 struct orbit_recenter_para : recenter_para
 {
     // the anchor type of particles used for recenter
-    std::vector< unsigned int > anchorIds;
+    std::vector< unsigned > anchorIds;
 };
 
 enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESIAN };
@@ -88,7 +88,7 @@ struct component
     component( std::string_view& compName, toml::table& compNodeTable );
     std::string             compName;  // name of the component
     std::vector< unsigned > types;     // particle types in this component
-    unsigned int            period;    // analysis period
+    unsigned                period;    // analysis period
     recenter_para           recenter;  // parameter of coordinate recenter
     coordinate_frame        frame;     // coordinate frame type
     align_para              align;     // whether align coordinates with the inertia tensor
@@ -112,7 +112,7 @@ public:
     enum class id_selection_method : std::uint8_t { TXTFILE = 0, RANDOM };
 
     bool                enable;                 // enable orbital log
-    unsigned int        period;                 // log period
+    unsigned            period;                 // log period
     id_selection_method method;                 // id determination method
     std::string         idfile   = "not used";  // if method is txt file, give the file name
     double              fraction = -1;          // if method is random sample, give the fraction
@@ -129,11 +129,11 @@ class runtime_para
 {
 public:
     runtime_para( const std::string_view& tomlParaFile );
-    bool         enableOtf;  // whether enable on-the-fly analysis
-    std::string  outputDir;  // output directory of the logs
-    std::string  fileName;   // prefix of the log file
-    unsigned int maxIter;    // specify the maximal iteration times
-    double       epsilon;    // specify the equal threshold of floating-point numbers
+    bool        enableOtf;  // whether enable on-the-fly analysis
+    std::string outputDir;  // output directory of the logs
+    std::string fileName;   // prefix of the log file
+    unsigned    maxIter;    // specify the maximal iteration times
+    double      epsilon;    // specify the equal threshold of floating-point numbers
 
     // hash map of parameter for each component
     std::unordered_map< std::string, std::unique_ptr< otf::component > > comps;

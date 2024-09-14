@@ -250,7 +250,8 @@ monitor::~monitor()
  */
 void monitor::main_analysis_api( const double time, const unsigned particleNumber, const int* ids,
                                  const int* partTypes, const double* masses,
-                                 const double* coordinates, const double* velocities )
+                                 const double* potentials, const double* coordinates,
+                                 const double* velocities )
 {
     if ( not para.enableOtf )
     {
@@ -267,8 +268,8 @@ void monitor::main_analysis_api( const double time, const unsigned particleNumbe
     // TODO: analyze each component
     for ( auto& comp : para.comps )
     {
-        component_analysis( time, particleNumber, partTypes, masses, coordinates, velocities,
-                            comp.second );
+        component_analysis( time, particleNumber, partTypes, masses, potentials, coordinates,
+                            velocities, comp.second );
     }
 
     // Last: increase the synchronized step counter
@@ -347,14 +348,17 @@ void monitor::orbital_log( const double time, const unsigned particleNumber, con
  * data
  */
 auto monitor::component_data_extract(
-    unsigned particleNumber, const int* partType, const double* masses, const double* coordinates,
-    const double* velocities, unique_ptr< otf::component >& comp ) -> monitor::compDataContainer
+    unsigned particleNumber, const int* partType, const double* masses, const double* potentials,
+    const double* coordinates, const double* velocities,
+    unique_ptr< otf::component >& comp ) -> monitor::compDataContainer
 {
     unsigned         count = 0;
     vector< double > extractedMasses;
+    vector< double > extractedPotentials;
     vector< double > extractedCoordinates;
     vector< double > extractedVelocities;
     extractedMasses.resize( particleNumber );
+    extractedPotentials.resize( particleNumber );
     extractedCoordinates.resize( particleNumber * 3 );
     extractedVelocities.resize( particleNumber * 3 );
     for ( unsigned i = 0; i < particleNumber; ++i )
@@ -369,6 +373,7 @@ auto monitor::component_data_extract(
 
         // get the extracted data
         extractedMasses[ count ]              = masses[ i ];
+        extractedPotentials[ count ]          = potentials[ i ];
         extractedCoordinates[ count * 3 + 0 ] = coordinates[ i * 3 + 0 ];
         extractedCoordinates[ count * 3 + 1 ] = coordinates[ i * 3 + 1 ];
         extractedCoordinates[ count * 3 + 2 ] = coordinates[ i * 3 + 2 ];
@@ -382,12 +387,14 @@ auto monitor::component_data_extract(
 
     // remove the tail garbage values
     extractedMasses.resize( count );
+    extractedPotentials.resize( count );
     extractedCoordinates.resize( count * 3 );
     extractedVelocities.resize( count * 3 );
 
     compDataContainer compData;
     compData.partNum = count;
     unique_ptr< double[] > massPtr( new double[ count ]() );
+    unique_ptr< double[] > potPtr( new double[ count ]() );
     unique_ptr< double[] > posPtr( new double[ count * 3 ]() );
     unique_ptr< double[] > velPtr( new double[ count * 3 ]() );
 
@@ -395,6 +402,7 @@ auto monitor::component_data_extract(
     for ( unsigned i = 0; i < count; ++i )
     {
         massPtr[ i ]        = extractedMasses[ i ];
+        potPtr[ i ]         = extractedPotentials[ i ];
         posPtr[ i * 3 + 0 ] = extractedCoordinates[ i * 3 + 0 ];
         posPtr[ i * 3 + 1 ] = extractedCoordinates[ i * 3 + 1 ];
         posPtr[ i * 3 + 2 ] = extractedCoordinates[ i * 3 + 2 ];
@@ -405,6 +413,7 @@ auto monitor::component_data_extract(
 
     // move the data to the container
     compData.masses      = std::move( massPtr );
+    compData.potentials  = std::move( potPtr );
     compData.coordinates = std::move( posPtr );
     compData.velocities  = std::move( velPtr );
 
@@ -416,14 +425,55 @@ auto monitor::component_data_extract(
  * @brief The api of analysis part for a single component.
  *
  * @param dataContainer reference to the extracted data, in the form of compDataContainer
+ * @param comp wrapper of parameters for analysis of a single component
  * @return the data container of the analysis results
  */
-auto monitor::component_data_analyze( monitor::compDataContainer& dataContainer )
+auto monitor::component_data_analyze( monitor::compDataContainer&        dataContainer,
+                                      std::unique_ptr< otf::component >& comp )
     -> monitor::compResContainer
 {
     compResContainer compRes;
-    ( void )dataContainer;
+
+    // NOTE: recenter the system if necessary
+    if ( comp->recenter.enable )  // if not enable, do nothing
+    {
+        recenter_coordinate( dataContainer, comp );
+    }
+
+    // TODO: align the system if necessary
+    if ( comp->align.enable )
+    {
+    }
+
+    // TODO: calculate the image if necessary
+
+    // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
+    // TODO: bar length
+
     return compRes;
+}
+
+/**
+ * @brief The api to recenter the coordinates in a data container object.
+ *
+ * @param dataContainer reference to the data container to be recenterred
+ * @param comp wrapper of parameters for analysis of a single component
+ */
+void monitor::recenter_coordinate( monitor::compDataContainer&        dataContainer,
+                                   std::unique_ptr< otf::component >& comp )
+{
+    // get the system center
+    auto center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                        dataContainer.masses.get(), dataContainer.potentials.get(),
+                                        dataContainer.coordinates.get(), comp->recenter.radius );
+    // substract the system center
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        for ( unsigned j = 0; j < 3; ++j )
+        {
+            dataContainer.coordinates[ i * 3 + j ] = center[ j ];
+        }
+    };
 }
 
 /**
@@ -438,16 +488,16 @@ auto monitor::component_data_analyze( monitor::compDataContainer& dataContainer 
  * @param comp otf::component object, a structure of parameters for a component
  */
 void monitor::component_analysis( double time, unsigned particleNumber, const int* partTypes,
-                                  const double* masses, const double* coordinates,
-                                  const double*                 velocities,
+                                  const double* masses, const double* potentials,
+                                  const double* coordinates, const double* velocities,
                                   unique_ptr< otf::component >& comp ) const
 {
     // NOTE: collect the component data
-    auto compDataContainer =
-        component_data_extract( particleNumber, partTypes, masses, coordinates, velocities, comp );
+    auto compDataContainer = component_data_extract( particleNumber, partTypes, masses, potentials,
+                                                     coordinates, velocities, comp );
 
     // NOTE: get the analysis result
-    auto compResContainer = component_data_analyze( compDataContainer );
+    auto compResContainer = component_data_analyze( compDataContainer, comp );
 
     // NOTE: create the datasets at the first call
     if ( isRootRank and stepCounter == 0 )

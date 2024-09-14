@@ -74,7 +74,8 @@ int main( int argc, char* argv[] )
     double A0target      = 19.631915485490538;
     double getA0         = bar_info::A0( 10, massRecv );
     double SbarTarget    = 0.08786394735228277;
-    double getSbar       = bar_info::Sbar( 10, massRecv, phiRecv );
+    auto   A2info        = bar_info::A2( 10, massRecv, phiRecv );
+    double getSbar       = A2info.amplitude / getA0;
     double SbuckleTarget = 4.279046929538018;
     double getSbuckle    = bar_info::Sbuckle( 10, massRecv, phiRecv, zedRecv );
 

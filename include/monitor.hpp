@@ -26,8 +26,8 @@ public:
     monitor( const std::string_view& tomlParaFile );  // initialize with the toml file name
     ~monitor();
     void main_analysis_api( double time, unsigned particleNumber, const int* id,
-                            const int* partTypes, const double* masses, const double* coordinates,
-                            const double* velocities );
+                            const int* partTypes, const double* masses, const double* potentials,
+                            const double* coordinates, const double* velocities );
 
 #ifdef DEBUG
 
@@ -54,6 +54,7 @@ private:
     {
         unsigned                    partNum     = 0;        // number of particles in this component
         std::unique_ptr< double[] > masses      = nullptr;  // masses of particles
+        std::unique_ptr< double[] > potentials  = nullptr;  // potentials of particles
         std::unique_ptr< double[] > coordinates = nullptr;  // coordinates of particles
         std::unique_ptr< double[] > velocities  = nullptr;  // velocities of particles
     };
@@ -76,27 +77,40 @@ private:
     auto id_data_process( double time, unsigned particleNumber, const int* particleIDs,
                           const int* particleTypes, const double* masses, const double* coordinates,
                           const double* velocities ) const -> std::vector< monitor::orbitPoint >;
-    // wrapper of orbital log
+    // NOTE: API of orbital log
     void orbital_log( double time, unsigned particleNumber, const int* ids, const int* partTypes,
                       const double* masses, const double* coordinates, const double* velocities );
-    // api to extract the data of a single component
+    // extract the data of a single component
     static auto
     component_data_extract( unsigned particleNumber, const int* partTypes, const double* masses,
-                            const double* coordinates, const double* velocities,
+                            const double* potentials, const double* coordinates,
+                            const double*                      velocities,
                             std::unique_ptr< otf::component >& comp ) -> monitor::compDataContainer;
-    // api to analyze the data of a component
-    static auto component_data_analyze( monitor::compDataContainer& dataContainer )
-        -> monitor::compResContainer;
-    // wrapper of orbital log
+    // analyze the data of a single component
+    static auto
+    component_data_analyze( monitor::compDataContainer&        dataContainer,
+                            std::unique_ptr< otf::component >& comp ) -> monitor::compResContainer;
+    // NOTE: API to analyze the data of a single component
     void component_analysis( double time, unsigned particleNumber, const int* partTypes,
-                             const double* masses, const double* coordinates,
-                             const double*                      velocities,
+                             const double* masses, const double* potentials,
+                             const double* coordinates, const double* velocities,
                              std::unique_ptr< otf::component >& comp ) const;
 
-    void data_flush();  // flush the data to the disk
-    void bar_info();    // bar info calculation
-    void image();       // image calculation
-    // the smart pointer to the HDF5 file organizer, it is less memory usage in the none-root rank
+    // NOTE: APIs used in component analysis
+
+    // recenter the coordinates
+    static void recenter_coordinate( monitor::compDataContainer&        dataContainer,
+                                     std::unique_ptr< otf::component >& comp );
+    // align the coordinates to the eigenvalues of the
+    void align_coordinate( monitor::compDataContainer&        dataContainer,
+                           std::unique_ptr< otf::component >& comp );
+    // bar info calculation
+    void bar_info();
+    // image calculation
+    void image();
+
+    // the smart pointer to the HDF5 file organizer, it is more memory efficient in the none-root
+    // rank
     std::unique_ptr< h5_out > h5Organizer;
 };
 

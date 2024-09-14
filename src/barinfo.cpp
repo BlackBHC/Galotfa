@@ -31,7 +31,7 @@ auto bar_info::A0( const unsigned partNum, const double* mass ) -> double
  * @param phi azimuthal angle of the particles
  * @return the A2 value
  */
-auto bar_info::A2( const unsigned partNum, const double* mass, const double* phi ) -> double
+auto bar_info::A2( const unsigned partNum, const double* mass, const double* phi ) -> A2info
 {
     double A2sumRe = 0;  // real part
     double A2sumIm = 0;  // imaginary part
@@ -42,22 +42,9 @@ auto bar_info::A2( const unsigned partNum, const double* mass, const double* phi
     }
     MPI_Allreduce( MPI_IN_PLACE, &A2sumRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     MPI_Allreduce( MPI_IN_PLACE, &A2sumIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-    return sqrt( A2sumRe * A2sumRe + A2sumIm * A2sumIm );
-}
-
-/**
- * @brief Calculate the bar strength parameter.
- *
- * @param partNum particle number
- * @param mass masses of partciles
- * @param phi azimuthal angle of the particles
- * @return the value of bar strength
- */
-auto bar_info::Sbar( const unsigned partNum, const double* mass, const double* phi ) -> double
-{
-    const double A0value = A0( partNum, mass );
-    const double A2value = A2( partNum, mass, phi );
-    return A2value / A0value;
+    double angle = atan2( A2sumIm, A2sumRe );
+    A2info info{ .amplitude = sqrt( A2sumRe * A2sumRe + A2sumIm * A2sumIm ), .phase = angle };
+    return info;
 }
 
 /**

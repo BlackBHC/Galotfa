@@ -21,20 +21,21 @@ namespace otf {
  * @param coordinate coordinates of particles
  * @param mass masses of particles
  * @param potential potentials of particles
- * @param rangeSize enclose radius of the region used for calculation
+ * @param radius enclose radius of the region used for calculation
  * @return uniqure_ptr to the gotten center of mass
  */
-auto recenter::run( const recenter_method method, const unsigned& partNum, const double* coordinate,
-                    const double* mass, const double* potential,
-                    const double rangeSize ) -> unique_ptr< double[] >
+auto recenter::get_center( const recenter_method method, const unsigned& partNum,
+                           const double* masses, const double* potentials,
+                           const double* coordinates,
+                           const double  radius ) -> unique_ptr< double[] >
 {
     switch ( method )
     {
     case recenter_method::COM:
-        return center_of_mass( mass, coordinate, partNum, rangeSize );
+        return center_of_mass( masses, coordinates, partNum, radius );
         break;
     case recenter_method::MBP:
-        return most_bound_particle( potential, coordinate, partNum );
+        return most_bound_particle( potentials, coordinates, partNum );
         break;
     default:
         ERROR( "Get into an unexpected branch!" );
@@ -48,12 +49,12 @@ auto recenter::run( const recenter_method method, const unsigned& partNum, const
  * @param mass masses of particles
  * @param coordinates coordinates of particles
  * @param partNum particle number
- * @param rangeSize enclose radius of the chosen range
+ * @param radius enclose radius of the chosen range
  * @return uniqure_ptr to the gotten center of mass
  */
 auto recenter::center_of_mass( const double* mass, const double* coordinates,
                                const unsigned& partNum,
-                               const double    rangeSize ) -> unique_ptr< double[] >
+                               const double    radius ) -> unique_ptr< double[] >
 {
     auto   com( make_unique< double[] >( 3 ) );
     double massSum           = 0;
@@ -63,7 +64,7 @@ auto recenter::center_of_mass( const double* mass, const double* coordinates,
     static unsigned j = 0;
     for ( i = 0; i < partNum; ++i )
     {
-        if ( NORM( coordinates + 3 * i ) < rangeSize )
+        if ( NORM( coordinates + 3 * i ) < radius )
         {
             massSum += mass[ i ];
             for ( j = 0; j < 3; ++j )

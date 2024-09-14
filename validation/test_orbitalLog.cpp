@@ -38,6 +38,12 @@ int main( int argc, char* argv[] )
         mockMassG[ i ] = ( double )i + 0.1;
     }
 
+    double mockPotG[ 40 ];
+    for ( auto i = 0U; i < 40; ++i )
+    {
+        mockPotG[ i ] = -( double )i - 0.1;
+    }
+
     double mockPosG[ 120 ];
     for ( auto i = 0U; i < 120; ++i )
     {
@@ -56,6 +62,7 @@ int main( int argc, char* argv[] )
     unique_ptr< int[] >    mockTypes( new int[ localNums[ rank ] ]() );
     unique_ptr< int[] >    mockIDs( new int[ localNums[ rank ] ]() );
     unique_ptr< double[] > mockMass( new double[ localNums[ rank ] ]() );
+    unique_ptr< double[] > mockPot( new double[ localNums[ rank ] ]() );
     unique_ptr< double[] > mockPos( new double[ localNums[ rank ] * 3 ]() );
     unique_ptr< double[] > mockVel( new double[ localNums[ rank ] * 3 ]() );
 
@@ -79,6 +86,12 @@ int main( int argc, char* argv[] )
     // ids
     MPI_Scatterv( mockIDsG, localNums, offsets.get(), MPI_INT, mockIDs.get(), localNums[ rank ],
                   MPI_INT, 0, MPI_COMM_WORLD );
+    // masses
+    MPI_Scatterv( mockMassG, localNums, offsets.get(), MPI_INT, mockMass.get(), localNums[ rank ],
+                  MPI_INT, 0, MPI_COMM_WORLD );
+    // potentials
+    MPI_Scatterv( mockPotG, localNums, offsets.get(), MPI_INT, mockPot.get(), localNums[ rank ],
+                  MPI_INT, 0, MPI_COMM_WORLD );
     // coordinates
     MPI_Scatterv( mockPosG, localNums, offset3s.get(), MPI_DOUBLE, mockPos.get(),
                   localNums[ rank ] * 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
@@ -96,7 +109,7 @@ int main( int argc, char* argv[] )
     for ( auto i = 0; i < maxStep; ++i )
     {
         otfServer.main_analysis_api( mockTime, localNums[ rank ], mockIDs.get(), mockTypes.get(),
-                                     mockMass.get(), mockPos.get(), mockVel.get() );
+                                     mockMass.get(), mockPot.get(), mockPos.get(), mockVel.get() );
 
         // mock the kick-drift pair
         for ( auto j = 0; j < localNums[ rank ]; ++j )

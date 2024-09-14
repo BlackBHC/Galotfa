@@ -128,6 +128,7 @@ add_executable(
     orbitalLog
     ./validation/test_orbitalLog.cpp
     ./src/monitor.cpp
+    ./src/recenter.cpp
     ./src/para.cpp
     ./src/h5out.cpp
     ./src/selector.cpp
