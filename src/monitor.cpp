@@ -7,6 +7,7 @@
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
 #endif
+#include "../include/eigen.hpp"
 #include "../include/h5out.hpp"
 #include "../include/monitor.hpp"
 #include "../include/para.hpp"
@@ -14,12 +15,26 @@
 #include "../include/selector.hpp"
 #include <H5Tpublic.h>
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <mpi.h>
 #include <string>
 #include <string_view>
 #include <vector>
 using namespace std;
+
+// inline function to calculate the determinant of an matrix
+inline auto determinant( const double* matrix ) -> double
+{
+    double det = 0;
+    det += matrix[ 0 ] * matrix[ 4 ] * matrix[ 8 ] + matrix[ 1 ] * matrix[ 5 ] * matrix[ 6 ]
+           + matrix[ 2 ] * matrix[ 3 ] * matrix[ 7 ];
+
+    det -= matrix[ 2 ] * matrix[ 4 ] * matrix[ 6 ] + matrix[ 1 ] * matrix[ 3 ] * matrix[ 8 ]
+           + matrix[ 0 ] * matrix[ 5 ] * matrix[ 7 ];
+
+    return det;
+}
 
 /**
  * @brief The global part.
@@ -238,7 +253,7 @@ monitor::~monitor()
 }
 
 /**
- * @brief The main analysis api, which should be called in the main loop of the simulation.
+ * @brief The main analysis API, which should be called in the main loop of the simulation.
  *
  * @param time time of the simulation
  * @param particleNumber number of particles in the local mpi rank
@@ -277,7 +292,7 @@ void monitor::main_analysis_api( const double time, const unsigned particleNumbe
 }
 
 /**
- * @brief The api of orbital log.
+ * @brief The API of orbital log.
  *
  * @param time time of the simulation
  * @param particleNumber number of particles in the local mpi rank
@@ -335,7 +350,7 @@ void monitor::orbital_log( const double time, const unsigned particleNumber, con
 }
 
 /**
- * @brief The api of data extraction for component analysis.
+ * @brief The API of data extraction for component analysis.
  *
  * @param time time of the simulation
  * @param particleNumber number of particles in the local mpi rank
@@ -422,7 +437,7 @@ auto monitor::component_data_extract(
 }
 
 /**
- * @brief The api of analysis part for a single component.
+ * @brief The API of analysis part for a single component.
  *
  * @param dataContainer reference to the extracted data, in the form of compDataContainer
  * @param comp wrapper of parameters for analysis of a single component
@@ -443,18 +458,21 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
     // TODO: align the system if necessary
     if ( comp->align.enable )
     {
+        align_coordinate( dataContainer, comp );
     }
-
-    // TODO: calculate the image if necessary
 
     // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
     // TODO: bar length
+    bar_info();
+
+    // TODO: calculate the image if necessary
+    image();
 
     return compRes;
 }
 
 /**
- * @brief The api to recenter the coordinates in a data container object.
+ * @brief The API to recenter the coordinates in a data container object.
  *
  * @param dataContainer reference to the data container to be recenterred
  * @param comp wrapper of parameters for analysis of a single component
@@ -477,7 +495,124 @@ void monitor::recenter_coordinate( monitor::compDataContainer&        dataContai
 }
 
 /**
- * @brief The api of analysis part for a single component
+ * @brief The API to align the coordinates in a data container object.
+ *
+ * @param dataContainer reference to the data container
+ * @param comp wrapper of parameters for analysis of a single component
+ */
+void monitor::align_coordinate( monitor::compDataContainer&        dataContainer,
+                                std::unique_ptr< otf::component >& comp )
+{
+    // get the intertia tensor
+    double inertiaTensor[ 9 ] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        // get the spherical radius of the particle
+        static double radius;
+        radius = sqrt(
+            dataContainer.coordinates[ i * 3 + 0 ] * dataContainer.coordinates[ i * 3 + 0 ]
+            + dataContainer.coordinates[ i * 3 + 1 ] * dataContainer.coordinates[ i * 3 + 1 ]
+            + dataContainer.coordinates[ i * 3 + 2 ] * dataContainer.coordinates[ i * 3 + 2 ] );
+
+        // check whether the particle locates in the enclosed radius
+        if ( comp->align.radius < radius )
+        {
+            continue;
+        }
+
+        // diagonal terms
+        inertiaTensor[ 0 * 3 + 0 ] +=
+            dataContainer.masses[ i ]
+            * ( dataContainer.coordinates[ i * 3 + 1 ] * dataContainer.coordinates[ i * 3 + 1 ]
+                + dataContainer.coordinates[ i * 3 + 2 ] * dataContainer.coordinates[ i * 3 + 2 ] );
+        inertiaTensor[ 1 * 3 + 1 ] +=
+            dataContainer.masses[ i ]
+            * ( dataContainer.coordinates[ i * 3 + 0 ] * dataContainer.coordinates[ i * 3 + 0 ]
+                + dataContainer.coordinates[ i * 3 + 2 ] * dataContainer.coordinates[ i * 3 + 2 ] );
+        inertiaTensor[ 2 * 3 + 2 ] +=
+            dataContainer.masses[ i ]
+            * ( dataContainer.coordinates[ i * 3 + 0 ] * dataContainer.coordinates[ i * 3 + 0 ]
+                + dataContainer.coordinates[ i * 3 + 1 ] * dataContainer.coordinates[ i * 3 + 1 ] );
+        // non-diagonal terms
+        inertiaTensor[ 0 * 3 + 1 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ];
+        inertiaTensor[ 0 * 3 + 2 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ];
+        inertiaTensor[ 1 * 3 + 0 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ];
+        inertiaTensor[ 1 * 3 + 2 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ];
+        inertiaTensor[ 2 * 3 + 0 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ];
+        inertiaTensor[ 2 * 3 + 1 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ];
+    }
+    // reduce the inertiaTensor from all mpi ranks
+    MPI_Allreduce( MPI_IN_PLACE, inertiaTensor, 9, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+    // get the eigenvalues and eigenvectors
+    double eigenValues[ 3 ];
+    double eigenVectors[ 9 ];
+    eigen::eigens_sym_33( inertiaTensor, eigenValues, eigenVectors );
+
+    // make sure it's a rotation matrix
+    if ( determinant( eigenVectors ) < 0 )
+    {
+        eigenVectors[ 2 ] *= -1;
+        eigenVectors[ 5 ] *= -1;
+        eigenVectors[ 8 ] *= -1;
+    }
+    // NOTE: rotation matrix is Transpose(EigenMatrix) x Identity
+
+    // rotate the coordinates and velocities
+    static double x = 0;
+    static double y = 0;
+    static double z = 0;
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        // coordinates
+        x = dataContainer.coordinates[ i * 3 + 0 ];
+        y = dataContainer.coordinates[ i * 3 + 1 ];
+        z = dataContainer.coordinates[ i * 3 + 2 ];
+        dataContainer.coordinates[ i * 3 + 0 ] =
+            eigenVectors[ 0 ] * x + eigenVectors[ 3 ] * y + eigenVectors[ 6 ] * z;
+        dataContainer.coordinates[ i * 3 + 1 ] =
+            eigenVectors[ 1 ] * x + eigenVectors[ 4 ] * y + eigenVectors[ 7 ] * z;
+        dataContainer.coordinates[ i * 3 + 2 ] =
+            eigenVectors[ 2 ] * x + eigenVectors[ 5 ] * y + eigenVectors[ 8 ] * z;
+
+        // velocities
+        x = dataContainer.velocities[ i * 3 + 0 ];
+        y = dataContainer.velocities[ i * 3 + 1 ];
+        z = dataContainer.velocities[ i * 3 + 2 ];
+        dataContainer.velocities[ i * 3 + 0 ] =
+            eigenVectors[ 0 ] * x + eigenVectors[ 3 ] * y + eigenVectors[ 6 ] * z;
+        dataContainer.velocities[ i * 3 + 1 ] =
+            eigenVectors[ 1 ] * x + eigenVectors[ 4 ] * y + eigenVectors[ 7 ] * z;
+        dataContainer.velocities[ i * 3 + 2 ] =
+            eigenVectors[ 2 ] * x + eigenVectors[ 5 ] * y + eigenVectors[ 8 ] * z;
+    }
+    // TODO: test the rotation part
+}
+
+void monitor::bar_info()
+{
+    ;
+}
+
+void monitor::image()
+{
+    ;
+}
+
+/**
+ * @brief The API of analysis part for a single component
  *
  * @param time time of the simulation
  * @param particleNumber number of particles in the local mpi rank

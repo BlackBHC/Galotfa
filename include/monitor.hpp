@@ -102,12 +102,12 @@ private:
     static void recenter_coordinate( monitor::compDataContainer&        dataContainer,
                                      std::unique_ptr< otf::component >& comp );
     // align the coordinates to the eigenvalues of the
-    void align_coordinate( monitor::compDataContainer&        dataContainer,
-                           std::unique_ptr< otf::component >& comp );
+    static void align_coordinate( monitor::compDataContainer&        dataContainer,
+                                  std::unique_ptr< otf::component >& comp );
     // bar info calculation
-    void bar_info();
+    static void bar_info();
     // image calculation
-    void image();
+    static void image();
 
     // the smart pointer to the HDF5 file organizer, it is more memory efficient in the none-root
     // rank
