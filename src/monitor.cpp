@@ -7,6 +7,7 @@
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
 #endif
+#include "../include/barinfo.hpp"
 #include "../include/eigen.hpp"
 #include "../include/h5out.hpp"
 #include "../include/monitor.hpp"
@@ -164,12 +165,12 @@ void print_component_part( otf::runtime_para& para )
         }
         INFO( "Image half length: %g.", comp.second->image.halfLength );
         INFO( "Image bin number: %d.", comp.second->image.binNum );
-        if ( comp.second->A2.enable )
+        if ( comp.second->sBar.enable )
         {
             INFO( "A2 of this component is enabled." );
         }
-        INFO( "A2 rmin : %g.", comp.second->A2.rmin );
-        INFO( "A2 rmax : %g.", comp.second->A2.rmax );
+        INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
+        INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
 
         if ( comp.second->barAngle.enable )
         {
@@ -209,7 +210,6 @@ namespace otf {
 monitor::monitor( const string_view& tomlParaFile )
     : mpiRank( -1 ), mpiSize( 0 ), isRootRank( false ), stepCounter( 0 ),
       mpiInitialzedByMonitor( false ), para( runtime_para( tomlParaFile ) ), h5Organizer( nullptr )
-
 {
     if ( not para.enableOtf )  // if the on-the-fly analysis is not enabled
     {
@@ -463,11 +463,15 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
 
     // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
     // TODO: bar length
-    bar_info();
+    if ( comp->sBar.enable or comp->barAngle.enable or comp->sBuckle.enable )
+    {
+        bar_info( dataContainer, comp, compRes );
+    }
 
     // TODO: calculate the image if necessary
     image();
 
+    // TODO: test whether the data in unique_ptr can be return in this form
     return compRes;
 }
 
@@ -601,9 +605,41 @@ void monitor::align_coordinate( monitor::compDataContainer&        dataContainer
     // TODO: test the rotation part
 }
 
-void monitor::bar_info()
+void monitor::bar_info( monitor::compDataContainer&        dataContainer,
+                        std::unique_ptr< otf::component >& comp, compResContainer& res )
 {
-    ;
+    // calculate the azimuthal angles
+    unique_ptr< double[] > phis( new double[ dataContainer.partNum ] );
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        phis[ i ] =
+            atan2( dataContainer.coordinates[ 3 * i + 1 ], dataContainer.coordinates[ 3 * i + 0 ] );
+    }
+
+    // BUG: doesn't consider the enclosed radius!!!
+    bar_info::A2info info;
+    if ( comp->barAngle.enable or comp->sBar.enable )
+    {
+        info = bar_info::A2( dataContainer.partNum, dataContainer.masses.get(), phis.get() );
+
+        // NOTE: bar angle
+        if ( comp->barAngle.enable )
+        {
+            res.barAngle = info.phase;
+        }
+
+        // NOTE: bar strength
+        if ( comp->sBar.enable )
+        {
+            double A0 = bar_info::A0( dataContainer.partNum, dataContainer.masses.get() );
+            res.sBar  = info.amplitude / A0;
+        }
+    };
+
+    if ( comp->sBuckle.enable )
+    {
+        ;
+    }
 }
 
 void monitor::image()
@@ -652,7 +688,7 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         }
 
         // create the datasets for bar infos
-        if ( comp->A2.enable )
+        if ( comp->sBar.enable )
         {
             h5Organizer->create_dataset_in_group( "A2", comp->compName, { 1 }, H5T_NATIVE_DOUBLE );
         }
@@ -697,9 +733,9 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         }
 
         // bar infos
-        if ( comp->A2.enable )
+        if ( comp->sBar.enable )
         {
-            h5Organizer->flush_single_block( comp->compName, "A2", &compResContainer.A2 );
+            h5Organizer->flush_single_block( comp->compName, "A2", &compResContainer.sBar );
         }
         if ( comp->barAngle.enable )
         {

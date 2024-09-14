@@ -63,7 +63,7 @@ private:
     using compResContainer = struct compResStruct
     {
         double                      center[ vecDim ] = { 0, 0, 0 };  // center of the component
-        double                      A2               = 0;            // bar strength parameter
+        double                      sBar             = 0;            // bar strength parameter
         double                      barAngle         = 0;            // bar angle
         double                      sBuckle          = 0;            // buckling strength
         unsigned                    imageBinNum      = 0;            // image matrix rank
@@ -105,7 +105,8 @@ private:
     static void align_coordinate( monitor::compDataContainer&        dataContainer,
                                   std::unique_ptr< otf::component >& comp );
     // bar info calculation
-    static void bar_info();
+    static void bar_info( monitor::compDataContainer&        dataContainer,
+                          std::unique_ptr< otf::component >& comp, compResContainer& res );
     // image calculation
     static void image();
 

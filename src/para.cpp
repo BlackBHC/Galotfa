@@ -156,12 +156,12 @@ component::component( string_view& compName, toml::table& compNodeTable )
     }
 
     // bar info parameters
-    // A2
-    A2.enable = *compNodeTable[ "A2" ][ "enable" ].value< bool >();
-    if ( A2.enable )
+    // sBar
+    sBar.enable = *compNodeTable[ "A2" ][ "enable" ].value< bool >();
+    if ( sBar.enable )
     {
-        A2.rmin = *compNodeTable[ "A2" ][ "rmin" ].value< double >();
-        A2.rmax = *compNodeTable[ "A2" ][ "rmax" ].value< double >();
+        sBar.rmin = *compNodeTable[ "A2" ][ "rmin" ].value< double >();
+        sBar.rmax = *compNodeTable[ "A2" ][ "rmax" ].value< double >();
     }
     // bar angle
     barAngle.enable = *compNodeTable[ "barangle" ][ "enable" ].value< bool >();

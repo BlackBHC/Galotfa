@@ -124,12 +124,12 @@ int main()
         }
         INFO( "Image half length: %g.", comp.second->image.halfLength );
         INFO( "Image bin number: %d.", comp.second->image.binNum );
-        if ( comp.second->A2.enable )
+        if ( comp.second->sBar.enable )
         {
             INFO( "A2 of this component is enabled." );
         }
-        INFO( "A2 rmin : %g.", comp.second->A2.rmin );
-        INFO( "A2 rmax : %g.", comp.second->A2.rmax );
+        INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
+        INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
 
         if ( comp.second->barAngle.enable )
         {

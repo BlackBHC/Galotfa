@@ -55,7 +55,7 @@ struct image_para
 
 /**
  * @class basic_bar_para
- * @brief The parameters used for bar info calculation, A2, Sbar et al.
+ * @brief The parameters used for bar info calculation, Sbar et al.
  *
  */
 struct basic_bar_para
@@ -93,7 +93,7 @@ struct component
     coordinate_frame        frame;     // coordinate frame type
     align_para              align;     // whether align coordinates with the inertia tensor
     image_para              image;     // parameter of the spatial image part
-    basic_bar_para          A2;        // bar strength parameter
+    basic_bar_para          sBar;      // bar strength parameter
     basic_bar_para          barAngle;  // bar angle parameter
     basic_bar_para          sBuckle;   // buckling strength parameter
 };
