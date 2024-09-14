@@ -24,18 +24,6 @@
 #include <vector>
 using namespace std;
 
-// inline function to calculate the determinant of an matrix
-inline auto determinant( const double* matrix ) -> double
-{
-    double det = 0;
-    det += matrix[ 0 ] * matrix[ 4 ] * matrix[ 8 ] + matrix[ 1 ] * matrix[ 5 ] * matrix[ 6 ]
-           + matrix[ 2 ] * matrix[ 3 ] * matrix[ 7 ];
-
-    det -= matrix[ 2 ] * matrix[ 4 ] * matrix[ 6 ] + matrix[ 1 ] * matrix[ 3 ] * matrix[ 8 ]
-           + matrix[ 0 ] * matrix[ 5 ] * matrix[ 7 ];
-
-    return det;
-}
 
 /**
  * @brief The global part.
@@ -565,6 +553,17 @@ void monitor::align_coordinate( monitor::compDataContainer&        dataContainer
     double eigenVectors[ 9 ];
     eigen::eigens_sym_33( inertiaTensor, eigenValues, eigenVectors );
 
+    // lambda function to calculate the determinant of an matrix
+    auto determinant = []( const double* matrix ) -> double {
+        double det = 0;
+        det += matrix[ 0 ] * matrix[ 4 ] * matrix[ 8 ] + matrix[ 1 ] * matrix[ 5 ] * matrix[ 6 ]
+               + matrix[ 2 ] * matrix[ 3 ] * matrix[ 7 ];
+
+        det -= matrix[ 2 ] * matrix[ 4 ] * matrix[ 6 ] + matrix[ 1 ] * matrix[ 3 ] * matrix[ 8 ]
+               + matrix[ 0 ] * matrix[ 5 ] * matrix[ 7 ];
+        return det;
+    };
+
     // make sure it's a rotation matrix
     if ( determinant( eigenVectors ) < 0 )
     {
@@ -608,18 +607,30 @@ void monitor::align_coordinate( monitor::compDataContainer&        dataContainer
 void monitor::bar_info( monitor::compDataContainer&        dataContainer,
                         std::unique_ptr< otf::component >& comp, compResContainer& res )
 {
-    // calculate the azimuthal angles
-    unique_ptr< double[] > phis( new double[ dataContainer.partNum ] );
+
+    // lambda function to calculate the norm of a vector
+    auto norm = []( const double* vec ) -> double {
+        return sqrt( vec[ 0 ] * vec[ 0 ] + vec[ 1 ] * vec[ 1 ] + vec[ 2 ] * vec[ 2 ] );
+    };
+
+    unsigned         count = 0;
+    vector< double > phis( dataContainer.partNum );
+    vector< double > masses( dataContainer.partNum );
+    vector< double > zeds( dataContainer.partNum );
+
     for ( unsigned i = 0; i < dataContainer.partNum; ++i )
     {
-        phis[ i ] =
+        phis[ count ] =
             atan2( dataContainer.coordinates[ 3 * i + 1 ], dataContainer.coordinates[ 3 * i + 0 ] );
+
+        ++count;
     }
 
     // BUG: doesn't consider the enclosed radius!!!
     bar_info::A2info info;
     if ( comp->barAngle.enable or comp->sBar.enable )
     {
+        // BUG: the APIs doesn't consider the rmin and rmax parameter!!!
         info = bar_info::A2( dataContainer.partNum, dataContainer.masses.get(), phis.get() );
 
         // NOTE: bar angle
