@@ -607,50 +607,110 @@ void monitor::align_coordinate( monitor::compDataContainer&        dataContainer
 void monitor::bar_info( monitor::compDataContainer&        dataContainer,
                         std::unique_ptr< otf::component >& comp, compResContainer& res )
 {
+    // NOTE: bar angle
+    if ( comp->barAngle.enable )
+    {
+        // extracted data
+        unsigned               count = 0;
+        unique_ptr< double[] > usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > usedPhis( new double[ dataContainer.partNum ] );
 
-    // lambda function to calculate the norm of a vector
-    auto norm = []( const double* vec ) -> double {
-        return sqrt( vec[ 0 ] * vec[ 0 ] + vec[ 1 ] * vec[ 1 ] + vec[ 2 ] * vec[ 2 ] );
+        // extract the used data
+        for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+        {
+            // get the radius of the current particle
+            static double radius = 0;
+            radius               = sqrt(
+                dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
+                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+
+            // if the particle not in the specified region, go to the next loop
+            if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+            {
+                continue;
+            }
+
+            usedPhis[ count ]   = atan2( dataContainer.coordinates[ 3 * i + 1 ],
+                                         dataContainer.coordinates[ 3 * i + 0 ] );
+            usedMasses[ count ] = dataContainer.masses[ i ];
+            ++count;
+        }
+
+        // calculate the bar angle
+        res.barAngle = bar_info::bar_angle( count, usedMasses.get(), usedPhis.get() );
     };
 
-    unsigned         count = 0;
-    vector< double > phis( dataContainer.partNum );
-    vector< double > masses( dataContainer.partNum );
-    vector< double > zeds( dataContainer.partNum );
-
-    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    if ( comp->sBar.enable )
     {
-        phis[ count ] =
-            atan2( dataContainer.coordinates[ 3 * i + 1 ], dataContainer.coordinates[ 3 * i + 0 ] );
+        // extracted data
+        unsigned               count = 0;
+        unique_ptr< double[] > usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > usedPhis( new double[ dataContainer.partNum ] );
 
-        ++count;
+        // extract the used data
+        for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+        {
+            // get the radius of the current particle
+            static double radius = 0;
+            radius               = sqrt(
+                dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
+                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+
+            // if the particle not in the specified region, go to the next loop
+            if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+            {
+                continue;
+            }
+
+            usedPhis[ count ]   = atan2( dataContainer.coordinates[ 3 * i + 1 ],
+                                         dataContainer.coordinates[ 3 * i + 0 ] );
+            usedMasses[ count ] = dataContainer.masses[ i ];
+            ++count;
+        }
+        double A0 = bar_info::A0( count, usedMasses.get() );
+        double A2 = bar_info::A2( count, usedMasses.get(), usedPhis.get() );
+        // calculate the bar strength
+        res.sBar = A2 / A0;
     }
-
-    // BUG: doesn't consider the enclosed radius!!!
-    bar_info::A2info info;
-    if ( comp->barAngle.enable or comp->sBar.enable )
-    {
-        // BUG: the APIs doesn't consider the rmin and rmax parameter!!!
-        info = bar_info::A2( dataContainer.partNum, dataContainer.masses.get(), phis.get() );
-
-        // NOTE: bar angle
-        if ( comp->barAngle.enable )
-        {
-            res.barAngle = info.phase;
-        }
-
-        // NOTE: bar strength
-        if ( comp->sBar.enable )
-        {
-            double A0 = bar_info::A0( dataContainer.partNum, dataContainer.masses.get() );
-            res.sBar  = info.amplitude / A0;
-        }
-    };
 
     if ( comp->sBuckle.enable )
     {
-        ;
+        // extracted data
+        unsigned               count = 0;
+        unique_ptr< double[] > usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > usedPhis( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > usedZeds( new double[ dataContainer.partNum ] );
+
+        // extract the used data
+        for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+        {
+            // get the radius of the current particle
+            static double radius = 0;
+            radius               = sqrt(
+                dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
+                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+
+            // if the particle not in the specified region, go to the next loop
+            if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+            {
+                continue;
+            }
+
+            usedPhis[ count ]   = atan2( dataContainer.coordinates[ 3 * i + 1 ],
+                                         dataContainer.coordinates[ 3 * i + 0 ] );
+            usedMasses[ count ] = dataContainer.masses[ i ];
+            usedZeds[ count ]   = dataContainer.coordinates[ 3 * i + 2 ];
+            ++count;
+        }
+
+        // calculate the buckling strength
+        res.sBuckle = bar_info::Sbuckle( count, usedMasses.get(), usedPhis.get(), usedZeds.get() );
     }
+
+    // TODO: bar length
 }
 
 void monitor::image()

@@ -128,13 +128,16 @@ add_executable(
     orbitalLog
     ./validation/test_orbitalLog.cpp
     ./src/monitor.cpp
-    ./src/recenter.cpp
     ./src/para.cpp
     ./src/h5out.cpp
     ./src/selector.cpp
+    ./src/recenter.cpp
+    ./src/barinfo.cpp
+    ./src/eigen.cpp
 )
 target_link_libraries(orbitalLog PUBLIC MPI::MPI_CXX)
 target_link_libraries(orbitalLog PRIVATE hdf5)
+target_link_libraries(orbitalLog PRIVATE gsl)
 target_link_options(orbitalLog PRIVATE ${sanitizer_flags})
 add_test(NAME orbitalLog COMMAND mpirun -np 4 $<TARGET_FILE:orbitalLog>)
 

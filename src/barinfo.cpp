@@ -31,7 +31,7 @@ auto bar_info::A0( const unsigned partNum, const double* masses ) -> double
  * @param phi azimuthal angle of the particles
  * @return the A2 value
  */
-auto bar_info::A2( const unsigned partNum, const double* masses, const double* phis ) -> A2info
+auto bar_info::A2( const unsigned partNum, const double* masses, const double* phis ) -> double
 {
     double A2sumRe = 0;  // real part
     double A2sumIm = 0;  // imaginary part
@@ -42,9 +42,30 @@ auto bar_info::A2( const unsigned partNum, const double* masses, const double* p
     }
     MPI_Allreduce( MPI_IN_PLACE, &A2sumRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     MPI_Allreduce( MPI_IN_PLACE, &A2sumIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-    const double angle = atan2( A2sumIm, A2sumRe );
-    A2info       info{ .amplitude = sqrt( A2sumRe * A2sumRe + A2sumIm * A2sumIm ), .phase = angle };
-    return info;
+    return sqrt( A2sumRe * A2sumRe + A2sumIm * A2sumIm );
+}
+
+/**
+ * @brief Calculate the bar angle as the phase angle of the m=2 Fourier mode
+ *
+ * @param partNum particle number
+ * @param mass masses of partciles
+ * @param phi azimuthal angle of the particles
+ * @return the bar angle
+ */
+auto bar_info::bar_angle( const unsigned partNum, const double* masses,
+                          const double* phis ) -> double
+{
+    double A2sumRe = 0;  // real part
+    double A2sumIm = 0;  // imaginary part
+    for ( auto i = 0U; i < partNum; ++i )
+    {
+        A2sumRe += masses[ i ] * cos( 2 * phis[ i ] );
+        A2sumIm += masses[ i ] * sin( 2 * phis[ i ] );
+    }
+    MPI_Allreduce( MPI_IN_PLACE, &A2sumRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, &A2sumIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    return atan2( A2sumIm, A2sumRe );
 }
 
 /**
