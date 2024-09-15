@@ -62,6 +62,27 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
         }
     } );
 
+    // remove useless components: a component without effective analysis
+    vector< string > toRemove;  // vector of component names
+    for ( auto& comp : comps )
+    {
+        bool effective;
+        // if at least one information is enabled, it's an effective component
+        effective = comp.second->recenter.enable or comp.second->align.enable
+                    or comp.second->sBar.enable or comp.second->barAngle.enable
+                    or comp.second->sBuckle.enable or comp.second->image.enable;
+
+        if ( not effective )
+        {
+            toRemove.push_back( comp.first );
+        }
+    }
+    // remove uneffective components
+    for ( auto& str : toRemove )
+    {
+        comps.erase( str );
+    }
+
     // NOTE: if there is no any component and orbital logs are enables, then toggle off the
     // on-the-fly analysis
     if ( comps.size() == 0 and ( not orbit->enable ) )
