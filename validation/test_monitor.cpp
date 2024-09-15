@@ -30,13 +30,13 @@ int main( int argc, char* argv[] )
     int mockIDsG[ 40 ];
     for ( auto i = 0; i < 40; ++i )
     {
-        mockIDsG[ i ] = i + 1;
+        mockIDsG[ i ] = i + 100001;
     }
 
     double mockMassG[ 40 ];
     for ( auto i = 0U; i < 40; ++i )
     {
-        mockMassG[ i ] = 0.1;
+        mockMassG[ i ] = 0.13;
     }
 
     double mockPotG[ 40 ];
@@ -51,8 +51,6 @@ int main( int argc, char* argv[] )
         mockPosG[ 3 * i + 0 ] = 5.2 * cos( i * numbers::pi );
         mockPosG[ 3 * i + 1 ] = 5.2 * sin( i * numbers::pi );
         mockPosG[ 3 * i + 2 ] = 0;
-        mpi_print( rank, "%lf\t%lf\t%lf", mockPosG[ 3 * i + 0 ], mockPosG[ 3 * i + 1 ],
-                   mockPosG[ 3 * i + 2 ] );
     }
 
     double mockVelG[ 120 ];
@@ -62,7 +60,13 @@ int main( int argc, char* argv[] )
     }
 
     // mock there are 9, 7, 11, 13 number of particles in the 4 ranks
-    int localNums[] = { 9, 7, 11, 13 };
+    int localNums[]  = { 9, 7, 11, 13 };
+    int localNums3[] = { 9, 7, 11, 13 };
+    for ( auto& triple : localNums3 )
+    {
+        triple *= 3;
+    }
+
     // local data
     unique_ptr< int[] >    mockTypes( new int[ localNums[ rank ] ]() );
     unique_ptr< int[] >    mockIDs( new int[ localNums[ rank ] ]() );
@@ -92,16 +96,16 @@ int main( int argc, char* argv[] )
     MPI_Scatterv( mockIDsG, localNums, offsets.get(), MPI_INT, mockIDs.get(), localNums[ rank ],
                   MPI_INT, 0, MPI_COMM_WORLD );
     // masses
-    MPI_Scatterv( mockMassG, localNums, offsets.get(), MPI_INT, mockMass.get(), localNums[ rank ],
-                  MPI_INT, 0, MPI_COMM_WORLD );
+    MPI_Scatterv( mockMassG, localNums, offsets.get(), MPI_DOUBLE, mockMass.get(),
+                  localNums[ rank ], MPI_DOUBLE, 0, MPI_COMM_WORLD );
     // potentials
-    MPI_Scatterv( mockPotG, localNums, offsets.get(), MPI_INT, mockPot.get(), localNums[ rank ],
-                  MPI_INT, 0, MPI_COMM_WORLD );
+    MPI_Scatterv( mockPotG, localNums, offsets.get(), MPI_DOUBLE, mockPot.get(), localNums[ rank ],
+                  MPI_DOUBLE, 0, MPI_COMM_WORLD );
     // coordinates
-    MPI_Scatterv( mockPosG, localNums, offset3s.get(), MPI_DOUBLE, mockPos.get(),
+    MPI_Scatterv( mockPosG, localNums3, offset3s.get(), MPI_DOUBLE, mockPos.get(),
                   localNums[ rank ] * 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
     // velocities
-    MPI_Scatterv( mockVelG, localNums, offset3s.get(), MPI_DOUBLE, mockVel.get(),
+    MPI_Scatterv( mockVelG, localNums3, offset3s.get(), MPI_DOUBLE, mockVel.get(),
                   localNums[ rank ] * 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
     double mockTime   = 0;     // mock the time of the simulation

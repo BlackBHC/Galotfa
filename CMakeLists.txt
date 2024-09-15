@@ -41,9 +41,21 @@ else()
 endif()
 
 # TARGET PART
-add_library(galotfa SHARED include/galotfa.hpp src/galotfa.cpp)
+add_library(galotfa SHARED
+    include/galotfa.hpp
+    ./src/galotfa.cpp
+    ./src/monitor.cpp
+    ./src/para.cpp
+    ./src/h5out.cpp
+    ./src/selector.cpp
+    ./src/recenter.cpp
+    ./src/barinfo.cpp
+    ./src/eigen.cpp
+    ./src/statistic.cpp
+)
 # TODO: link the functional components
 target_link_libraries(galotfa PRIVATE gsl gslcblas hdf5)
+target_link_libraries(galotfa PRIVATE MPI::MPI_CXX)
 # Library with the same name
 #[[ add_library(message-shared
   SHARED
@@ -67,9 +79,9 @@ set_target_properties(message-static
 
 # UNIT TESTS
 # C++ programes
-enable_testing()
 find_package(MPI REQUIRED)
 
+enable_testing()
 add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
@@ -138,10 +150,26 @@ add_executable(
     ./src/statistic.cpp
 )
 target_link_libraries(orbitalLog PUBLIC MPI::MPI_CXX)
-target_link_libraries(orbitalLog PRIVATE hdf5)
-target_link_libraries(orbitalLog PRIVATE gsl)
+target_link_libraries(orbitalLog PRIVATE hdf5 gsl gslcblas)
 target_link_options(orbitalLog PRIVATE ${sanitizer_flags})
 add_test(NAME orbitalLog COMMAND mpirun -np 4 $<TARGET_FILE:orbitalLog>)
+
+add_executable(
+    monitor
+    ./validation/test_monitor.cpp
+    ./src/monitor.cpp
+    ./src/para.cpp
+    ./src/h5out.cpp
+    ./src/selector.cpp
+    ./src/recenter.cpp
+    ./src/barinfo.cpp
+    ./src/eigen.cpp
+    ./src/statistic.cpp
+)
+target_link_libraries(monitor PUBLIC MPI::MPI_CXX)
+target_link_libraries(monitor PRIVATE hdf5 gsl gslcblas)
+target_link_options(monitor PRIVATE ${sanitizer_flags})
+add_test(NAME monitor COMMAND mpirun -np 4 $<TARGET_FILE:monitor>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

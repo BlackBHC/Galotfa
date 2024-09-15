@@ -121,58 +121,64 @@ void print_component_part( otf::runtime_para& para )
         {
             INFO( "%d ", id );
         }
+
         if ( comp.second->recenter.enable )
         {
-            INFO( "Recenter of this component is enabled." );
+            INFO( "Recenter of [%s] is enabled.", comp.second->compName.c_str() );
+            string method;
+            switch ( comp.second->recenter.method )
+            {
+            case otf::recenter_method::COM:
+                method = "center of mass";
+                break;
+            case otf::recenter_method::MBP:
+                method = "most bound particle";
+                break;
+            default:
+                ERROR( "Get into an unexpected branch!" );
+            }
+            INFO( "Potential method for recenter: %s.", method.c_str() );
+            INFO( "Potential enclosed radius for recenter: %g.", comp.second->recenter.radius );
+            INFO( "Initial guess of the recenter:" );
+            INFO( "(%g, %g, %g)", comp.second->recenter.initialGuess[ 0 ],
+                  comp.second->recenter.initialGuess[ 1 ],
+                  comp.second->recenter.initialGuess[ 2 ] );
         }
-        string method;
-        switch ( comp.second->recenter.method )
-        {
-        case otf::recenter_method::COM:
-            method = "center of mass";
-            break;
-        case otf::recenter_method::MBP:
-            method = "most bound particle";
-            break;
-        default:
-            ERROR( "Get into an unexpected branch!" );
-        }
-        INFO( "Potential method for recenter: %s.", method.c_str() );
-        INFO( "Potential enclosed radius for recenter: %g.", comp.second->recenter.radius );
-        INFO( "Initial guess of the recenter:" );
-        INFO( "(%g, %g, %g)", para.orbit->recenter.initialGuess[ 0 ],
-              para.orbit->recenter.initialGuess[ 1 ], para.orbit->recenter.initialGuess[ 2 ] );
+
         if ( comp.second->align.enable )
         {
-            INFO( "Alignment of this component is enabled." );
+            INFO( "Alignment of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "Enclose radius of intertia tensor calculation of [%s]: %g",
+                  comp.second->compName.c_str(), comp.second->align.radius );
         }
-        INFO( "Potential enclosed radius for align: %g.", comp.second->align.radius );
+
         if ( comp.second->image.enable )
         {
-            INFO( "Image of this component is enabled." );
+            INFO( "Image of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "Image half length: %g.", comp.second->image.halfLength );
+            INFO( "Image bin number: %d.", comp.second->image.binNum );
         }
-        INFO( "Image half length: %g.", comp.second->image.halfLength );
-        INFO( "Image bin number: %d.", comp.second->image.binNum );
+
         if ( comp.second->sBar.enable )
         {
-            INFO( "A2 of this component is enabled." );
+            INFO( "A2 of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
+            INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
         }
-        INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
-        INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
 
         if ( comp.second->barAngle.enable )
         {
-            INFO( "barAngle of this component is enabled." );
+            INFO( "barAngle of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
+            INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
         }
-        INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
-        INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
 
         if ( comp.second->sBuckle.enable )
         {
-            INFO( "buckle of this component is enabled." );
+            INFO( "buckle of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
+            INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
         }
-        INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
-        INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
     }
 }
 
@@ -776,24 +782,6 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
         ys[ i ] = dataContainer.coordinates[ 3 * i + 1 ];
         zs[ i ] = dataContainer.coordinates[ 3 * i + 2 ];
     }
-    static int times = 0;
-
-    if ( times == 0 )
-    {
-        for ( int i = 0; i < 4; ++i )
-        {
-            if ( mpiRank == i )
-            {
-                myprint( "In rank %d: %d particles", mpiRank, dataContainer.partNum );
-                for ( unsigned j = 0; j < dataContainer.partNum; ++j )
-                {
-                    myprint( "mass=%lf\tx=%lf\ty=%lf\tz=%lf", dataContainer.masses[ j ], xs[ j ],
-                             ys[ j ], zs[ j ] );
-                }
-            }
-            MPI_Barrier( MPI_COMM_WORLD );
-        }
-    }
 
     // calculate the image matrix
     auto imageXY = statistic::bin2d(
@@ -809,31 +797,6 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
 
-
-    if ( times == 0 )
-    {
-        for ( int i = 0; i < 4; ++i )
-        {
-            if ( mpiRank == i )
-            {
-                myprint( "In rank %d:", mpiRank );
-                for ( int j = 0; j < 5; ++j )
-                {
-                    // myprint( "%lf\t%lf\t%lf\t%lf\t%lf\t", imageXY[ j * 5 + 0 ],
-                    //          imageXY[ j * 5 + 1 ], imageXY[ j * 5 + 2 ], imageXY[ j * 5 + 3 ],
-                    //          imageXY[ j * 5 + 4 ] );
-                    // myprint( "%lf\t%lf\t%lf\t%lf\t%lf\t", imageXZ[ j * 5 + 0 ],
-                    //          imageXZ[ j * 5 + 1 ], imageXZ[ j * 5 + 2 ], imageXZ[ j * 5 + 3 ],
-                    //          imageXZ[ j * 5 + 4 ] );
-                    myprint( "%lf\t%lf\t%lf\t%lf\t%lf\t", imageYZ[ j * 5 + 0 ],
-                             imageYZ[ j * 5 + 1 ], imageYZ[ j * 5 + 2 ], imageYZ[ j * 5 + 3 ],
-                             imageYZ[ j * 5 + 4 ] );
-                }
-            }
-            MPI_Barrier( MPI_COMM_WORLD );
-        }
-    }
-    times = 1;
 
     // restore the results
     res.imageXY = std::move( imageXY );
@@ -873,11 +836,7 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
     if ( isRootRank and stepCounter == 0 )
     {
         // create the datasets for times
-        if ( comp->recenter.enable )
-        {
-            h5Organizer->create_dataset_in_group( "Time", comp->compName, { 1 },
-                                                  H5T_NATIVE_DOUBLE );
-        }
+        h5Organizer->create_dataset_in_group( "Time", comp->compName, { 1 }, H5T_NATIVE_DOUBLE );
 
         // create the datasets for center positions
         if ( comp->recenter.enable )

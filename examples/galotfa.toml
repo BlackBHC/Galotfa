@@ -18,12 +18,12 @@ epsilon = 1e-10 # default 1e-8
 # You need to specify the following parameters for each component you
 # want to analysis.
 # You can define many componentXs, X is an identifier of the component
-# that a positive integer is recommended.
+# that a positive integer or a string is recommended.
 [component1]
 # the ids of particle types in this component
 types = [2]
 # The period of analyses, in units of syncrhonized time steps in the
-# simulation.
+# simulation. Note that the period must be positive integer.
 period = 10
 # The coordinate frame used for analyses.
 # Available values:
