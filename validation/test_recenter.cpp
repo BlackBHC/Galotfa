@@ -46,8 +46,10 @@ int main( int argc, char* argv[] )
             }
         }
     }
-    double expected1[ 3 ] = { 0, 0, 0 };
-    auto   res1 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100 );
+    double expected1[ 3 ]    = { 0, 0, 0 };
+    double initialGuess[ 3 ] = { 0, 0, 0 };
+    auto   res1 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100,
+                                            initialGuess );
     MPI_Barrier( MPI_COMM_WORLD );
     mpi_print( rank, "Expect: %lf, %lf, %lf", expected1[ 0 ], expected1[ 1 ], expected1[ 2 ] );
     mpi_print( rank, "Get: %lf, %lf, %lf", res1[ 0 ], res1[ 1 ], res1[ 2 ] );
@@ -69,7 +71,8 @@ int main( int argc, char* argv[] )
     }
 
     double expected2[ 3 ] = { 3.14, 3.14, 3.14 };
-    auto   res2 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100 );
+    auto   res2 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100,
+                                            initialGuess );
     MPI_Barrier( MPI_COMM_WORLD );
     mpi_print( rank, "Expect: %lf, %lf, %lf", expected2[ 0 ], expected2[ 1 ], expected2[ 2 ] );
     mpi_print( rank, "Get: %lf, %lf, %lf", res2[ 0 ], res2[ 1 ], res2[ 2 ] );
@@ -117,7 +120,8 @@ int main( int argc, char* argv[] )
         }
     }
     double expected3[ 3 ] = { 0.49207988, 0.57682968, 0.49231838 };
-    auto   res3 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100 );
+    auto   res3 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100,
+                                            initialGuess );
     MPI_Barrier( MPI_COMM_WORLD );
     mpi_print( rank, "Expect: %lf, %lf, %lf", expected3[ 0 ], expected3[ 1 ], expected3[ 2 ] );
     mpi_print( rank, "Get: %lf, %lf, %lf", res3[ 0 ], res3[ 1 ], res3[ 2 ] );
@@ -173,7 +177,8 @@ int main( int argc, char* argv[] )
         }
     }
     double expected4[ 3 ] = { 0.44997152, 0.55214703, 0.49108783 };
-    auto   res4 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100 );
+    auto   res4 = recenter::center_of_mass( mass + 10 * rank, coordinate + 3 * 10 * rank, 10, 100,
+                                            initialGuess );
     MPI_Barrier( MPI_COMM_WORLD );
     mpi_print( rank, "Expect: %lf, %lf, %lf", expected4[ 0 ], expected4[ 1 ], expected4[ 2 ] );
     mpi_print( rank, "Get: %lf, %lf, %lf", res4[ 0 ], res4[ 1 ], res4[ 2 ] );

@@ -87,9 +87,9 @@ private:
                             const double*                      velocities,
                             std::unique_ptr< otf::component >& comp ) -> monitor::compDataContainer;
     // analyze the data of a single component
-    static auto
-    component_data_analyze( monitor::compDataContainer&        dataContainer,
-                            std::unique_ptr< otf::component >& comp ) -> monitor::compResContainer;
+    auto component_data_analyze( monitor::compDataContainer&        dataContainer,
+                                 std::unique_ptr< otf::component >& comp ) const
+        -> monitor::compResContainer;
     // NOTE: API to analyze the data of a single component
     void component_analysis( double time, unsigned particleNumber, const int* partTypes,
                              const double* masses, const double* potentials,
@@ -100,7 +100,8 @@ private:
 
     // recenter the coordinates
     static void recenter_coordinate( monitor::compDataContainer&        dataContainer,
-                                     std::unique_ptr< otf::component >& comp );
+                                     std::unique_ptr< otf::component >& comp,
+                                     compResContainer&                  res );
     // align the coordinates to the eigenvalues of the
     static void align_coordinate( monitor::compDataContainer&        dataContainer,
                                   std::unique_ptr< otf::component >& comp );
@@ -108,8 +109,8 @@ private:
     static void bar_info( monitor::compDataContainer&        dataContainer,
                           std::unique_ptr< otf::component >& comp, compResContainer& res );
     // image calculation
-    static void image();
-
+    void image( monitor::compDataContainer& dataContainer, std::unique_ptr< otf::component >& comp,
+                compResContainer& res ) const;
     // the smart pointer to the HDF5 file organizer, it is more memory efficient in the none-root
     // rank
     std::unique_ptr< h5_out > h5Organizer;

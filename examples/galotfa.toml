@@ -42,7 +42,7 @@ recenter.enable = true
 # com: define ... as the center of mass. For better performance, the
 #      program calculate the com through iteration: 100 times, 50
 #      times, 10 times, 1 times, and 0.5 times radius.
-recenter.method = "com"
+recenter.method = "mbp"
 # Enclose radius of the sphere used in center of mass calculation, a
 # value closing to twice disk/galactic radius is recommended.
 recenter.radius = 10

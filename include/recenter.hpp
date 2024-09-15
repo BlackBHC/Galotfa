@@ -19,21 +19,21 @@ enum class recenter_method : std::uint8_t { COM = 0, MBP = 1 };
 class recenter
 {
 public:
-    static auto get_center( recenter_method method, const unsigned int& partNum,
-                            const double* masses, const double* potentials,
-                            const double* coordinates,
-                            double        radius ) -> std::unique_ptr< double[] >;
+    static auto get_center( recenter_method method, const unsigned& partNum, const double* masses,
+                            const double* potentials, const double* coordinates, double radius,
+                            const double* previousPos = nullptr ) -> std::unique_ptr< double[] >;
 
 #ifdef DEBUG
 
 #else
 private:
 #endif
-    static auto center_of_mass( const double* mass, const double* coordinates,
-                                const unsigned int& partNum,
-                                double              radius ) -> std::unique_ptr< double[] >;
+    static auto
+    center_of_mass( const double* mass, const double* coordinates, const unsigned& partNum,
+                    double        radius,
+                    const double* previousPos = nullptr ) -> std::unique_ptr< double[] >;
     static auto most_bound_particle( const double* potentials, const double* coordinates,
-                                     const unsigned int& partNum ) -> std::unique_ptr< double[] >;
+                                     const unsigned& partNum ) -> std::unique_ptr< double[] >;
 };
 
 }  // namespace otf

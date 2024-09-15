@@ -14,6 +14,7 @@
 #include "../include/para.hpp"
 #include "../include/recenter.hpp"
 #include "../include/selector.hpp"
+#include "../include/statistic.hpp"
 #include <H5Tpublic.h>
 #include <algorithm>
 #include <cmath>
@@ -432,7 +433,7 @@ auto monitor::component_data_extract(
  * @return the data container of the analysis results
  */
 auto monitor::component_data_analyze( monitor::compDataContainer&        dataContainer,
-                                      std::unique_ptr< otf::component >& comp )
+                                      std::unique_ptr< otf::component >& comp ) const
     -> monitor::compResContainer
 {
     compResContainer compRes;
@@ -440,10 +441,10 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
     // NOTE: recenter the system if necessary
     if ( comp->recenter.enable )  // if not enable, do nothing
     {
-        recenter_coordinate( dataContainer, comp );
+        recenter_coordinate( dataContainer, comp, compRes );
     }
 
-    // TODO: align the system if necessary
+    // NOTE: align the system if necessary
     if ( comp->align.enable )
     {
         align_coordinate( dataContainer, comp );
@@ -456,8 +457,11 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
         bar_info( dataContainer, comp, compRes );
     }
 
-    // TODO: calculate the image if necessary
-    image();
+    // NOTE: calculate the image if necessary
+    if ( comp->image.enable )
+    {
+        image( dataContainer, comp, compRes );
+    }
 
     // TODO: test whether the data in unique_ptr can be return in this form
     return compRes;
@@ -470,18 +474,52 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
  * @param comp wrapper of parameters for analysis of a single component
  */
 void monitor::recenter_coordinate( monitor::compDataContainer&        dataContainer,
-                                   std::unique_ptr< otf::component >& comp )
+                                   std::unique_ptr< otf::component >& comp, compResContainer& res )
 {
-    // get the system center
+    /* in galotfa.toml:
+    # com: define ... as the center of mass. For better performance, the
+    #      program calculate the com through iteration: 100 times, 50
+    #      times, 10 times, 1 times, and 0.5 times radius.
+    recenter.method = "com"
+    */
+
+    // get the system center based on the inital guess: 100 times enclosed radius
     auto center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
                                         dataContainer.masses.get(), dataContainer.potentials.get(),
-                                        dataContainer.coordinates.get(), comp->recenter.radius );
+                                        dataContainer.coordinates.get(),
+                                        comp->recenter.radius * 100, comp->recenter.initialGuess );
+    // get the system center based on the previous result: 50 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius * 50,
+                                   center.get() );
+    // get the system center based on the previous result: 10 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius * 10,
+                                   center.get() );
+    // get the system center based on the previous result: 1 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius,
+                                   center.get() );
+    // get the system center based on the previous result: 0.5 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius * 0.5,
+                                   center.get() );
+    // restore the position of the center
+    for ( auto i = 0; i < 3; ++i )
+    {
+        res.center[ i ] = center[ i ];
+    }
+
     // substract the system center
     for ( unsigned i = 0; i < dataContainer.partNum; ++i )
     {
         for ( unsigned j = 0; j < 3; ++j )
         {
-            dataContainer.coordinates[ i * 3 + j ] = center[ j ];
+            dataContainer.coordinates[ i * 3 + j ] -= center[ j ];
         }
     };
 }
@@ -604,6 +642,14 @@ void monitor::align_coordinate( monitor::compDataContainer&        dataContainer
     // TODO: test the rotation part
 }
 
+/**
+ * @brief API to calculate the bar information, namely bar strength, bar angle, buckling strength,
+ * and bar length (to be implemented).
+ *
+ * @param dataContainer container of the extracted data
+ * @param comp parameters of the component analysis
+ * @param res container of the analysis results
+ */
 void monitor::bar_info( monitor::compDataContainer&        dataContainer,
                         std::unique_ptr< otf::component >& comp, compResContainer& res )
 {
@@ -611,9 +657,9 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
     if ( comp->barAngle.enable )
     {
         // extracted data
-        unsigned               count = 0;
-        unique_ptr< double[] > usedMasses( new double[ dataContainer.partNum ] );
-        unique_ptr< double[] > usedPhis( new double[ dataContainer.partNum ] );
+        unsigned                     count = 0;
+        unique_ptr< double[] > const usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedPhis( new double[ dataContainer.partNum ] );
 
         // extract the used data
         for ( unsigned i = 0; i < dataContainer.partNum; ++i )
@@ -644,9 +690,9 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
     if ( comp->sBar.enable )
     {
         // extracted data
-        unsigned               count = 0;
-        unique_ptr< double[] > usedMasses( new double[ dataContainer.partNum ] );
-        unique_ptr< double[] > usedPhis( new double[ dataContainer.partNum ] );
+        unsigned                     count = 0;
+        unique_ptr< double[] > const usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedPhis( new double[ dataContainer.partNum ] );
 
         // extract the used data
         for ( unsigned i = 0; i < dataContainer.partNum; ++i )
@@ -669,8 +715,8 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
             usedMasses[ count ] = dataContainer.masses[ i ];
             ++count;
         }
-        double A0 = bar_info::A0( count, usedMasses.get() );
-        double A2 = bar_info::A2( count, usedMasses.get(), usedPhis.get() );
+        double const A0 = bar_info::A0( count, usedMasses.get() );
+        double const A2 = bar_info::A2( count, usedMasses.get(), usedPhis.get() );
         // calculate the bar strength
         res.sBar = A2 / A0;
     }
@@ -678,10 +724,10 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
     if ( comp->sBuckle.enable )
     {
         // extracted data
-        unsigned               count = 0;
-        unique_ptr< double[] > usedMasses( new double[ dataContainer.partNum ] );
-        unique_ptr< double[] > usedPhis( new double[ dataContainer.partNum ] );
-        unique_ptr< double[] > usedZeds( new double[ dataContainer.partNum ] );
+        unsigned                     count = 0;
+        unique_ptr< double[] > const usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedPhis( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedZeds( new double[ dataContainer.partNum ] );
 
         // extract the used data
         for ( unsigned i = 0; i < dataContainer.partNum; ++i )
@@ -713,9 +759,45 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
     // TODO: bar length
 }
 
-void monitor::image()
+/**
+ * @brief API to calculate the image matrices.
+ *
+ * @param dataContainer container of the extracted data
+ * @param comp parameters of the component analysis
+ * @param res container of the analysis results
+ */
+void monitor::image( monitor::compDataContainer&        dataContainer,
+                     std::unique_ptr< otf::component >& comp, compResContainer& res ) const
 {
-    ;
+    // extracted the xs, ys, zs for bin2d function
+    const unique_ptr< double[] > xs( new double[ dataContainer.partNum ] );
+    unique_ptr< double[] > const ys( new double[ dataContainer.partNum ] );
+    unique_ptr< double[] > const zs( new double[ dataContainer.partNum ] );
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        xs[ i ] = dataContainer.coordinates[ 3 * i + 0 ];
+        ys[ i ] = dataContainer.coordinates[ 3 * i + 1 ];
+        zs[ i ] = dataContainer.coordinates[ 3 * i + 2 ];
+    }
+
+    // calculate the image matrix
+    auto imageXY = statistic::bin2d(
+        mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+    auto imageXZ = statistic::bin2d(
+        mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+    auto imageYZ = statistic::bin2d(
+        mpiRank, ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+
+    // restore the results
+    res.imageXY = std::move( imageXY );
+    res.imageXZ = std::move( imageXZ );
+    res.imageYZ = std::move( imageYZ );
 }
 
 /**

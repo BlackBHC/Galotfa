@@ -69,6 +69,7 @@ set_target_properties(message-static
 # C++ programes
 enable_testing()
 find_package(MPI REQUIRED)
+
 add_executable(
     coordinate
     ./validation/test_coordTrans.cpp
@@ -134,6 +135,7 @@ add_executable(
     ./src/recenter.cpp
     ./src/barinfo.cpp
     ./src/eigen.cpp
+    ./src/statistic.cpp
 )
 target_link_libraries(orbitalLog PUBLIC MPI::MPI_CXX)
 target_link_libraries(orbitalLog PRIVATE hdf5)

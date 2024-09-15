@@ -16,7 +16,7 @@ enum class coordate_type : std::uint8_t { CARTESIAN = 0, SPHERICAL, CYLINDRICAL 
 class coordinate_transformer
 {
 public:
-    static void transform( const unsigned int& num, double* data, const coordate_type& from,
+    static void transform( const unsigned& num, double* data, const coordate_type& from,
                            const coordate_type& to );
 
 #ifdef DEBUG
