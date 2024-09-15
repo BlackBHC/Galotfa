@@ -9,8 +9,10 @@ enable = true
 outdir = "./otfLogs"      # path of the log directorys
 filename = "galotfa.hdf5" # filename of the log file
 # maximal iteration times during analysis
+# NOTE: this parameter is unused at present
 maxiter = 25 # default 25
 # the equal threshold for float numbers
+# NOTE: this parameter is unused at present
 epsilon = 1e-10 # default 1e-8
 
 # You need to specify the following parameters for each component you

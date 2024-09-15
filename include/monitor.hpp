@@ -48,7 +48,6 @@ private:
         double data[ orbitPointDim ];
     };
 
-    static constexpr unsigned vecDim = 3;
     // the container of data for a single component
     using compDataContainer = struct compDataStruct
     {
@@ -62,14 +61,14 @@ private:
     // the container of analysis results for a single component
     using compResContainer = struct compResStruct
     {
-        double                      center[ vecDim ] = { 0, 0, 0 };  // center of the component
-        double                      sBar             = 0;            // bar strength parameter
-        double                      barAngle         = 0;            // bar angle
-        double                      sBuckle          = 0;            // buckling strength
-        unsigned                    imageBinNum      = 0;            // image matrix rank
-        std::unique_ptr< double[] > imageXY          = nullptr;      // image matrix x-y
-        std::unique_ptr< double[] > imageXZ          = nullptr;      // image matrix x-z
-        std::unique_ptr< double[] > imageYZ          = nullptr;      // image matrix y-z
+        double                      center[ 3 ] = { 0, 0, 0 };  // center of the component
+        double                      sBar        = 0;            // bar strength parameter
+        double                      barAngle    = 0;            // bar angle
+        double                      sBuckle     = 0;            // buckling strength
+        unsigned                    imageBinNum = 0;            // image matrix rank
+        std::unique_ptr< double[] > imageXY     = nullptr;      // image matrix x-y
+        std::unique_ptr< double[] > imageXZ     = nullptr;      // image matrix x-z
+        std::unique_ptr< double[] > imageYZ     = nullptr;      // image matrix y-z
         // TODO: bar length
     };
 

@@ -27,7 +27,7 @@ epsilon = 1e-10 # default 1e-8
 types = [2]
 # The period of analyses, in units of syncrhonized time steps in the
 # simulation.
-period = 10
+period = 7
 # The coordinate frame used for analyses.
 # Available values:
 # cyl: cylindrical, recommended for disk-like components, including
@@ -50,7 +50,7 @@ recenter.enable = true
 recenter.method = "com"
 # Enclose radius of the sphere used in center of mass calculation, a
 # value closing to twice disk/galactic radius is recommended.
-recenter.radius = 10
+recenter.radius = 100
 # Initial guess of the center position, aiming to avoid the system
 # center is always outside of the box.
 recenter.iguess = [0, 0, 0]
@@ -67,8 +67,8 @@ align.radius = true
 # be given if recenter.enable=true and method="dp", or if align=true.
 # TODO: images of streaming motion, their dispersion etc.
 image.enable = true
-image.halflength = 10.0 # the half length of the box to be projected.
-image.binnum = 100      # the number of bins in each direction.
+image.halflength = 100.0 # the half length of the box to be projected.
+image.binnum = 5         # the number of bins in each direction.
 ##### The parameters for frame="cyl" cases
 # Parameters for bar strength calculation.
 # A2 := |\frac{ \sum_k m_k * exp(2i * phi_k) }{ \sum_k m_k }|, where

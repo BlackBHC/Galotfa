@@ -2,6 +2,7 @@
  * @file h5out.hpp
  * @brief Organizer of the hdf5 output.
  */
+
 #ifndef MY_H5_OUTPUT_HEADER
 #define MY_H5_OUTPUT_HEADER
 #include "H5Ipublic.h"

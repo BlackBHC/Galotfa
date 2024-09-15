@@ -2,6 +2,7 @@
  * @file myprompt.hpp
  * @brief Define some utility functions for convenient print.
  */
+
 #ifndef MY_UTILS_HEADER
 #define MY_UTILS_HEADER
 #include <cstdio>

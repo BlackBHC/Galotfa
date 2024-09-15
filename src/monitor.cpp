@@ -1,8 +1,3 @@
-/**
- * @file monitor.cpp
- * @brief The organizer of other components to work together.
- */
-
 #include <utility>
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
@@ -57,6 +52,10 @@ void print_orbital_part( otf::runtime_para& para )
     if ( para.orbit->enable )
     {
         INFO( "Orbital log is enabled." );
+    }
+    else
+    {
+        return;
     }
     INFO( "Log period: %d", para.orbit->period );
     INFO( "Particle types to be logged:" );
@@ -269,7 +268,7 @@ void monitor::main_analysis_api( const double time, const unsigned particleNumbe
     }
 
     // Second: analyze each component
-    // TODO: analyze each component
+    // NOTE: analyze each component
     for ( auto& comp : para.comps )
     {
         component_analysis( time, particleNumber, partTypes, masses, potentials, coordinates,
@@ -421,7 +420,6 @@ auto monitor::component_data_extract(
     compData.coordinates = std::move( posPtr );
     compData.velocities  = std::move( velPtr );
 
-    // TODO: test whether this retern can work correctly
     return compData;
 }
 
@@ -463,7 +461,6 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
         image( dataContainer, comp, compRes );
     }
 
-    // TODO: test whether the data in unique_ptr can be return in this form
     return compRes;
 }
 
@@ -779,6 +776,24 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
         ys[ i ] = dataContainer.coordinates[ 3 * i + 1 ];
         zs[ i ] = dataContainer.coordinates[ 3 * i + 2 ];
     }
+    static int times = 0;
+
+    if ( times == 0 )
+    {
+        for ( int i = 0; i < 4; ++i )
+        {
+            if ( mpiRank == i )
+            {
+                myprint( "In rank %d: %d particles", mpiRank, dataContainer.partNum );
+                for ( unsigned j = 0; j < dataContainer.partNum; ++j )
+                {
+                    myprint( "mass=%lf\tx=%lf\ty=%lf\tz=%lf", dataContainer.masses[ j ], xs[ j ],
+                             ys[ j ], zs[ j ] );
+                }
+            }
+            MPI_Barrier( MPI_COMM_WORLD );
+        }
+    }
 
     // calculate the image matrix
     auto imageXY = statistic::bin2d(
@@ -793,6 +808,32 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
         mpiRank, ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+
+
+    if ( times == 0 )
+    {
+        for ( int i = 0; i < 4; ++i )
+        {
+            if ( mpiRank == i )
+            {
+                myprint( "In rank %d:", mpiRank );
+                for ( int j = 0; j < 5; ++j )
+                {
+                    // myprint( "%lf\t%lf\t%lf\t%lf\t%lf\t", imageXY[ j * 5 + 0 ],
+                    //          imageXY[ j * 5 + 1 ], imageXY[ j * 5 + 2 ], imageXY[ j * 5 + 3 ],
+                    //          imageXY[ j * 5 + 4 ] );
+                    // myprint( "%lf\t%lf\t%lf\t%lf\t%lf\t", imageXZ[ j * 5 + 0 ],
+                    //          imageXZ[ j * 5 + 1 ], imageXZ[ j * 5 + 2 ], imageXZ[ j * 5 + 3 ],
+                    //          imageXZ[ j * 5 + 4 ] );
+                    myprint( "%lf\t%lf\t%lf\t%lf\t%lf\t", imageYZ[ j * 5 + 0 ],
+                             imageYZ[ j * 5 + 1 ], imageYZ[ j * 5 + 2 ], imageYZ[ j * 5 + 3 ],
+                             imageYZ[ j * 5 + 4 ] );
+                }
+            }
+            MPI_Barrier( MPI_COMM_WORLD );
+        }
+    }
+    times = 1;
 
     // restore the results
     res.imageXY = std::move( imageXY );
@@ -816,6 +857,11 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
                                   const double* coordinates, const double* velocities,
                                   unique_ptr< otf::component >& comp ) const
 {
+    if ( stepCounter % comp->period != 0 )  // only analyze the data in the specified steps
+    {
+        return;
+    }
+
     // NOTE: collect the component data
     auto compDataContainer = component_data_extract( particleNumber, partTypes, masses, potentials,
                                                      coordinates, velocities, comp );
