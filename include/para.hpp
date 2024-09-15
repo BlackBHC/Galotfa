@@ -88,7 +88,7 @@ struct component
     component( std::string_view& compName, toml::table& compNodeTable );
     std::string             compName;  // name of the component
     std::vector< unsigned > types;     // particle types in this component
-    unsigned                period;    // analysis period
+    int                     period;    // analysis period
     recenter_para           recenter;  // parameter of coordinate recenter
     coordinate_frame        frame;     // coordinate frame type
     align_para              align;     // whether align coordinates with the inertia tensor
@@ -112,7 +112,7 @@ public:
     enum class id_selection_method : std::uint8_t { TXTFILE = 0, RANDOM };
 
     bool                enable;                 // enable orbital log
-    unsigned            period;                 // log period
+    int                 period;                 // log period
     id_selection_method method;                 // id determination method
     std::string         idfile   = "not used";  // if method is txt file, give the file name
     double              fraction = -1;          // if method is random sample, give the fraction

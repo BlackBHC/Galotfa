@@ -106,7 +106,8 @@ component::component( string_view& compName, toml::table& compNodeTable )
     }
 
     // period
-    period = *compNodeTable[ "period" ].value< double >();
+    period = *compNodeTable[ "period" ].value< int >();
+    assert( period > 0 );
 
     // recenter parameters
     recenter.enable = *compNodeTable[ "recenter" ][ "enable" ].value< bool >();
@@ -211,7 +212,8 @@ orbit::orbit( toml::table& orbitNode )
     }
 
     // period
-    period = *orbitNode[ "period" ].value< double >();
+    period = *orbitNode[ "period" ].value< int >();
+    assert( period > 0 );
 
     // particle types to be logged
     auto typeIDs = orbitNode[ "logtypes" ];
