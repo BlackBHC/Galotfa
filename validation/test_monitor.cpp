@@ -1,12 +1,13 @@
 /**
- * @file test_orbitalLog.cpp
- * @brief Test the orbital log.
+ * @file test_monitor.cpp
+ * @brief Test the monitor class with mock simulation data.
  */
 
 #include "../include/monitor.hpp"
+#include "../include/myprompt.hpp"
 #include <cmath>
-#include <memory>
 #include <mpi.h>
+#include <numbers>
 using namespace std;
 using namespace otf;
 
@@ -29,13 +30,13 @@ int main( int argc, char* argv[] )
     int mockIDsG[ 40 ];
     for ( auto i = 0; i < 40; ++i )
     {
-        mockIDsG[ i ] = i + 1;
+        mockIDsG[ i ] = i + 100001;
     }
 
     double mockMassG[ 40 ];
     for ( auto i = 0U; i < 40; ++i )
     {
-        mockMassG[ i ] = ( double )i + 0.1;
+        mockMassG[ i ] = 0.13;
     }
 
     double mockPotG[ 40 ];
@@ -45,9 +46,11 @@ int main( int argc, char* argv[] )
     }
 
     double mockPosG[ 120 ];
-    for ( auto i = 0U; i < 120; ++i )
+    for ( auto i = 0U; i < 40; ++i )
     {
-        mockPosG[ i ] = ( double )i + 0.2;
+        mockPosG[ 3 * i + 0 ] = 5.2 * cos( i * numbers::pi );
+        mockPosG[ 3 * i + 1 ] = 5.2 * sin( i * numbers::pi );
+        mockPosG[ 3 * i + 2 ] = 0;
     }
 
     double mockVelG[ 120 ];
@@ -107,13 +110,16 @@ int main( int argc, char* argv[] )
 
     double mockTime   = 0;     // mock the time of the simulation
     double mockDeltaT = 0.13;  // mock the time step of the simulation
-    double mockDrift  = 1.2;   // mock the drift
-    double mockKick   = -1.7;  // mock the kick
-    int    maxStep    = 23;    // mock the number of synchronized steps
+    // double mockDrift  = 0.23;  // mock the drift
+    // double mockKick   = -1.7;  // mock the kick
+    double mockDrift = 0;   // mock the drift
+    double mockKick  = 0;   // mock the kick
+    int    maxStep   = 50;  // mock the number of synchronized steps
 
-    monitor otfServer( "../validation/orbit_log_test.toml" );
+    monitor otfServer( "../validation/component_test.toml" );
     for ( auto i = 0; i < maxStep; ++i )
     {
+        // call the main API
         otfServer.main_analysis_api( mockTime, localNums[ rank ], mockIDs.get(), mockTypes.get(),
                                      mockMass.get(), mockPot.get(), mockPos.get(), mockVel.get() );
 

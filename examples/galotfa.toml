@@ -9,19 +9,21 @@ enable = true
 outdir = "./otfLogs"      # path of the log directorys
 filename = "galotfa.hdf5" # filename of the log file
 # maximal iteration times during analysis
+# NOTE: this parameter is unused at present
 maxiter = 25 # default 25
 # the equal threshold for float numbers
+# NOTE: this parameter is unused at present
 epsilon = 1e-10 # default 1e-8
 
 # You need to specify the following parameters for each component you
 # want to analysis.
 # You can define many componentXs, X is an identifier of the component
-# that a positive integer is recommended.
+# that a positive integer or a string is recommended.
 [component1]
 # the ids of particle types in this component
 types = [2]
 # The period of analyses, in units of syncrhonized time steps in the
-# simulation.
+# simulation. Note that the period must be positive integer.
 period = 10
 # The coordinate frame used for analyses.
 # Available values:
@@ -57,7 +59,7 @@ align.enable = true
 # Enclose radius for calculation of inertial tensor. For example, to
 # align the x,y,z axes with the bar principal axes, a value closing
 # to the bar radius is recommended.
-align.radius = true
+align.radius = 5
 # Parameters for calculations of x-y, x-z, and y-z projections. Must
 # be given if recenter.enable=true and method="dp", or if align=true.
 # TODO: images of streaming motion, their dispersion etc.

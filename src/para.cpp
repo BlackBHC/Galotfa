@@ -2,6 +2,7 @@
 #include "../include/myprompt.hpp"
 #include "../include/recenter.hpp"
 #include "../include/toml.hpp"
+#include "mpi.h"
 #include <cassert>
 #include <memory>
 #include <string>
@@ -39,12 +40,21 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
     constexpr double   defaultEpsilon = 1e-8;  // floating-point number equal threshold
     maxIter = paraTable[ "global" ][ "maxiter" ].value_or( defaultMaxIter );
     epsilon = paraTable[ "global" ][ "outdir" ].value_or( defaultEpsilon );
-    assert( maxIter > 0 );
-    assert( epsilon > 0 );
-    // outdir = "./otfLogs"      # path of the log directorys
-    // filename = "galotfa.hdf5" # filename of the log file
-    // maxiter = 25              # maximal iteration times during analysis
-    // epsilon = 1e-12           # the equal threshold for float numbers
+    if ( not( maxIter > 0 ) )
+    {
+        int rank;
+        MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+        MPI_ERROR( rank, "maxIter must be positive!" );
+        throw;
+    }
+
+    if ( not( epsilon > 0 ) )
+    {
+        int rank;
+        MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+        MPI_ERROR( rank, "epsilon must be positive!" );
+        throw;
+    };
 
     // orbital log parameters
     orbit = make_unique< otf::orbit >( *paraTable[ "orbit" ].as_table() );
@@ -61,6 +71,27 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
             }
         }
     } );
+
+    // remove useless components: a component without effective analysis
+    vector< string > toRemove;  // vector of component names
+    for ( auto& comp : comps )
+    {
+        bool effective;
+        // if at least one information is enabled, it's an effective component
+        effective = comp.second->recenter.enable or comp.second->align.enable
+                    or comp.second->sBar.enable or comp.second->barAngle.enable
+                    or comp.second->sBuckle.enable or comp.second->image.enable;
+
+        if ( not effective )
+        {
+            toRemove.push_back( comp.first );
+        }
+    }
+    // remove uneffective components
+    for ( auto& str : toRemove )
+    {
+        comps.erase( str );
+    }
 
     // NOTE: if there is no any component and orbital logs are enables, then toggle off the
     // on-the-fly analysis
@@ -85,7 +116,14 @@ component::component( string_view& compName, toml::table& compNodeTable )
     }
 
     // period
-    period = *compNodeTable[ "period" ].value< double >();
+    period = *compNodeTable[ "period" ].value< int >();
+    if ( not( period > 0 ) )
+    {
+        int rank;
+        MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+        MPI_ERROR( rank, "period must be positive!" );
+        throw;
+    };
 
     // recenter parameters
     recenter.enable = *compNodeTable[ "recenter" ][ "enable" ].value< bool >();
@@ -103,8 +141,8 @@ component::component( string_view& compName, toml::table& compNodeTable )
         }
         else
         {
-            ERROR( "Get an unknown value for [recenter method] of component [%s]: [%s]",
-                   compName.data(), str.data() );
+            ERROR( "Get an unknown value for [recenter method] of [%s]: [%s]", compName.data(),
+                   str.data() );
             ERROR( "Must be 'com' (for center of mass) or 'mbp' (for most bound particle)." );
             exit( -1 );
         }
@@ -133,7 +171,7 @@ component::component( string_view& compName, toml::table& compNodeTable )
     // }
     // else
     // {
-    //     ERROR( "Get an unknown value for [coordinate frame] of component [%s]: [%s]",
+    //     ERROR( "Get an unknown value for [coordinate frame] of [%s]: [%s]",
     //            compName.data(), str.data() );
     //     ERROR( "Must be one of 'cyl' (for cylindrical), 'car' (for Cartesian), or 'sph' (for "
     //            "spherical)." );
@@ -162,6 +200,14 @@ component::component( string_view& compName, toml::table& compNodeTable )
     {
         sBar.rmin = *compNodeTable[ "A2" ][ "rmin" ].value< double >();
         sBar.rmax = *compNodeTable[ "A2" ][ "rmax" ].value< double >();
+        if ( not( sBar.rmin >= 0 and sBar.rmin < sBar.rmax ) )
+        {
+            int rank;
+            MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+            MPI_ERROR( rank, "The radial range for bar strength calculation of [%s] is illegal.",
+                       compName.data() );
+            throw;
+        };
     }
     // bar angle
     barAngle.enable = *compNodeTable[ "barangle" ][ "enable" ].value< bool >();
@@ -169,6 +215,14 @@ component::component( string_view& compName, toml::table& compNodeTable )
     {
         barAngle.rmin = *compNodeTable[ "barangle" ][ "rmin" ].value< double >();
         barAngle.rmax = *compNodeTable[ "barangle" ][ "rmax" ].value< double >();
+        if ( not( barAngle.rmin >= 0 and barAngle.rmin < barAngle.rmax ) )
+        {
+            int rank;
+            MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+            MPI_ERROR( rank, "The radial range for bar angle calculation of [%s] is illegal.",
+                       compName.data() );
+            throw;
+        };
     }
     // buckling strength
     sBuckle.enable = *compNodeTable[ "buckle" ][ "enable" ].value< bool >();
@@ -176,6 +230,15 @@ component::component( string_view& compName, toml::table& compNodeTable )
     {
         sBuckle.rmin = *compNodeTable[ "buckle" ][ "rmin" ].value< double >();
         sBuckle.rmax = *compNodeTable[ "buckle" ][ "rmax" ].value< double >();
+        if ( not( sBuckle.rmin >= 0 and sBuckle.rmin < sBuckle.rmax ) )
+        {
+            int rank;
+            MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+            MPI_ERROR( rank,
+                       "The radial range for buckling strength calculation of [%s] is illegal.",
+                       compName.data() );
+            throw;
+        };
     }
 }
 
@@ -190,7 +253,14 @@ orbit::orbit( toml::table& orbitNode )
     }
 
     // period
-    period = *orbitNode[ "period" ].value< double >();
+    period = *orbitNode[ "period" ].value< int >();
+    if ( not( period > 0 ) )
+    {
+        int rank;
+        MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+        MPI_ERROR( rank, "period must be positive!" );
+        throw;
+    };
 
     // particle types to be logged
     auto typeIDs = orbitNode[ "logtypes" ];

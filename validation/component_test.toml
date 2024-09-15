@@ -21,13 +21,13 @@ epsilon = 1e-10 # default 1e-8
 # You need to specify the following parameters for each component you
 # want to analysis.
 # You can define many componentXs, X is an identifier of the component
-# that a positive integer is recommended.
+# that a positive integer or a string is recommended.
 [component1]
 # the ids of particle types in this component
 types = [2]
 # The period of analyses, in units of syncrhonized time steps in the
-# simulation.
-period = 10
+# simulation. Note that the period must be positive integer.
+period = 7
 # The coordinate frame used for analyses.
 # Available values:
 # cyl: cylindrical, recommended for disk-like components, including
@@ -50,7 +50,7 @@ recenter.enable = true
 recenter.method = "com"
 # Enclose radius of the sphere used in center of mass calculation, a
 # value closing to twice disk/galactic radius is recommended.
-recenter.radius = 10
+recenter.radius = 100
 # Initial guess of the center position, aiming to avoid the system
 # center is always outside of the box.
 recenter.iguess = [0, 0, 0]
@@ -62,13 +62,13 @@ align.enable = true
 # Enclose radius for calculation of inertial tensor. For example, to
 # align the x,y,z axes with the bar principal axes, a value closing
 # to the bar radius is recommended.
-align.radius = true
+align.radius = 10
 # Parameters for calculations of x-y, x-z, and y-z projections. Must
 # be given if recenter.enable=true and method="dp", or if align=true.
 # TODO: images of streaming motion, their dispersion etc.
 image.enable = true
-image.halflength = 10.0 # the half length of the box to be projected.
-image.binnum = 100      # the number of bins in each direction.
+image.halflength = 20.0 # the half length of the box to be projected.
+image.binnum = 3        # the number of bins in each direction.
 ##### The parameters for frame="cyl" cases
 # Parameters for bar strength calculation.
 # A2 := |\frac{ \sum_k m_k * exp(2i * phi_k) }{ \sum_k m_k }|, where

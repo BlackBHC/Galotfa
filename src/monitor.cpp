@@ -1,8 +1,3 @@
-/**
- * @file monitor.cpp
- * @brief The organizer of other components to work together.
- */
-
 #include <utility>
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
@@ -57,6 +52,10 @@ void print_orbital_part( otf::runtime_para& para )
     if ( para.orbit->enable )
     {
         INFO( "Orbital log is enabled." );
+    }
+    else
+    {
+        return;
     }
     INFO( "Log period: %d", para.orbit->period );
     INFO( "Particle types to be logged:" );
@@ -122,58 +121,64 @@ void print_component_part( otf::runtime_para& para )
         {
             INFO( "%d ", id );
         }
+
         if ( comp.second->recenter.enable )
         {
-            INFO( "Recenter of this component is enabled." );
+            INFO( "Recenter of [%s] is enabled.", comp.second->compName.c_str() );
+            string method;
+            switch ( comp.second->recenter.method )
+            {
+            case otf::recenter_method::COM:
+                method = "center of mass";
+                break;
+            case otf::recenter_method::MBP:
+                method = "most bound particle";
+                break;
+            default:
+                ERROR( "Get into an unexpected branch!" );
+            }
+            INFO( "Potential method for recenter: %s.", method.c_str() );
+            INFO( "Potential enclosed radius for recenter: %g.", comp.second->recenter.radius );
+            INFO( "Initial guess of the recenter:" );
+            INFO( "(%g, %g, %g)", comp.second->recenter.initialGuess[ 0 ],
+                  comp.second->recenter.initialGuess[ 1 ],
+                  comp.second->recenter.initialGuess[ 2 ] );
         }
-        string method;
-        switch ( comp.second->recenter.method )
-        {
-        case otf::recenter_method::COM:
-            method = "center of mass";
-            break;
-        case otf::recenter_method::MBP:
-            method = "most bound particle";
-            break;
-        default:
-            ERROR( "Get into an unexpected branch!" );
-        }
-        INFO( "Potential method for recenter: %s.", method.c_str() );
-        INFO( "Potential enclosed radius for recenter: %g.", comp.second->recenter.radius );
-        INFO( "Initial guess of the recenter:" );
-        INFO( "(%g, %g, %g)", para.orbit->recenter.initialGuess[ 0 ],
-              para.orbit->recenter.initialGuess[ 1 ], para.orbit->recenter.initialGuess[ 2 ] );
+
         if ( comp.second->align.enable )
         {
-            INFO( "Alignment of this component is enabled." );
+            INFO( "Alignment of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "Enclose radius of intertia tensor calculation of [%s]: %g",
+                  comp.second->compName.c_str(), comp.second->align.radius );
         }
-        INFO( "Potential enclosed radius for align: %g.", comp.second->align.radius );
+
         if ( comp.second->image.enable )
         {
-            INFO( "Image of this component is enabled." );
+            INFO( "Image of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "Image half length: %g.", comp.second->image.halfLength );
+            INFO( "Image bin number: %d.", comp.second->image.binNum );
         }
-        INFO( "Image half length: %g.", comp.second->image.halfLength );
-        INFO( "Image bin number: %d.", comp.second->image.binNum );
+
         if ( comp.second->sBar.enable )
         {
-            INFO( "A2 of this component is enabled." );
+            INFO( "A2 of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
+            INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
         }
-        INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
-        INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
 
         if ( comp.second->barAngle.enable )
         {
-            INFO( "barAngle of this component is enabled." );
+            INFO( "barAngle of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
+            INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
         }
-        INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
-        INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
 
         if ( comp.second->sBuckle.enable )
         {
-            INFO( "buckle of this component is enabled." );
+            INFO( "buckle of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
+            INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
         }
-        INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
-        INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
     }
 }
 
@@ -269,7 +274,7 @@ void monitor::main_analysis_api( const double time, const unsigned particleNumbe
     }
 
     // Second: analyze each component
-    // TODO: analyze each component
+    // NOTE: analyze each component
     for ( auto& comp : para.comps )
     {
         component_analysis( time, particleNumber, partTypes, masses, potentials, coordinates,
@@ -421,7 +426,6 @@ auto monitor::component_data_extract(
     compData.coordinates = std::move( posPtr );
     compData.velocities  = std::move( velPtr );
 
-    // TODO: test whether this retern can work correctly
     return compData;
 }
 
@@ -463,7 +467,6 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
         image( dataContainer, comp, compRes );
     }
 
-    // TODO: test whether the data in unique_ptr can be return in this form
     return compRes;
 }
 
@@ -794,6 +797,7 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
 
+
     // restore the results
     res.imageXY = std::move( imageXY );
     res.imageXZ = std::move( imageXZ );
@@ -816,6 +820,11 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
                                   const double* coordinates, const double* velocities,
                                   unique_ptr< otf::component >& comp ) const
 {
+    if ( stepCounter % comp->period != 0 )  // only analyze the data in the specified steps
+    {
+        return;
+    }
+
     // NOTE: collect the component data
     auto compDataContainer = component_data_extract( particleNumber, partTypes, masses, potentials,
                                                      coordinates, velocities, comp );
@@ -827,11 +836,7 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
     if ( isRootRank and stepCounter == 0 )
     {
         // create the datasets for times
-        if ( comp->recenter.enable )
-        {
-            h5Organizer->create_dataset_in_group( "Time", comp->compName, { 1 },
-                                                  H5T_NATIVE_DOUBLE );
-        }
+        h5Organizer->create_dataset_in_group( "Time", comp->compName, { 1 }, H5T_NATIVE_DOUBLE );
 
         // create the datasets for center positions
         if ( comp->recenter.enable )
