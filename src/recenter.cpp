@@ -8,11 +8,6 @@ using namespace std;
 
 namespace otf {
 
-// Calculate the norm of the coordinate 1x3 vector.
-#define NORM( vec3ptr )                                                             \
-    sqrt( *( vec3ptr ) * *( vec3ptr ) + *( ( vec3ptr ) + 1 ) * *( ( vec3ptr ) + 1 ) \
-          + *( ( vec3ptr ) + 2 ) * *( ( vec3ptr ) + 2 ) )
-
 /**
  * @brief Calculate the center of a system.
  *
@@ -21,20 +16,22 @@ namespace otf {
  * @param coordinate coordinates of particles
  * @param mass masses of particles
  * @param potential potentials of particles
- * @param rangeSize enclose radius of the region used for calculation
+ * @param radius enclose radius of the region used for calculation
+ * @param previousPos the position of the previous center
  * @return uniqure_ptr to the gotten center of mass
  */
-auto recenter::run( const recenter_method method, const unsigned int& partNum,
-                    const double* coordinate, const double* mass, const double* potential,
-                    const double rangeSize ) -> unique_ptr< double[] >
+auto recenter::get_center( const recenter_method method, const unsigned& partNum,
+                           const double* masses, const double* potentials,
+                           const double* coordinates, const double radius,
+                           const double* previousPos ) -> unique_ptr< double[] >
 {
     switch ( method )
     {
     case recenter_method::COM:
-        return center_of_mass( mass, coordinate, partNum, rangeSize );
+        return center_of_mass( masses, coordinates, partNum, radius, previousPos );
         break;
     case recenter_method::MBP:
-        return most_bound_particle( potential, coordinate, partNum );
+        return most_bound_particle( potentials, coordinates, partNum );
         break;
     default:
         ERROR( "Get into an unexpected branch!" );
@@ -48,22 +45,41 @@ auto recenter::run( const recenter_method method, const unsigned int& partNum,
  * @param mass masses of particles
  * @param coordinates coordinates of particles
  * @param partNum particle number
- * @param rangeSize enclose radius of the chosen range
+ * @param radius enclose radius of the chosen range
+ * @param previousPos the position of the previous center
  * @return uniqure_ptr to the gotten center of mass
  */
 auto recenter::center_of_mass( const double* mass, const double* coordinates,
-                               const unsigned int& partNum,
-                               const double        rangeSize ) -> unique_ptr< double[] >
+                               const unsigned& partNum, const double radius,
+                               const double* previousPos ) -> unique_ptr< double[] >
 {
-    auto   com( make_unique< double[] >( 3 ) );
-    double massSum           = 0;
+    // results of the center of mass
+    auto com( make_unique< double[] >( 3 ) );
+    // summation of mass
+    double massSum = 0;
+    // summation of mass[i]xcoordinates[i]
     double coordMassSum[ 3 ] = { 0, 0, 0 };
 
-    static unsigned int i = 0;
-    static unsigned int j = 0;
+    // indexes for iteration
+    static unsigned i = 0;
+    static unsigned j = 0;
+    // error vector
+    static double error[ 3 ] = { 0, 0, 0 };
+    // norm function
+    static auto norm = []( const double vec[ 3 ] ) -> double {
+        return sqrt( vec[ 0 ] * vec[ 0 ] + vec[ 1 ] * vec[ 1 ] + vec[ 2 ] * vec[ 2 ] );
+    };
+
     for ( i = 0; i < partNum; ++i )
     {
-        if ( NORM( coordinates + 3 * i ) < rangeSize )
+        // get the error
+        for ( j = 0; j < 3; ++j )
+        {
+            error[ j ] = previousPos[ j ] - coordinates[ i * 3 + j ];
+        }
+
+        // accumulate if the particle locates around the previousPos within some enclosed radius
+        if ( norm( error ) < radius )
         {
             massSum += mass[ i ];
             for ( j = 0; j < 3; ++j )
@@ -101,7 +117,7 @@ auto recenter::center_of_mass( const double* mass, const double* coordinates,
  * @return the coordinates of the most bound particle
  */
 auto recenter::most_bound_particle( const double* potential, const double* coordinates,
-                                    const unsigned int& partNum ) -> std::unique_ptr< double[] >
+                                    const unsigned& partNum ) -> std::unique_ptr< double[] >
 {
     auto      minPotPosition( make_unique< double[] >( 3 ) );
     const int minLocateId = min_element( potential, potential + partNum ) - potential;

@@ -33,10 +33,10 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
     const string tmpFileName( *paraTable[ "global" ][ "filename" ].value< string_view >() );
     const string tmpDir( *paraTable[ "global" ][ "outdir" ].value< string_view >() );
     // fileName                              = std::move( tmpFileName );
-    outputDir                             = std::move( tmpDir );
-    fileName                              = std::move( tmpFileName );
-    constexpr unsigned int defaultMaxIter = 25;
-    constexpr double       defaultEpsilon = 1e-8;  // floating-point number equal threshold
+    outputDir                         = std::move( tmpDir );
+    fileName                          = std::move( tmpFileName );
+    constexpr unsigned defaultMaxIter = 25;
+    constexpr double   defaultEpsilon = 1e-8;  // floating-point number equal threshold
     maxIter = paraTable[ "global" ][ "maxiter" ].value_or( defaultMaxIter );
     epsilon = paraTable[ "global" ][ "outdir" ].value_or( defaultEpsilon );
     assert( maxIter > 0 );
@@ -70,8 +70,7 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
 
 component::component( string_view& compName, toml::table& compNodeTable )
 {
-    const string tmpStr( compName );
-    this->compName = std::move( tmpStr );
+    this->compName = compName;
     // particle types in this component
     auto typeIDs = compNodeTable[ "types" ];
     if ( toml::array* arr = typeIDs.as_array() )
@@ -153,16 +152,16 @@ component::component( string_view& compName, toml::table& compNodeTable )
     if ( image.enable )
     {
         image.halfLength = *compNodeTable[ "image" ][ "halflength" ].value< double >();
-        image.binNum     = *compNodeTable[ "image" ][ "binnum" ].value< unsigned int >();
+        image.binNum     = *compNodeTable[ "image" ][ "binnum" ].value< unsigned >();
     }
 
     // bar info parameters
-    // A2
-    A2.enable = *compNodeTable[ "A2" ][ "enable" ].value< bool >();
-    if ( A2.enable )
+    // sBar
+    sBar.enable = *compNodeTable[ "A2" ][ "enable" ].value< bool >();
+    if ( sBar.enable )
     {
-        A2.rmin = *compNodeTable[ "A2" ][ "rmin" ].value< double >();
-        A2.rmax = *compNodeTable[ "A2" ][ "rmax" ].value< double >();
+        sBar.rmin = *compNodeTable[ "A2" ][ "rmin" ].value< double >();
+        sBar.rmax = *compNodeTable[ "A2" ][ "rmax" ].value< double >();
     }
     // bar angle
     barAngle.enable = *compNodeTable[ "barangle" ][ "enable" ].value< bool >();
@@ -172,11 +171,11 @@ component::component( string_view& compName, toml::table& compNodeTable )
         barAngle.rmax = *compNodeTable[ "barangle" ][ "rmax" ].value< double >();
     }
     // buckling strength
-    buckle.enable = *compNodeTable[ "buckle" ][ "enable" ].value< bool >();
-    if ( buckle.enable )
+    sBuckle.enable = *compNodeTable[ "buckle" ][ "enable" ].value< bool >();
+    if ( sBuckle.enable )
     {
-        buckle.rmin = *compNodeTable[ "buckle" ][ "rmin" ].value< double >();
-        buckle.rmax = *compNodeTable[ "buckle" ][ "rmax" ].value< double >();
+        sBuckle.rmin = *compNodeTable[ "buckle" ][ "rmin" ].value< double >();
+        sBuckle.rmax = *compNodeTable[ "buckle" ][ "rmax" ].value< double >();
     }
 }
 

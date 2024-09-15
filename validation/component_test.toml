@@ -17,6 +17,11 @@ epsilon = 1e-10 # default 1e-8
 # want to analysis.
 # You can define many componentXs, X is an identifier of the component
 # that a positive integer is recommended.
+
+# You need to specify the following parameters for each component you
+# want to analysis.
+# You can define many componentXs, X is an identifier of the component
+# that a positive integer is recommended.
 [component1]
 # the ids of particle types in this component
 types = [2]
@@ -42,7 +47,7 @@ recenter.enable = true
 # com: define ... as the center of mass. For better performance, the
 #      program calculate the com through iteration: 100 times, 50
 #      times, 10 times, 1 times, and 0.5 times radius.
-recenter.method = "mbp"
+recenter.method = "com"
 # Enclose radius of the sphere used in center of mass calculation, a
 # value closing to twice disk/galactic radius is recommended.
 recenter.radius = 10
@@ -104,13 +109,14 @@ enable = false
 period = 10
 # Two ways to specify which particles to be logged: "txtfile" for txt
 # file or "random" for random sampling.
-method = "txtfile"
+# method = "txtfile"
+method = "random"
 # The text file name that specifies the particle ids to be logged.
 # In this file, each row is a legal value of a particle id.
-idfile = "./idlists.txt"
+idfile = "../validation/idlist.txt"
 # Another way to specify the logged particles.
 # The fraction to be randomly sampled, must be in (0, 1]
-fraction = 0.05
+fraction = 0.9
 # The array of particle types to be randomly sampled.
 logtypes = [2]
 # The component used for recenter and alignment during orbital log,

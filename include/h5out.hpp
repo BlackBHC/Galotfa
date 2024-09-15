@@ -25,7 +25,7 @@ class dataset_handle
 {
 public:
     dataset_handle( hid_t& parent, const std::string& datasetName,
-                    const std::vector< unsigned int >& sizeInEachDim, hid_t& dataType );
+                    const std::vector< unsigned >& sizeInEachDim, hid_t& dataType );
     ~dataset_handle();
     auto flush_single_block( const void* dataBuffer ) -> int;
 
@@ -34,12 +34,12 @@ public:
 #else
 private:
 #endif
-    std::string datasetName;
-    hid_t       singleBlockSpace = H5I_INVALID_HID;  // memory space id for single step
-    hid_t       dataset          = H5I_INVALID_HID;
-    hid_t       property         = H5I_INVALID_HID;
-    hid_t       dataType         = H5I_INVALID_HID;
-    std::vector< unsigned int >  sizeInEachDim;
+    std::string             datasetName;
+    hid_t                   singleBlockSpace = H5I_INVALID_HID;  // memory space id for single step
+    hid_t                   dataset          = H5I_INVALID_HID;
+    hid_t                   property         = H5I_INVALID_HID;
+    hid_t                   dataType         = H5I_INVALID_HID;
+    std::vector< unsigned > sizeInEachDim;
     std::unique_ptr< hsize_t[] > fileSize;
     std::unique_ptr< hsize_t[] > countOfSingleBlock;
     std::unique_ptr< hsize_t[] > offset;
@@ -76,8 +76,8 @@ private:
     h5_out( const std::string& dir, const std::string& filename );
     ~h5_out();
     auto create_dataset_in_group( const std::string& datasetName, const std::string& groupName,
-                                  const std::vector< unsigned int >& sizeInEachDim,
-                                  hid_t                              dataType ) -> int;
+                                  const std::vector< unsigned >& sizeInEachDim,
+                                  hid_t                          dataType ) -> int;
     auto flush_single_block( const std::string& groupName, const std::string& datasetName,
                              const void* dataBuffer ) -> int;
 };

@@ -19,7 +19,7 @@ namespace otf {
 struct dataContainer
 {
 public:
-    unsigned int          count = 0;
+    unsigned              count = 0;
     std::vector< int >    id;
     std::vector< double > mass;
     std::vector< double > coordinate;
@@ -35,7 +35,7 @@ class orbit_selector
 {
 public:
     orbit_selector( const runtime_para& para );
-    auto select( unsigned int particleNumber, const int* particleID, const int* partType,
+    auto select( unsigned particleNumber, const int* particleID, const int* partType,
                  const double* mass, const double* coordinate,
                  const double* velocity ) const -> std::unique_ptr< dataContainer >;
 
@@ -49,7 +49,7 @@ private:
                                    const std::vector< int >& sampleTypes,
                                    double                    fraction ) -> std::vector< int >;
     static auto         id_read( const std::string& idFilename ) -> std::vector< int >;
-    auto                extract_target_ids( unsigned int particleNumber, const int* particleID,
+    auto                extract_target_ids( unsigned particleNumber, const int* particleID,
                                             const int* partType ) const -> std::vector< int >;
 };
 

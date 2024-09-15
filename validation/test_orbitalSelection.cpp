@@ -109,7 +109,7 @@ int main( int argc, char* argv[] )
     }
     else
     {
-        assert( getData->count == ( unsigned int )rank );
+        assert( getData->count == ( unsigned )rank );
         switch ( rank )
         {
         case 0:

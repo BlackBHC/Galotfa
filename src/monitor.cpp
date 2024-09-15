@@ -3,22 +3,28 @@
  * @brief The organizer of other components to work together.
  */
 
+#include <utility>
 #ifdef DEBUG
 #include "../include/myprompt.hpp"
 #endif
+#include "../include/barinfo.hpp"
+#include "../include/eigen.hpp"
 #include "../include/h5out.hpp"
 #include "../include/monitor.hpp"
 #include "../include/para.hpp"
 #include "../include/recenter.hpp"
 #include "../include/selector.hpp"
+#include "../include/statistic.hpp"
 #include <H5Tpublic.h>
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <mpi.h>
 #include <string>
 #include <string_view>
 #include <vector>
 using namespace std;
+
 
 /**
  * @brief The global part.
@@ -148,12 +154,12 @@ void print_component_part( otf::runtime_para& para )
         }
         INFO( "Image half length: %g.", comp.second->image.halfLength );
         INFO( "Image bin number: %d.", comp.second->image.binNum );
-        if ( comp.second->A2.enable )
+        if ( comp.second->sBar.enable )
         {
             INFO( "A2 of this component is enabled." );
         }
-        INFO( "A2 rmin : %g.", comp.second->A2.rmin );
-        INFO( "A2 rmax : %g.", comp.second->A2.rmax );
+        INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
+        INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
 
         if ( comp.second->barAngle.enable )
         {
@@ -162,12 +168,12 @@ void print_component_part( otf::runtime_para& para )
         INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
         INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
 
-        if ( comp.second->buckle.enable )
+        if ( comp.second->sBuckle.enable )
         {
             INFO( "buckle of this component is enabled." );
         }
-        INFO( "buckle rmin : %g.", comp.second->buckle.rmin );
-        INFO( "buckle rmax : %g.", comp.second->buckle.rmax );
+        INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
+        INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
     }
 }
 
@@ -190,10 +196,9 @@ void print_para_info( otf::runtime_para& para )
 
 namespace otf {
 
-monitor::monitor( const std::string_view& tomlParaFile )
+monitor::monitor( const string_view& tomlParaFile )
     : mpiRank( -1 ), mpiSize( 0 ), isRootRank( false ), stepCounter( 0 ),
       mpiInitialzedByMonitor( false ), para( runtime_para( tomlParaFile ) ), h5Organizer( nullptr )
-
 {
     if ( not para.enableOtf )  // if the on-the-fly analysis is not enabled
     {
@@ -236,9 +241,21 @@ monitor::~monitor()
     }
 }
 
-void monitor::one_analysis_api( const double time, const unsigned int particleNumber, const int* id,
-                                const int* partType, const double* mass, const double* coordinate,
-                                const double* velocity )
+/**
+ * @brief The main analysis API, which should be called in the main loop of the simulation.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ */
+void monitor::main_analysis_api( const double time, const unsigned particleNumber, const int* ids,
+                                 const int* partTypes, const double* masses,
+                                 const double* potentials, const double* coordinates,
+                                 const double* velocities )
 {
     if ( not para.enableOtf )
     {
@@ -248,19 +265,35 @@ void monitor::one_analysis_api( const double time, const unsigned int particleNu
     // First: orbital logs part
     if ( para.orbit->enable )
     {
-        orbital_part( time, particleNumber, id, partType, mass, coordinate, velocity );
+        orbital_log( time, particleNumber, ids, partTypes, masses, coordinates, velocities );
     }
 
-    // Third: analyze each component
+    // Second: analyze each component
     // TODO: analyze each component
+    for ( auto& comp : para.comps )
+    {
+        component_analysis( time, particleNumber, partTypes, masses, potentials, coordinates,
+                            velocities, comp.second );
+    }
 
     // Last: increase the synchronized step counter
     stepCounter++;
 }
 
-void monitor::orbital_part( const double time, const unsigned int particleNumber, const int* id,
-                            const int* partType, const double* mass, const double* coordinate,
-                            const double* velocity )
+/**
+ * @brief The API of orbital log.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleID ids of particles
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ */
+void monitor::orbital_log( const double time, const unsigned particleNumber, const int* ids,
+                           const int* partTypes, const double* masses, const double* coordinates,
+                           const double* velocities )
 {
     if ( stepCounter % para.orbit->period != 0 )  // only log in the chosen steps
     {
@@ -269,7 +302,7 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
 
     // First: extract the data for orbital log, and the data for each component
     auto orbitData =
-        id_data_process( time, particleNumber, id, partType, mass, coordinate, velocity );
+        id_data_process( time, particleNumber, ids, partTypes, masses, coordinates, velocities );
     // if it's the first extraction, create the datasets in the root rank
     if ( isRootRank and stepCounter == 0 )
     {
@@ -306,6 +339,582 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
 }
 
 /**
+ * @brief The API of data extraction for component analysis.
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ * @param comp otf::component object, a structure of parameters for a component
+ * @return an object of otf::monitor::compDataContainer, which is the container of the extracted
+ * data
+ */
+auto monitor::component_data_extract(
+    unsigned particleNumber, const int* partType, const double* masses, const double* potentials,
+    const double* coordinates, const double* velocities,
+    unique_ptr< otf::component >& comp ) -> monitor::compDataContainer
+{
+    unsigned         count = 0;
+    vector< double > extractedMasses;
+    vector< double > extractedPotentials;
+    vector< double > extractedCoordinates;
+    vector< double > extractedVelocities;
+    extractedMasses.resize( particleNumber );
+    extractedPotentials.resize( particleNumber );
+    extractedCoordinates.resize( particleNumber * 3 );
+    extractedVelocities.resize( particleNumber * 3 );
+    for ( unsigned i = 0; i < particleNumber; ++i )
+    {
+        // check whether it's a particle with the specified id
+        auto find_res = find( comp->types.begin(), comp->types.end(), partType[ i ] );
+        // if not found, go to the next loop
+        if ( find_res == comp->types.end() )
+        {
+            continue;
+        }
+
+        // get the extracted data
+        extractedMasses[ count ]              = masses[ i ];
+        extractedPotentials[ count ]          = potentials[ i ];
+        extractedCoordinates[ count * 3 + 0 ] = coordinates[ i * 3 + 0 ];
+        extractedCoordinates[ count * 3 + 1 ] = coordinates[ i * 3 + 1 ];
+        extractedCoordinates[ count * 3 + 2 ] = coordinates[ i * 3 + 2 ];
+        extractedVelocities[ count * 3 + 0 ]  = velocities[ i * 3 + 0 ];
+        extractedVelocities[ count * 3 + 1 ]  = velocities[ i * 3 + 1 ];
+        extractedVelocities[ count * 3 + 2 ]  = velocities[ i * 3 + 2 ];
+
+        // increase the particle count
+        ++count;
+    }
+
+    // remove the tail garbage values
+    extractedMasses.resize( count );
+    extractedPotentials.resize( count );
+    extractedCoordinates.resize( count * 3 );
+    extractedVelocities.resize( count * 3 );
+
+    compDataContainer compData;
+    compData.partNum = count;
+    unique_ptr< double[] > massPtr( new double[ count ]() );
+    unique_ptr< double[] > potPtr( new double[ count ]() );
+    unique_ptr< double[] > posPtr( new double[ count * 3 ]() );
+    unique_ptr< double[] > velPtr( new double[ count * 3 ]() );
+
+    // get the extracted data
+    for ( unsigned i = 0; i < count; ++i )
+    {
+        massPtr[ i ]        = extractedMasses[ i ];
+        potPtr[ i ]         = extractedPotentials[ i ];
+        posPtr[ i * 3 + 0 ] = extractedCoordinates[ i * 3 + 0 ];
+        posPtr[ i * 3 + 1 ] = extractedCoordinates[ i * 3 + 1 ];
+        posPtr[ i * 3 + 2 ] = extractedCoordinates[ i * 3 + 2 ];
+        velPtr[ i * 3 + 0 ] = extractedVelocities[ i * 3 + 0 ];
+        velPtr[ i * 3 + 1 ] = extractedVelocities[ i * 3 + 1 ];
+        velPtr[ i * 3 + 2 ] = extractedVelocities[ i * 3 + 2 ];
+    }
+
+    // move the data to the container
+    compData.masses      = std::move( massPtr );
+    compData.potentials  = std::move( potPtr );
+    compData.coordinates = std::move( posPtr );
+    compData.velocities  = std::move( velPtr );
+
+    // TODO: test whether this retern can work correctly
+    return compData;
+}
+
+/**
+ * @brief The API of analysis part for a single component.
+ *
+ * @param dataContainer reference to the extracted data, in the form of compDataContainer
+ * @param comp wrapper of parameters for analysis of a single component
+ * @return the data container of the analysis results
+ */
+auto monitor::component_data_analyze( monitor::compDataContainer&        dataContainer,
+                                      std::unique_ptr< otf::component >& comp ) const
+    -> monitor::compResContainer
+{
+    compResContainer compRes;
+
+    // NOTE: recenter the system if necessary
+    if ( comp->recenter.enable )  // if not enable, do nothing
+    {
+        recenter_coordinate( dataContainer, comp, compRes );
+    }
+
+    // NOTE: align the system if necessary
+    if ( comp->align.enable )
+    {
+        align_coordinate( dataContainer, comp );
+    }
+
+    // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
+    // TODO: bar length
+    if ( comp->sBar.enable or comp->barAngle.enable or comp->sBuckle.enable )
+    {
+        bar_info( dataContainer, comp, compRes );
+    }
+
+    // NOTE: calculate the image if necessary
+    if ( comp->image.enable )
+    {
+        image( dataContainer, comp, compRes );
+    }
+
+    // TODO: test whether the data in unique_ptr can be return in this form
+    return compRes;
+}
+
+/**
+ * @brief The API to recenter the coordinates in a data container object.
+ *
+ * @param dataContainer reference to the data container to be recenterred
+ * @param comp wrapper of parameters for analysis of a single component
+ */
+void monitor::recenter_coordinate( monitor::compDataContainer&        dataContainer,
+                                   std::unique_ptr< otf::component >& comp, compResContainer& res )
+{
+    /* in galotfa.toml:
+    # com: define ... as the center of mass. For better performance, the
+    #      program calculate the com through iteration: 100 times, 50
+    #      times, 10 times, 1 times, and 0.5 times radius.
+    recenter.method = "com"
+    */
+
+    // get the system center based on the inital guess: 100 times enclosed radius
+    auto center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                        dataContainer.masses.get(), dataContainer.potentials.get(),
+                                        dataContainer.coordinates.get(),
+                                        comp->recenter.radius * 100, comp->recenter.initialGuess );
+    // get the system center based on the previous result: 50 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius * 50,
+                                   center.get() );
+    // get the system center based on the previous result: 10 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius * 10,
+                                   center.get() );
+    // get the system center based on the previous result: 1 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius,
+                                   center.get() );
+    // get the system center based on the previous result: 0.5 times enclosed radius
+    center = recenter::get_center( comp->recenter.method, dataContainer.partNum,
+                                   dataContainer.masses.get(), dataContainer.potentials.get(),
+                                   dataContainer.coordinates.get(), comp->recenter.radius * 0.5,
+                                   center.get() );
+    // restore the position of the center
+    for ( auto i = 0; i < 3; ++i )
+    {
+        res.center[ i ] = center[ i ];
+    }
+
+    // substract the system center
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        for ( unsigned j = 0; j < 3; ++j )
+        {
+            dataContainer.coordinates[ i * 3 + j ] -= center[ j ];
+        }
+    };
+}
+
+/**
+ * @brief The API to align the coordinates in a data container object.
+ *
+ * @param dataContainer reference to the data container
+ * @param comp wrapper of parameters for analysis of a single component
+ */
+void monitor::align_coordinate( monitor::compDataContainer&        dataContainer,
+                                std::unique_ptr< otf::component >& comp )
+{
+    // get the intertia tensor
+    double inertiaTensor[ 9 ] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        // get the spherical radius of the particle
+        static double radius;
+        radius = sqrt(
+            dataContainer.coordinates[ i * 3 + 0 ] * dataContainer.coordinates[ i * 3 + 0 ]
+            + dataContainer.coordinates[ i * 3 + 1 ] * dataContainer.coordinates[ i * 3 + 1 ]
+            + dataContainer.coordinates[ i * 3 + 2 ] * dataContainer.coordinates[ i * 3 + 2 ] );
+
+        // check whether the particle locates in the enclosed radius
+        if ( comp->align.radius < radius )
+        {
+            continue;
+        }
+
+        // diagonal terms
+        inertiaTensor[ 0 * 3 + 0 ] +=
+            dataContainer.masses[ i ]
+            * ( dataContainer.coordinates[ i * 3 + 1 ] * dataContainer.coordinates[ i * 3 + 1 ]
+                + dataContainer.coordinates[ i * 3 + 2 ] * dataContainer.coordinates[ i * 3 + 2 ] );
+        inertiaTensor[ 1 * 3 + 1 ] +=
+            dataContainer.masses[ i ]
+            * ( dataContainer.coordinates[ i * 3 + 0 ] * dataContainer.coordinates[ i * 3 + 0 ]
+                + dataContainer.coordinates[ i * 3 + 2 ] * dataContainer.coordinates[ i * 3 + 2 ] );
+        inertiaTensor[ 2 * 3 + 2 ] +=
+            dataContainer.masses[ i ]
+            * ( dataContainer.coordinates[ i * 3 + 0 ] * dataContainer.coordinates[ i * 3 + 0 ]
+                + dataContainer.coordinates[ i * 3 + 1 ] * dataContainer.coordinates[ i * 3 + 1 ] );
+        // non-diagonal terms
+        inertiaTensor[ 0 * 3 + 1 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ];
+        inertiaTensor[ 0 * 3 + 2 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ];
+        inertiaTensor[ 1 * 3 + 0 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ];
+        inertiaTensor[ 1 * 3 + 2 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ];
+        inertiaTensor[ 2 * 3 + 0 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ]
+                                      * dataContainer.coordinates[ i * 3 + 0 ];
+        inertiaTensor[ 2 * 3 + 1 ] += -dataContainer.masses[ i ]
+                                      * dataContainer.coordinates[ i * 3 + 2 ]
+                                      * dataContainer.coordinates[ i * 3 + 1 ];
+    }
+    // reduce the inertiaTensor from all mpi ranks
+    MPI_Allreduce( MPI_IN_PLACE, inertiaTensor, 9, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+    // get the eigenvalues and eigenvectors
+    double eigenValues[ 3 ];
+    double eigenVectors[ 9 ];
+    eigen::eigens_sym_33( inertiaTensor, eigenValues, eigenVectors );
+
+    // lambda function to calculate the determinant of an matrix
+    auto determinant = []( const double* matrix ) -> double {
+        double det = 0;
+        det += matrix[ 0 ] * matrix[ 4 ] * matrix[ 8 ] + matrix[ 1 ] * matrix[ 5 ] * matrix[ 6 ]
+               + matrix[ 2 ] * matrix[ 3 ] * matrix[ 7 ];
+
+        det -= matrix[ 2 ] * matrix[ 4 ] * matrix[ 6 ] + matrix[ 1 ] * matrix[ 3 ] * matrix[ 8 ]
+               + matrix[ 0 ] * matrix[ 5 ] * matrix[ 7 ];
+        return det;
+    };
+
+    // make sure it's a rotation matrix
+    if ( determinant( eigenVectors ) < 0 )
+    {
+        eigenVectors[ 2 ] *= -1;
+        eigenVectors[ 5 ] *= -1;
+        eigenVectors[ 8 ] *= -1;
+    }
+    // NOTE: rotation matrix is Transpose(EigenMatrix) x Identity
+
+    // rotate the coordinates and velocities
+    static double x = 0;
+    static double y = 0;
+    static double z = 0;
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        // coordinates
+        x = dataContainer.coordinates[ i * 3 + 0 ];
+        y = dataContainer.coordinates[ i * 3 + 1 ];
+        z = dataContainer.coordinates[ i * 3 + 2 ];
+        dataContainer.coordinates[ i * 3 + 0 ] =
+            eigenVectors[ 0 ] * x + eigenVectors[ 3 ] * y + eigenVectors[ 6 ] * z;
+        dataContainer.coordinates[ i * 3 + 1 ] =
+            eigenVectors[ 1 ] * x + eigenVectors[ 4 ] * y + eigenVectors[ 7 ] * z;
+        dataContainer.coordinates[ i * 3 + 2 ] =
+            eigenVectors[ 2 ] * x + eigenVectors[ 5 ] * y + eigenVectors[ 8 ] * z;
+
+        // velocities
+        x = dataContainer.velocities[ i * 3 + 0 ];
+        y = dataContainer.velocities[ i * 3 + 1 ];
+        z = dataContainer.velocities[ i * 3 + 2 ];
+        dataContainer.velocities[ i * 3 + 0 ] =
+            eigenVectors[ 0 ] * x + eigenVectors[ 3 ] * y + eigenVectors[ 6 ] * z;
+        dataContainer.velocities[ i * 3 + 1 ] =
+            eigenVectors[ 1 ] * x + eigenVectors[ 4 ] * y + eigenVectors[ 7 ] * z;
+        dataContainer.velocities[ i * 3 + 2 ] =
+            eigenVectors[ 2 ] * x + eigenVectors[ 5 ] * y + eigenVectors[ 8 ] * z;
+    }
+    // TODO: test the rotation part
+}
+
+/**
+ * @brief API to calculate the bar information, namely bar strength, bar angle, buckling strength,
+ * and bar length (to be implemented).
+ *
+ * @param dataContainer container of the extracted data
+ * @param comp parameters of the component analysis
+ * @param res container of the analysis results
+ */
+void monitor::bar_info( monitor::compDataContainer&        dataContainer,
+                        std::unique_ptr< otf::component >& comp, compResContainer& res )
+{
+    // NOTE: bar angle
+    if ( comp->barAngle.enable )
+    {
+        // extracted data
+        unsigned                     count = 0;
+        unique_ptr< double[] > const usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedPhis( new double[ dataContainer.partNum ] );
+
+        // extract the used data
+        for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+        {
+            // get the radius of the current particle
+            static double radius = 0;
+            radius               = sqrt(
+                dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
+                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+
+            // if the particle not in the specified region, go to the next loop
+            if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+            {
+                continue;
+            }
+
+            usedPhis[ count ]   = atan2( dataContainer.coordinates[ 3 * i + 1 ],
+                                         dataContainer.coordinates[ 3 * i + 0 ] );
+            usedMasses[ count ] = dataContainer.masses[ i ];
+            ++count;
+        }
+
+        // calculate the bar angle
+        res.barAngle = bar_info::bar_angle( count, usedMasses.get(), usedPhis.get() );
+    };
+
+    if ( comp->sBar.enable )
+    {
+        // extracted data
+        unsigned                     count = 0;
+        unique_ptr< double[] > const usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedPhis( new double[ dataContainer.partNum ] );
+
+        // extract the used data
+        for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+        {
+            // get the radius of the current particle
+            static double radius = 0;
+            radius               = sqrt(
+                dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
+                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+
+            // if the particle not in the specified region, go to the next loop
+            if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+            {
+                continue;
+            }
+
+            usedPhis[ count ]   = atan2( dataContainer.coordinates[ 3 * i + 1 ],
+                                         dataContainer.coordinates[ 3 * i + 0 ] );
+            usedMasses[ count ] = dataContainer.masses[ i ];
+            ++count;
+        }
+        double const A0 = bar_info::A0( count, usedMasses.get() );
+        double const A2 = bar_info::A2( count, usedMasses.get(), usedPhis.get() );
+        // calculate the bar strength
+        res.sBar = A2 / A0;
+    }
+
+    if ( comp->sBuckle.enable )
+    {
+        // extracted data
+        unsigned                     count = 0;
+        unique_ptr< double[] > const usedMasses( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedPhis( new double[ dataContainer.partNum ] );
+        unique_ptr< double[] > const usedZeds( new double[ dataContainer.partNum ] );
+
+        // extract the used data
+        for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+        {
+            // get the radius of the current particle
+            static double radius = 0;
+            radius               = sqrt(
+                dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
+                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+
+            // if the particle not in the specified region, go to the next loop
+            if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+            {
+                continue;
+            }
+
+            usedPhis[ count ]   = atan2( dataContainer.coordinates[ 3 * i + 1 ],
+                                         dataContainer.coordinates[ 3 * i + 0 ] );
+            usedMasses[ count ] = dataContainer.masses[ i ];
+            usedZeds[ count ]   = dataContainer.coordinates[ 3 * i + 2 ];
+            ++count;
+        }
+
+        // calculate the buckling strength
+        res.sBuckle = bar_info::Sbuckle( count, usedMasses.get(), usedPhis.get(), usedZeds.get() );
+    }
+
+    // TODO: bar length
+}
+
+/**
+ * @brief API to calculate the image matrices.
+ *
+ * @param dataContainer container of the extracted data
+ * @param comp parameters of the component analysis
+ * @param res container of the analysis results
+ */
+void monitor::image( monitor::compDataContainer&        dataContainer,
+                     std::unique_ptr< otf::component >& comp, compResContainer& res ) const
+{
+    // extracted the xs, ys, zs for bin2d function
+    const unique_ptr< double[] > xs( new double[ dataContainer.partNum ] );
+    unique_ptr< double[] > const ys( new double[ dataContainer.partNum ] );
+    unique_ptr< double[] > const zs( new double[ dataContainer.partNum ] );
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        xs[ i ] = dataContainer.coordinates[ 3 * i + 0 ];
+        ys[ i ] = dataContainer.coordinates[ 3 * i + 1 ];
+        zs[ i ] = dataContainer.coordinates[ 3 * i + 2 ];
+    }
+
+    // calculate the image matrix
+    auto imageXY = statistic::bin2d(
+        mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+    auto imageXZ = statistic::bin2d(
+        mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+    auto imageYZ = statistic::bin2d(
+        mpiRank, ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
+        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+
+    // restore the results
+    res.imageXY = std::move( imageXY );
+    res.imageXZ = std::move( imageXZ );
+    res.imageYZ = std::move( imageYZ );
+}
+
+/**
+ * @brief The API of analysis part for a single component
+ *
+ * @param time time of the simulation
+ * @param particleNumber number of particles in the local mpi rank
+ * @param particleType PartTypes of particles
+ * @param mass masses of particles
+ * @param coordinate coordinates of particles
+ * @param velocity velocities of particles
+ * @param comp otf::component object, a structure of parameters for a component
+ */
+void monitor::component_analysis( double time, unsigned particleNumber, const int* partTypes,
+                                  const double* masses, const double* potentials,
+                                  const double* coordinates, const double* velocities,
+                                  unique_ptr< otf::component >& comp ) const
+{
+    // NOTE: collect the component data
+    auto compDataContainer = component_data_extract( particleNumber, partTypes, masses, potentials,
+                                                     coordinates, velocities, comp );
+
+    // NOTE: get the analysis result
+    auto compResContainer = component_data_analyze( compDataContainer, comp );
+
+    // NOTE: create the datasets at the first call
+    if ( isRootRank and stepCounter == 0 )
+    {
+        // create the datasets for times
+        if ( comp->recenter.enable )
+        {
+            h5Organizer->create_dataset_in_group( "Time", comp->compName, { 1 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+
+        // create the datasets for center positions
+        if ( comp->recenter.enable )
+        {
+            h5Organizer->create_dataset_in_group( "Center", comp->compName, { 3 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+
+        // create the datasets for bar infos
+        if ( comp->sBar.enable )
+        {
+            h5Organizer->create_dataset_in_group( "A2", comp->compName, { 1 }, H5T_NATIVE_DOUBLE );
+        }
+        if ( comp->barAngle.enable )
+        {
+            h5Organizer->create_dataset_in_group( "BarAngle", comp->compName, { 1 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+        if ( comp->sBuckle.enable )
+        {
+            h5Organizer->create_dataset_in_group( "Sbuckle", comp->compName, { 1 },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+        // TODO: bar length
+
+        // create the datasets for image
+        if ( comp->image.enable )
+        {
+            // create the datasets for images in x-y, y-z, x-z planes
+            h5Organizer->create_dataset_in_group( "ImageXY", comp->compName,
+                                                  { comp->image.binNum, comp->image.binNum },
+                                                  H5T_NATIVE_DOUBLE );
+            h5Organizer->create_dataset_in_group( "ImageXZ", comp->compName,
+                                                  { comp->image.binNum, comp->image.binNum },
+                                                  H5T_NATIVE_DOUBLE );
+            h5Organizer->create_dataset_in_group( "ImageYZ", comp->compName,
+                                                  { comp->image.binNum, comp->image.binNum },
+                                                  H5T_NATIVE_DOUBLE );
+        }
+    }
+
+    // NOTE: flush the data
+    if ( isRootRank )
+    {
+        // time of the current iteration
+        h5Organizer->flush_single_block( comp->compName, "Time", &time );
+
+        // center positions
+        if ( comp->recenter.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "Center", compResContainer.center );
+        }
+
+        // bar infos
+        if ( comp->sBar.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "A2", &compResContainer.sBar );
+        }
+        if ( comp->barAngle.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "BarAngle",
+                                             &compResContainer.barAngle );
+        }
+        if ( comp->sBuckle.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "Sbuckle", &compResContainer.sBuckle );
+        }
+        // TODO: bar length
+
+        // images
+        if ( comp->image.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "ImageXY",
+                                             compResContainer.imageXZ.get() );
+            h5Organizer->flush_single_block( comp->compName, "ImageXZ",
+                                             compResContainer.imageXZ.get() );
+            h5Organizer->flush_single_block( comp->compName, "ImageYZ",
+                                             compResContainer.imageXZ.get() );
+        }
+    }
+}
+
+/**
  * @brief Extract the orbital data points and sort them based on the particle IDs, only the root
  * rank will return the effective data.
  *
@@ -318,15 +927,15 @@ void monitor::orbital_part( const double time, const unsigned int particleNumber
  * @param velocity velocities of particles
  * @return the vector of orbitPoint objects
  */
-auto monitor::id_data_process( const double time, const unsigned int particleNumber,
-                               const int* particleID, const int* particleType, const double* mass,
-                               const double* coordinate,
-                               const double* velocity ) const -> vector< orbitPoint >
+auto monitor::id_data_process( const double time, const unsigned particleNumber,
+                               const int* particleIDs, const int* particleTypes,
+                               const double* masses, const double* coordinates,
+                               const double* velocities ) const -> vector< orbitPoint >
 {
     vector< orbitPoint >             points;
     static const otf::orbit_selector orbitSelector( para );
-    auto getData = orbitSelector.select( particleNumber, particleID, particleType, mass, coordinate,
-                                         velocity );
+    auto getData = orbitSelector.select( particleNumber, particleIDs, particleTypes, masses,
+                                         coordinates, velocities );
 
     // NOTE: MPI collection
     const int                 localNum = getData->count;  // the number of ids in local mpi rank
@@ -391,7 +1000,7 @@ auto monitor::id_data_process( const double time, const unsigned int particleNum
 
     // NOTE: sort the orbit points based on their id
     static auto cmp = []( orbitPoint p1, orbitPoint p2 ) { return p1.particleID < p2.particleID; };
-    std::sort( points.begin(), points.end(), cmp );
+    sort( points.begin(), points.end(), cmp );
     return points;
 }
 

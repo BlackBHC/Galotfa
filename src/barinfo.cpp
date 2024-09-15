@@ -12,12 +12,12 @@ namespace otf {
  * @param mass masses of partciles
  * @return the A0 value
  */
-auto bar_info::A0( const unsigned int partNum, const double* mass ) -> double
+auto bar_info::A0( const unsigned partNum, const double* masses ) -> double
 {
     double A0sum = 0;
     for ( auto i = 0U; i < partNum; ++i )
     {
-        A0sum += mass[ i ];
+        A0sum += masses[ i ];
     }
     MPI_Allreduce( MPI_IN_PLACE, &A0sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     return A0sum;
@@ -31,14 +31,14 @@ auto bar_info::A0( const unsigned int partNum, const double* mass ) -> double
  * @param phi azimuthal angle of the particles
  * @return the A2 value
  */
-auto bar_info::A2( const unsigned int partNum, const double* mass, const double* phi ) -> double
+auto bar_info::A2( const unsigned partNum, const double* masses, const double* phis ) -> double
 {
     double A2sumRe = 0;  // real part
     double A2sumIm = 0;  // imaginary part
     for ( auto i = 0U; i < partNum; ++i )
     {
-        A2sumRe += mass[ i ] * cos( 2 * phi[ i ] );
-        A2sumIm += mass[ i ] * sin( 2 * phi[ i ] );
+        A2sumRe += masses[ i ] * cos( 2 * phis[ i ] );
+        A2sumIm += masses[ i ] * sin( 2 * phis[ i ] );
     }
     MPI_Allreduce( MPI_IN_PLACE, &A2sumRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     MPI_Allreduce( MPI_IN_PLACE, &A2sumIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
@@ -46,18 +46,26 @@ auto bar_info::A2( const unsigned int partNum, const double* mass, const double*
 }
 
 /**
- * @brief Calculate the bar strength parameter.
+ * @brief Calculate the bar angle as the phase angle of the m=2 Fourier mode
  *
  * @param partNum particle number
  * @param mass masses of partciles
  * @param phi azimuthal angle of the particles
- * @return the value of bar strength
+ * @return the bar angle
  */
-auto bar_info::Sbar( const unsigned int partNum, const double* mass, const double* phi ) -> double
+auto bar_info::bar_angle( const unsigned partNum, const double* masses,
+                          const double* phis ) -> double
 {
-    const double A0value = A0( partNum, mass );
-    const double A2value = A2( partNum, mass, phi );
-    return A2value / A0value;
+    double A2sumRe = 0;  // real part
+    double A2sumIm = 0;  // imaginary part
+    for ( auto i = 0U; i < partNum; ++i )
+    {
+        A2sumRe += masses[ i ] * cos( 2 * phis[ i ] );
+        A2sumIm += masses[ i ] * sin( 2 * phis[ i ] );
+    }
+    MPI_Allreduce( MPI_IN_PLACE, &A2sumRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, &A2sumIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    return atan2( A2sumIm, A2sumRe );
 }
 
 /**
@@ -69,16 +77,16 @@ auto bar_info::Sbar( const unsigned int partNum, const double* mass, const doubl
  * @param zed z coordinates of the particles
  * @return the value of buckling strength
  */
-auto bar_info::Sbuckle( const unsigned int partNum, const double* mass, const double* phi,
-                        const double* zed ) -> double
+auto bar_info::Sbuckle( const unsigned partNum, const double* masses, const double* phis,
+                        const double* zeds ) -> double
 {
-    const double A0value     = A0( partNum, mass );
+    const double A0value     = A0( partNum, masses );
     double       numeratorRe = 0;  // real part
     double       numeratorIm = 0;  // imaginary part
     for ( auto i = 0U; i < partNum; ++i )
     {
-        numeratorRe += mass[ i ] * zed[ i ] * cos( 2 * phi[ i ] );
-        numeratorIm += mass[ i ] * zed[ i ] * sin( 2 * phi[ i ] );
+        numeratorRe += masses[ i ] * zeds[ i ] * cos( 2 * phis[ i ] );
+        numeratorIm += masses[ i ] * zeds[ i ] * sin( 2 * phis[ i ] );
     }
     MPI_Allreduce( MPI_IN_PLACE, &numeratorRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     MPI_Allreduce( MPI_IN_PLACE, &numeratorIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
