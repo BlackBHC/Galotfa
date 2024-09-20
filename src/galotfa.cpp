@@ -1,8 +1,6 @@
 #include "../include/galotfa.h"
 #include "../include/monitor.hpp"
 
-otf::monitor otfServer( "./galotfa.toml" );
-
 /**
  * @brief API for n body simulation, without sub-grid physics parameters and redshifts.
  *
@@ -20,6 +18,9 @@ extern "C" void OnTheFly_Analysis_Nbody( const double currentTime, const unsigne
                                          const double* masses, const double* potentials,
                                          const double* coordinates, const double* velocities )
 {
+    static otf::monitor otfServer( "./galotfa.toml" );  // create the on-the-fly analysis server
+
+    // call the analysis API
     otfServer.main_analysis_api( currentTime, particleNumber, particleIDs, particleTypes, masses,
                                  potentials, coordinates, velocities );
 }

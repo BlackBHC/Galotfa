@@ -106,6 +106,8 @@ enable = false
 period = 10
 # Two ways to specify which particles to be logged: "txtfile" for txt
 # file or "random" for random sampling.
+# NOTE: the random sampling is done in each mpi rank, so there may be
+# 0 particle selected if there are only sparse particles in a rank.
 method = "txtfile"
 # The text file name that specifies the particle ids to be logged.
 # In this file, each row is a legal value of a particle id.
