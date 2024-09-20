@@ -1,4 +1,8 @@
-#include "../include/galotfa.hpp"
+#include "../include/galotfa.h"
+#include "../include/monitor.hpp"
+
+otf::monitor otfServer( "./galotfa.toml" );
+
 /**
  * @brief API for n body simulation, without sub-grid physics parameters and redshifts.
  *
@@ -11,17 +15,11 @@
  * @param velocities velocities in simulation units.
  * @return
  */
-extern "C" auto OnTheFly_Analysis_Nbody( const double currentTime, const unsigned particleNumber,
+extern "C" void OnTheFly_Analysis_Nbody( const double currentTime, const unsigned particleNumber,
                                          const int* particleIDs, const int* particleTypes,
-                                         const double* masses, const double* coordinates,
-                                         const double* velocities ) -> int
+                                         const double* masses, const double* potentials,
+                                         const double* coordinates, const double* velocities )
 {
-    ( void )currentTime;
-    ( void )particleNumber;
-    ( void )particleIDs;
-    ( void )particleTypes;
-    ( void )masses;
-    ( void )coordinates;
-    ( void )velocities;
-    return 0;
+    otfServer.main_analysis_api( currentTime, particleNumber, particleIDs, particleTypes, masses,
+                                 potentials, coordinates, velocities );
 }
