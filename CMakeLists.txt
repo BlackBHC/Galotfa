@@ -108,7 +108,6 @@ add_test(NAME test_bin2d COMMAND mpirun -np 4 $<TARGET_FILE:bin2d>)
 
 add_executable(bin1d ./validation/test_bin1d.cpp ./src/statistic.cpp)
 target_link_libraries(bin1d PRIVATE gsl gslcblas)
-find_package(MPI REQUIRED) # first: find the package
 target_link_libraries(bin1d PUBLIC MPI::MPI_CXX)
 target_link_options(bin1d PRIVATE ${sanitizer_flags})
 add_test(NAME test_bin1d COMMAND mpirun -np 4 $<TARGET_FILE:bin1d>)
@@ -124,6 +123,7 @@ target_link_options(barinfo PRIVATE ${sanitizer_flags})
 add_test(NAME barinfo COMMAND mpirun -np 4 $<TARGET_FILE:barinfo>)
 
 add_executable(para ./validation/test_para.cpp ./src/para.cpp)
+target_link_libraries(para PUBLIC MPI::MPI_CXX)
 target_link_options(para PRIVATE ${sanitizer_flags})
 add_test(NAME para COMMAND $<TARGET_FILE:para>)
 

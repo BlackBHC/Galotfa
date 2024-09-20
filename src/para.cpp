@@ -2,9 +2,9 @@
 #include "../include/myprompt.hpp"
 #include "../include/recenter.hpp"
 #include "../include/toml.hpp"
-#include "mpi.h"
 #include <cassert>
 #include <memory>
+#include <mpi.h>
 #include <string>
 #include <string_view>
 #include <unistd.h>
