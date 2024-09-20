@@ -18,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # COMPILATION FLAGS PART
 # customized debug flags: default one only includes -g
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror")
 # print fundamental flags: -g, -O, and whether -DNDEBUG
 message(STATUS "C++ flags, Debug configuration: ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "C++ flags, Release configuration: ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -45,7 +45,6 @@ find_package(MPI REQUIRED)
 
 # TARGET PART
 add_library(galotfa SHARED
-    include/galotfa.hpp
     ./src/galotfa.cpp
     ./src/monitor.cpp
     ./src/para.cpp
@@ -56,7 +55,7 @@ add_library(galotfa SHARED
     ./src/eigen.cpp
     ./src/statistic.cpp
 )
-# TODO: link the functional components
+set_target_properties(galotfa PROPERTIES PUBLIC_HEADER ./include/galotfa.h)
 target_link_libraries(galotfa PRIVATE gsl gslcblas hdf5)
 target_link_libraries(galotfa PRIVATE MPI::MPI_CXX)
 # Library with the same name
@@ -219,7 +218,7 @@ install(
     ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
     RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT bin
     LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
-    PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR}/message COMPONENT dev
+    PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
 )
 # Offer the user the choice of overriding the installation directories
 set(INSTALL_LIBDIR

@@ -1,5 +1,5 @@
 /**
- * @file galotfa.hpp
+ * @file galotfa.h
  * @brief The public C style API of the galotfa library.
  */
 
@@ -17,9 +17,9 @@
  * @param velocities velocities in simulation units.
  * @return
  */
-extern "C" auto OnTheFly_Analysis_Nbody( const double currentTime, const unsigned particleNumber,
+extern "C" void OnTheFly_Analysis_Nbody( const double currentTime, const unsigned particleNumber,
                                          const int* particleIDs, const int* particleTypes,
-                                         const double* masses, const double* coordinates,
-                                         const double* velocities ) -> int;
+                                         const double* masses, const double* potentials,
+                                         const double* coordinates, const double* velocities );
 
 #endif
