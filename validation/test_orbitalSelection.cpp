@@ -3,8 +3,10 @@
  * @brief Test the orbital particle selection.
  */
 
+#define DEBUG 1
 #include "../include/myprompt.hpp"
 #include "../include/selector.hpp"
+#include <cassert>
 #include <cmath>
 #include <memory>
 #include <mpi.h>

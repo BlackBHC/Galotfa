@@ -3,7 +3,9 @@
  * @brief Test the orbital log.
  */
 
+#define DEBUG 1
 #include "../include/monitor.hpp"
+#include <cassert>
 #include <cmath>
 #include <memory>
 #include <mpi.h>

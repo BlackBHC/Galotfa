@@ -1,10 +1,8 @@
-#ifdef DEBUG
-#include "../include/myprompt.hpp"
-#endif
+#include "../include/monitor.hpp"
 #include "../include/barinfo.hpp"
 #include "../include/eigen.hpp"
 #include "../include/h5out.hpp"
-#include "../include/monitor.hpp"
+#include "../include/myprompt.hpp"
 #include "../include/para.hpp"
 #include "../include/recenter.hpp"
 #include "../include/selector.hpp"

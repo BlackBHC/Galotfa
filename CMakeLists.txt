@@ -18,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # COMPILATION FLAGS PART
 # customized debug flags: default one only includes -g
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC -DDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Wpedantic -Werror -fPIC")
 # print fundamental flags: -g, -O, and whether -DNDEBUG
 message(STATUS "C++ flags, Debug configuration: ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "C++ flags, Release configuration: ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -39,6 +39,9 @@ else()
         "-fsanitize=leak"
     )
 endif()
+
+# Find the mpi library
+find_package(MPI REQUIRED)
 
 # TARGET PART
 add_library(galotfa SHARED
@@ -79,8 +82,6 @@ set_target_properties(message-static
 
 # UNIT TESTS
 # C++ programes
-find_package(MPI REQUIRED)
-
 enable_testing()
 add_executable(
     coordinate
@@ -173,7 +174,7 @@ add_test(NAME monitor COMMAND mpirun -np 4 $<TARGET_FILE:monitor>)
 
 # INSTALL PART
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "~/.local" CACHE PATH "install prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "~/.local/" CACHE PATH "install prefix" FORCE)
 endif()
 include(GNUInstallDirs)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY

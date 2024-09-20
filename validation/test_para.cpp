@@ -3,6 +3,7 @@
  * @brief Test the parameter parser.
  */
 
+#define DEBUG 1
 #include "../include/myprompt.hpp"
 #include "../include/para.hpp"
 using namespace std;

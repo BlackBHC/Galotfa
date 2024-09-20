@@ -3,6 +3,7 @@
  * @brief Test the hdf5 output class.
  */
 
+#define DEBUG 1
 #include "../include/h5out.hpp"
 #include "H5Tpublic.h"
 #include <hdf5.h>

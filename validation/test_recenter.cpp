@@ -2,6 +2,8 @@
  * @file test_recenter.cpp
  * @brief Test the recenter APIs
  */
+
+#define DEBUG 1
 #include "../include/recenter.hpp"
 #ifdef DEBUG
 #include "../include/myprompt.hpp"

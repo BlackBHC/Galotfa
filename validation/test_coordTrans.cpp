@@ -3,6 +3,7 @@
  * @brief Test the coordinate transformation class.
  */
 
+#define DEBUG 1
 #include "../include/coordinate.hpp"
 #include <iostream>
 #include <vector>
