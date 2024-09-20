@@ -2,6 +2,8 @@
  * @file test_barinfo.cpp
  * @brief Test the bar info APIs
  */
+
+#define DEBUG 1
 #include "../include/barinfo.hpp"
 #ifdef DEBUG
 #include "../include/myprompt.hpp"

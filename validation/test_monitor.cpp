@@ -3,8 +3,10 @@
  * @brief Test the monitor class with mock simulation data.
  */
 
+#define DEBUG 1
 #include "../include/monitor.hpp"
 #include "../include/myprompt.hpp"
+#include <cassert>
 #include <cmath>
 #include <mpi.h>
 #include <numbers>

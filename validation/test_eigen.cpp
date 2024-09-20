@@ -3,6 +3,7 @@
  * @brief Test the eigenvalue, eigenvector calculations.
  */
 
+#define DEBUG 1
 #include "../include/eigen.hpp"
 #include <iostream>
 using namespace std;

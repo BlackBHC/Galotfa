@@ -55,6 +55,15 @@ private:
  */
 class h5_out
 {
+public:
+    h5_out( const std::string& dir, const std::string& filename );
+    ~h5_out();
+    auto create_dataset_in_group( const std::string& datasetName, const std::string& groupName,
+                                  const std::vector< unsigned >& sizeInEachDim,
+                                  hid_t                          dataType ) -> int;
+    auto flush_single_block( const std::string& groupName, const std::string& datasetName,
+                             const void* dataBuffer ) -> int;
+
 #ifdef DEBUG
 public:
 #else
@@ -72,17 +81,7 @@ private:
     auto        ensure_dataset_empty( const std::string& groupName,
                                       const std::string& datasetName ) -> int;
     std::string filename;
-
-
-    h5_out( const std::string& dir, const std::string& filename );
-    ~h5_out();
-    auto create_dataset_in_group( const std::string& datasetName, const std::string& groupName,
-                                  const std::vector< unsigned >& sizeInEachDim,
-                                  hid_t                          dataType ) -> int;
-    auto flush_single_block( const std::string& groupName, const std::string& datasetName,
-                             const void* dataBuffer ) -> int;
 };
-
 
 void Backup_Old_Logs_If_Necessary( const std::string& dir, const std::string& filename );
 #endif
