@@ -446,17 +446,17 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
         recenter_coordinate( dataContainer, comp, compRes );
     }
 
-    // NOTE: align the system if necessary
-    if ( comp->align.enable )
-    {
-        align_coordinate( dataContainer, comp );
-    }
-
     // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
     // TODO: bar length
     if ( comp->sBar.enable or comp->barAngle.enable or comp->sBuckle.enable )
     {
         bar_info( dataContainer, comp, compRes );
+    }
+
+    // NOTE: align the system if necessary
+    if ( comp->align.enable )
+    {
+        align_coordinate( dataContainer, comp );
     }
 
     // NOTE: calculate the image if necessary

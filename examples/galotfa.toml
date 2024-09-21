@@ -55,6 +55,8 @@ recenter.iguess = [0, 0, 0]
 # tensor or not. The calculation of the inertial tensor is based on
 # the image parameters. Again,  align=true requires the parameters
 # for image calculation and force image.enable=true.
+# NOTE: the alignment is done after the calculation of bar strength,
+# bar angles and other bar properties.
 align.enable = true
 # Enclose radius for calculation of inertial tensor. For example, to
 # align the x,y,z axes with the bar principal axes, a value closing
@@ -66,7 +68,9 @@ align.radius = 5
 image.enable = true
 image.halflength = 10.0 # the half length of the box to be projected.
 image.binnum = 100      # the number of bins in each direction.
-##### The parameters for frame="cyl" cases
+##### The parameters for bar informations
+# NOTE: all the following bar properties are calculated under the
+# assumption that the bar is located in the x-y plane.
 # Parameters for bar strength calculation.
 # A2 := |\frac{ \sum_k m_k * exp(2i * phi_k) }{ \sum_k m_k }|, where
 # the subscript k is over particles in curtain radial range.
