@@ -908,11 +908,11 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         if ( comp->image.enable )
         {
             h5Organizer->flush_single_block( comp->compName, "ImageXY",
-                                             compResContainer.imageXZ.get() );
+                                             compResContainer.imageXY.get() );
             h5Organizer->flush_single_block( comp->compName, "ImageXZ",
                                              compResContainer.imageXZ.get() );
             h5Organizer->flush_single_block( comp->compName, "ImageYZ",
-                                             compResContainer.imageXZ.get() );
+                                             compResContainer.imageYZ.get() );
         }
     }
 }
