@@ -785,15 +785,15 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
     auto imageXY = statistic::bin2d(
         mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
-        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+        statistic_method::COUNT, dataContainer.partNum, dataContainer.masses.get() );
     auto imageXZ = statistic::bin2d(
         mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
-        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+        statistic_method::COUNT, dataContainer.partNum, dataContainer.masses.get() );
     auto imageYZ = statistic::bin2d(
         mpiRank, ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
-        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+        statistic_method::COUNT, dataContainer.partNum, dataContainer.masses.get() );
 
 
     // restore the results

@@ -62,8 +62,7 @@ align.enable = true
 # align the x,y,z axes with the bar principal axes, a value closing
 # to the bar radius is recommended.
 align.radius = 5
-# Parameters for calculations of x-y, x-z, and y-z projections. Must
-# be given if recenter.enable=true and method="dp", or if align=true.
+# Parameters for calculations of x-y, x-z, and y-z projections.
 # TODO: images of streaming motion, their dispersion etc.
 image.enable = true
 image.halflength = 10.0 # the half length of the box to be projected.
