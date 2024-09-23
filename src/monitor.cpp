@@ -446,17 +446,17 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
         recenter_coordinate( dataContainer, comp, compRes );
     }
 
-    // NOTE: align the system if necessary
-    if ( comp->align.enable )
-    {
-        align_coordinate( dataContainer, comp );
-    }
-
     // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
     // TODO: bar length
     if ( comp->sBar.enable or comp->barAngle.enable or comp->sBuckle.enable )
     {
         bar_info( dataContainer, comp, compRes );
+    }
+
+    // NOTE: align the system if necessary
+    if ( comp->align.enable )
+    {
+        align_coordinate( dataContainer, comp );
     }
 
     // NOTE: calculate the image if necessary
@@ -785,15 +785,15 @@ void monitor::image( monitor::compDataContainer&        dataContainer,
     auto imageXY = statistic::bin2d(
         mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
-        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+        statistic_method::COUNT, dataContainer.partNum, dataContainer.masses.get() );
     auto imageXZ = statistic::bin2d(
         mpiRank, xs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
-        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+        statistic_method::COUNT, dataContainer.partNum, dataContainer.masses.get() );
     auto imageYZ = statistic::bin2d(
         mpiRank, ys.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
         zs.get(), -comp->image.halfLength, comp->image.halfLength, comp->image.binNum,
-        statistic_method::SUM, dataContainer.partNum, dataContainer.masses.get() );
+        statistic_method::COUNT, dataContainer.partNum, dataContainer.masses.get() );
 
 
     // restore the results
@@ -908,11 +908,11 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         if ( comp->image.enable )
         {
             h5Organizer->flush_single_block( comp->compName, "ImageXY",
-                                             compResContainer.imageXZ.get() );
+                                             compResContainer.imageXY.get() );
             h5Organizer->flush_single_block( comp->compName, "ImageXZ",
                                              compResContainer.imageXZ.get() );
             h5Organizer->flush_single_block( comp->compName, "ImageYZ",
-                                             compResContainer.imageXZ.get() );
+                                             compResContainer.imageYZ.get() );
         }
     }
 }

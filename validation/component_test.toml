@@ -1,127 +1,40 @@
 title = "galotfa runtime parameters"
-# This is a comment line
-
 [global]
-# whether enable the on-the-fly analysis
 enable = true
-# The design purpose is to simplify the closure of the on-the-fly
-# analysis.
 outdir = "./otfLogs"      # path of the log directorys
 filename = "galotfa.hdf5" # filename of the log file
-# maximal iteration times during analysis
-maxiter = 25 # default 25
-# the equal threshold for float numbers
-epsilon = 1e-10 # default 1e-8
-
-# You need to specify the following parameters for each component you
-# want to analysis.
-# You can define many componentXs, X is an identifier of the component
-# that a positive integer is recommended.
-
-# You need to specify the following parameters for each component you
-# want to analysis.
-# You can define many componentXs, X is an identifier of the component
-# that a positive integer or a string is recommended.
+maxiter = 25              # default 25
+epsilon = 1e-10           # default 1e-8
 [component1]
-# the ids of particle types in this component
 types = [2]
-# The period of analyses, in units of syncrhonized time steps in the
-# simulation. Note that the period must be positive integer.
 period = 7
-# The coordinate frame used for analyses.
-# Available values:
-# cyl: cylindrical, recommended for disk-like components, including
-#      barred disk.
-# sph: spherical, recommended for spherical components such as
-#      classical bulge and dark matter halo.
-# car: cartesian, to be implemented in future versions.
 # NOTE: this parameter is unused at present
 frame = "cyl"
-# Whether recenter the component before analyses or not.
 recenter.enable = true
-# The method used to recenter the component, meaningful only when
-# recenter=true.
-# Available values:
-# mbp: most bound particle, define the component's center as the
-#      position of particle with minimal potential in such group.
-# com: define ... as the center of mass. For better performance, the
-#      program calculate the com through iteration: 100 times, 50
-#      times, 10 times, 1 times, and 0.5 times radius.
 recenter.method = "com"
-# Enclose radius of the sphere used in center of mass calculation, a
-# value closing to twice disk/galactic radius is recommended.
 recenter.radius = 100
-# Initial guess of the center position, aiming to avoid the system
-# center is always outside of the box.
 recenter.iguess = [0, 0, 0]
-# Whether align the x,y,z axes with the eigenvectors of the inertial
-# tensor or not. The calculation of the inertial tensor is based on
-# the image parameters. Again,  align=true requires the parameters
-# for image calculation and force image.enable=true.
 align.enable = true
-# Enclose radius for calculation of inertial tensor. For example, to
-# align the x,y,z axes with the bar principal axes, a value closing
-# to the bar radius is recommended.
 align.radius = 10
-# Parameters for calculations of x-y, x-z, and y-z projections. Must
-# be given if recenter.enable=true and method="dp", or if align=true.
-# TODO: images of streaming motion, their dispersion etc.
 image.enable = true
-image.halflength = 20.0 # the half length of the box to be projected.
-image.binnum = 3        # the number of bins in each direction.
-##### The parameters for frame="cyl" cases
-# Parameters for bar strength calculation.
-# A2 := |\frac{ \sum_k m_k * exp(2i * phi_k) }{ \sum_k m_k }|, where
-# the subscript k is over particles in curtain radial range.
-# Whether calculate the normalized bar strength parameter or not.
-A2.enable = true # if true, require the following 2 parameters
-# Minimal radius for A2 calculation
+image.halflength = 20.0     # the half length of the box to be projected.
+image.binnum = 3            # the number of bins in each direction.
+A2.enable = true            # if true, require the following 2 parameters
 A2.rmin = 0.1
-# Maximal radius for A2 calculation
 A2.rmax = 10
-# Parameters for bar angle calculation, where the bar angle is
-# defined as the phase angle \sum_k m_k * exp(2i * phi_k).
-# Note: the program assumes that the bar is in the X-Y plane, if you
-# can not make sure whether it's true or not, you can choose to set
-# recenter=true and align=true
-barangle.enable = true # if true, require the following 3 parameters
-# Minimal radius for bar angle calculation
+barangle.enable = true      # if true, require the following 3 parameters
 barangle.rmin = 0.1
-# Maximal radius for bar angle calculation
 barangle.rmax = 10
-# Parameters for buckling strength calculation.
-# Sbuckle:=|\frac{\sum_k z_k * m_k * exp(2i * phi_k)}{\sum_k m_k}|,
-# where the subscript k is over particles in curtain radial range.
-# Again, the program assumes that the bar is in the X-Y plane.
-buckle.enable = true # if true, require the following 2 parameters
-# Minimal radius for A2 calculation
+buckle.enable = true        # if true, require the following 2 parameters
 buckle.rmin = 0.1
-# Maximal radius for A2 calculation
 buckle.rmax = 10
-# TODO: bar length
-
-##### Parameter for orbital logs
 [orbit]
-# Whether enable the log of orbits.
 enable = false
-# The period of orbital logs, in units of syncrhonized time steps in
-# the simulation.
 period = 10
-# Two ways to specify which particles to be logged: "txtfile" for txt
-# file or "random" for random sampling.
-# method = "txtfile"
 method = "random"
-# The text file name that specifies the particle ids to be logged.
-# In this file, each row is a legal value of a particle id.
 idfile = "../validation/idlist.txt"
-# Another way to specify the logged particles.
-# The fraction to be randomly sampled, must be in (0, 1]
 fraction = 0.9
-# The array of particle types to be randomly sampled.
 logtypes = [2]
-# The component used for recenter and alignment during orbital log,
-# which is needed only when recenter.enable=true or align=true.
-# Whether recenter the system before output the orbits or not.
 recenter.enable = true
 recenter.method = "mbp"
 recenter.radius = 10

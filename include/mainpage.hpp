@@ -1,56 +1,30 @@
-// TODO: finish this page
 /** @mainpage
  *
- * @authors Bin-Hui Chen (orcid: https://orcid.org/0000-0001-8962-663X)
+ * @author Bin-Hui Chen (GitHub: https://github.com/blackbhc)
  *
- * @section intro Introduction
- * This package provides code templates for use by GLAST developers.
- * All header files for external access are located in the templates directory,
- * as it is customary to put external public header files in the packageName
- * directory. Header files that are not meant for external access reside in
- * the src directory. Source files are located in the src directory. Files
- * related to loading sharable libraries are located in the src/Dll directory.
- * There are 3 examples:
+ * @section over Overview
+ * This package explains the code structure of the galotfa project.
  *
- * - User-Defined generic C++ class
- * -# templates/ClassTemplate.h
- * -# src/ClassTemplate.cxx
- * - User-Defined Gaudi Algorithm
- * -# src/ExampleAlg.cxx
- * -# src/Dll/templates_dll.cxx
- * -# src/Dll/templates_load.cxx
- * - User-Defined Gaudi Service
- * -# templates/IExampleSvc.h
- * -# templates/ExampleSvc.h
- * -# src/ExampleSvc.cxx
- * -# src/Dll/templates_dll.cxx
- * -# src/Dll/templates_load.cxx
- *
- *
- * Also note the existence of the following directories:
- * - cmt
- * -# Contains the requirements file
- * - doc
- * -# Contains the release.notes file
- *
- *
- * As you prepare to develop code for GLAST SAS, please be sure you are aware
- * of our current
- * <A HREF="http://www-glast.slac.stanford.edu/software/CodeHowTo/codeStandards.html"> Coding
- * Standards </A>
- *
- *
- * If using the code in this package as an example - please modify the comments
- * as appropriate for your own specific code.
+ * - The C-style API be called at the synchronized time steps of N-body simulations.
+ * -# include/galotfa.h
+ * - The server of the on-the-fly analysis eigen, which calls the orbital analysis and
+ * component analysis modules implemented in other files to execute the analysis.
+ * -# include/monitor.hpp
+ * - The hdf5 output organizer.
+ * -# include/h5out.hpp Organize the hdf5 file output.
+ * - The runtime parameters organizer.
+ * -# include/toml.hpp The toml parser taken from toml++
+ * (https://marzer.github.io/tomlplusplus/#mainpage-example)
+ * -# include/para.hpp Organize the toml file parsing and restoring of runtime parameters.
+ * - The orbital analysis module.
+ * -# include/selector.hpp Select the particles to be logged.
+ * - The component analysis module.
+ * -# include/recenter.hpp Recenter the coordinates.
+ * -# include/barinfo.hpp Calculate the A2, Sbuckle and other bar informations.
+ * -# include/statistic.hpp Calculate the 1D or 2D binning statistics.
+ * -# include/eigen.hpp Calculate the eigenvalues and eigenvectors of a given matrix.
  *
  * <hr>
- * @section notes release.notes
- * release.notes
- * <hr>
- * @section requirements requirements
- * @verbinclude requirements
- * <hr>
- * @todo [optionally include text about more work to be done]
- * @todo Give each todo item its own line
- *
+ * @todo Bar length calculation.
+ * @todo Toomre Q parameter calculation.
  */
