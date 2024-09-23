@@ -24,6 +24,9 @@ epsilon = 1e-10 # default 1e-8
 types = [2]
 # The period of analyses, in units of syncrhonized time steps in the
 # simulation. Note that the period must be positive integer.
+# NOTE: you can define different components with the same types and
+# other parameters, but this is not recommended if you don't know
+# what you are trying to do.
 period = 10
 # The coordinate frame used for analyses.
 # Available values:
