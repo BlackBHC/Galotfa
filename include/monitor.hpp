@@ -69,7 +69,10 @@ private:
         std::unique_ptr< double[] > imageXY     = nullptr;      // image matrix x-y
         std::unique_ptr< double[] > imageXZ     = nullptr;      // image matrix x-z
         std::unique_ptr< double[] > imageYZ     = nullptr;      // image matrix y-z
-        // TODO: bar length
+        // For radial A2 profile
+        std::unique_ptr< double[] > A2Re = nullptr;  // real parts of the radial A2 profile
+        std::unique_ptr< double[] > A2Im = nullptr;  // imaginary parts of the radial A2 profile
+        std::unique_ptr< double[] > A2Rs = nullptr;  // radii of the radial A2 profile
     };
 
     // extract the data used for orbital log
@@ -107,6 +110,9 @@ private:
     // bar info calculation
     static void bar_info( monitor::compDataContainer&        dataContainer,
                           std::unique_ptr< otf::component >& comp, compResContainer& res );
+    // radial A2 profile calculation
+    void a2_profile( monitor::compDataContainer&        dataContainer,
+                     std::unique_ptr< otf::component >& comp, compResContainer& res ) const;
     // image calculation
     void image( monitor::compDataContainer& dataContainer, std::unique_ptr< otf::component >& comp,
                 compResContainer& res ) const;

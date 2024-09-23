@@ -151,7 +151,7 @@ int main()
             INFO( "Radial A2 profile of this component is enabled." );
             INFO( "Radial A2 profile rmin : %g.", comp.second->A2profile.rmin );
             INFO( "Radial A2 profile rmax : %g.", comp.second->A2profile.rmax );
-            INFO( "Radial A2 profile binnum : %u.", comp.second->A2profile.binnum );
+            INFO( "Radial A2 profile binnum : %u.", comp.second->A2profile.binNum );
         }
     }
 

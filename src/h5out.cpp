@@ -258,6 +258,7 @@ dataset_handle::~dataset_handle()
     // remove the additional garbage values in the dataset
     fileSize[ 0 ]       = curIndex;
     herr_t const status = H5Dset_extent( dataset, fileSize.get() );
+    ( void )status;
     H5Dflush( dataset );
 
     // flush the data buffers and close the dataset

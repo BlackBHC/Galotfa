@@ -75,7 +75,7 @@ struct a2_profile_para
     bool     enable;
     double   rmin;
     double   rmax;
-    unsigned binnum;
+    unsigned binNum;
 };
 
 /**

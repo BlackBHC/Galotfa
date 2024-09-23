@@ -177,6 +177,14 @@ void print_component_part( otf::runtime_para& para )
             INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
             INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
         }
+
+        if ( comp.second->A2profile.enable )
+        {
+            INFO( "Radial A2 profile of [%s] is enabled.", comp.second->compName.c_str() );
+            INFO( "Radial A2 profile rmin : %g.", comp.second->A2profile.rmin );
+            INFO( "Radial A2 profile rmax : %g.", comp.second->A2profile.rmax );
+            INFO( "Radial A2 profile binnum : %u.", comp.second->A2profile.binNum );
+        }
     }
 }
 
@@ -447,7 +455,6 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
     }
 
     // NOTE: calculate the bar info if necessary: Sbar, Sbuckle, bar angle and
-    // TODO: bar length
     if ( comp->sBar.enable or comp->barAngle.enable or comp->sBuckle.enable )
     {
         bar_info( dataContainer, comp, compRes );
@@ -463,6 +470,12 @@ auto monitor::component_data_analyze( monitor::compDataContainer&        dataCon
     if ( comp->image.enable )
     {
         image( dataContainer, comp, compRes );
+    }
+
+    // NOTE: calculate the radial A2 profile
+    if ( comp->A2profile.enable )
+    {
+        a2_profile( dataContainer, comp, compRes );
     }
 
     return compRes;
@@ -644,8 +657,7 @@ void monitor::align_coordinate( monitor::compDataContainer&        dataContainer
 }
 
 /**
- * @brief API to calculate the bar information, namely bar strength, bar angle, buckling strength,
- * and bar length (to be implemented).
+ * @brief API to calculate the bar information, namely bar strength, bar angle, buckling strength.
  *
  * @param dataContainer container of the extracted data
  * @param comp parameters of the component analysis
@@ -669,8 +681,7 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
             static double radius = 0;
             radius               = sqrt(
                 dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
-                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
-                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ] );
 
             // if the particle not in the specified region, go to the next loop
             if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
@@ -702,8 +713,7 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
             static double radius = 0;
             radius               = sqrt(
                 dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
-                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
-                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ] );
 
             // if the particle not in the specified region, go to the next loop
             if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
@@ -737,8 +747,7 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
             static double radius = 0;
             radius               = sqrt(
                 dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
-                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ]
-                + dataContainer.coordinates[ 3 * i + 2 ] * dataContainer.coordinates[ 3 * i + 2 ] );
+                + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ] );
 
             // if the particle not in the specified region, go to the next loop
             if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
@@ -756,8 +765,81 @@ void monitor::bar_info( monitor::compDataContainer&        dataContainer,
         // calculate the buckling strength
         res.sBuckle = bar_info::Sbuckle( count, usedMasses.get(), usedPhis.get(), usedZeds.get() );
     }
+}
 
-    // TODO: bar length
+/**
+ * @brief API to calculate the radial A2 profile.
+ *
+ * @param dataContainer container of the extracted data
+ * @param comp parameters of the component analysis
+ * @param res container of the analysis results
+ */
+void monitor::a2_profile( monitor::compDataContainer&        dataContainer,
+                          std::unique_ptr< otf::component >& comp, compResContainer& res ) const
+{
+    // extracted data
+    unsigned                       count = 0;
+    unique_ptr< double[] > const   usedMasses( new double[ dataContainer.partNum ] );
+    unique_ptr< double[] > const   usedPhis( new double[ dataContainer.partNum ] );
+    unique_ptr< unsigned[] > const ids( new unsigned[ dataContainer.partNum ] );
+
+    // extract the used data
+    static double   lowerBound = comp->A2profile.rmin;
+    static double   upperBound = comp->A2profile.rmax;
+    static unsigned binNum     = comp->A2profile.binNum;
+    for ( unsigned i = 0; i < dataContainer.partNum; ++i )
+    {
+        // get the radius of the current particle
+        static double radius = 0;
+        radius               = sqrt(
+            dataContainer.coordinates[ 3 * i + 0 ] * dataContainer.coordinates[ 3 * i + 0 ]
+            + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ] );
+
+        // if the particle not in the specified region, go to the next loop
+        if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+        {
+            continue;
+        }
+
+        usedPhis[ count ] =
+            atan2( dataContainer.coordinates[ 3 * i + 1 ], dataContainer.coordinates[ 3 * i + 0 ] );
+        usedMasses[ count ] = dataContainer.masses[ i ];
+        ids[ count ]        = ( radius - lowerBound ) / ( upperBound - lowerBound ) * binNum;
+        ++count;
+    }
+
+    // Other used variables
+    auto A2ReSend( make_unique< double[] >( comp->A2profile.binNum ) );
+    auto A2ReRecv( make_unique< double[] >( comp->A2profile.binNum ) );
+    auto A2ImSend( make_unique< double[] >( comp->A2profile.binNum ) );
+    auto A2ImRecv( make_unique< double[] >( comp->A2profile.binNum ) );
+    auto A0Send( make_unique< double[] >( comp->A2profile.binNum ) );
+    auto A0Recv( make_unique< double[] >( comp->A2profile.binNum ) );
+
+    // Accumulate in the local mpi rank
+    for ( unsigned i = 0; i < count; ++i )
+    {
+        A2ReSend[ ids[ i ] ] += usedMasses[ i ] * cos( 2 * usedPhis[ i ] );
+        A2ImSend[ ids[ i ] ] += usedMasses[ i ] * sin( 2 * usedPhis[ i ] );
+        A0Send[ ids[ i ] ] += usedMasses[ i ];
+    }
+
+    // MPI reduce
+    MPI_Reduce( A2ReSend.get(), A2ReRecv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Reduce( A2ImSend.get(), A2ImRecv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Reduce( A0Send.get(), A0Recv.get(), binNum, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+    // restore the analysis results
+    if ( isRootRank )
+    {
+        for ( unsigned i = 0; i < binNum; ++i )
+        {
+            A2ReRecv[ i ] /= A0Recv[ i ];
+            A2ImRecv[ i ] /= A0Recv[ i ];
+        }
+        res.A2Im = std::move( A2ImRecv );
+        res.A2Re = std::move( A2ReRecv );
+    }
 }
 
 /**
@@ -858,7 +940,6 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
             h5Organizer->create_dataset_in_group( "Sbuckle", comp->compName, { 1 },
                                                   H5T_NATIVE_DOUBLE );
         }
-        // TODO: bar length
 
         // create the datasets for image
         if ( comp->image.enable )
@@ -873,6 +954,29 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
             h5Organizer->create_dataset_in_group( "ImageYZ", comp->compName,
                                                   { comp->image.binNum, comp->image.binNum },
                                                   H5T_NATIVE_DOUBLE );
+        }
+
+        // create the datasets for radial A2 profile
+        if ( comp->A2profile.enable )
+        {
+            // for radii
+            h5Organizer->create_dataset_in_group( "A2_Rs", comp->compName,
+                                                  { comp->A2profile.binNum }, H5T_NATIVE_DOUBLE );
+            double rBinSize =
+                ( comp->A2profile.rmax - comp->A2profile.rmin ) / comp->A2profile.binNum;
+            auto A2Rs( make_unique< double[] >( comp->A2profile.binNum ) );
+            for ( unsigned i = 0; i < comp->A2profile.binNum; ++i )
+            {
+                A2Rs[ i ] = comp->A2profile.rmin + ( i + 0.5 ) * rBinSize;
+            }
+            h5Organizer->flush_single_block( comp->compName, "A2_Rs", A2Rs.get() );
+
+            // for read parts
+            h5Organizer->create_dataset_in_group( "A2_Re", comp->compName,
+                                                  { comp->A2profile.binNum }, H5T_NATIVE_DOUBLE );
+            // for imaginary parts
+            h5Organizer->create_dataset_in_group( "A2_Im", comp->compName,
+                                                  { comp->A2profile.binNum }, H5T_NATIVE_DOUBLE );
         }
     }
 
@@ -902,7 +1006,13 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         {
             h5Organizer->flush_single_block( comp->compName, "Sbuckle", &compResContainer.sBuckle );
         }
-        // TODO: bar length
+
+        // radial A2 profile
+        if ( comp->A2profile.enable )
+        {
+            h5Organizer->flush_single_block( comp->compName, "A2_Re", &compResContainer.A2Re );
+            h5Organizer->flush_single_block( comp->compName, "A2_Im", &compResContainer.A2Im );
+        }
 
         // images
         if ( comp->image.enable )

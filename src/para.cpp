@@ -247,9 +247,9 @@ component::component( string_view& compName, toml::table& compNodeTable )
     {
         A2profile.rmin   = *compNodeTable[ "A2profile" ][ "rmin" ].value< double >();
         A2profile.rmax   = *compNodeTable[ "A2profile" ][ "rmax" ].value< double >();
-        A2profile.binnum = *compNodeTable[ "A2profile" ][ "binnum" ].value< unsigned >();
+        A2profile.binNum = *compNodeTable[ "A2profile" ][ "binnum" ].value< unsigned >();
         if ( not( A2profile.rmin >= 0 and A2profile.rmin < A2profile.rmax
-                  and A2profile.binnum > 0 ) )
+                  and A2profile.binNum > 0 ) )
         {
             int rank;
             MPI_Comm_rank( MPI_COMM_WORLD, &rank );
