@@ -63,9 +63,10 @@ auto bar_info::bar_angle( const unsigned partNum, const double* masses,
         A2sumRe += masses[ i ] * cos( 2 * phis[ i ] );
         A2sumIm += masses[ i ] * sin( 2 * phis[ i ] );
     }
+    // MPI reduce
     MPI_Allreduce( MPI_IN_PLACE, &A2sumRe, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     MPI_Allreduce( MPI_IN_PLACE, &A2sumIm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-    return atan2( A2sumIm, A2sumRe );
+    return atan2( A2sumIm, A2sumRe ) / 2;
 }
 
 /**
