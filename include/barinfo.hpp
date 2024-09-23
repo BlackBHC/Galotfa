@@ -10,7 +10,7 @@ namespace otf {
 
 /**
  * @class bar_info
- * @brief A0, A2, Sbar, Sbuckle, bar length (to be implemented), bar ellipticity (to be implemented)
+ * @brief A0, A2, Sbar, Sbuckle, bar ellipticity (to be implemented)
  *
  */
 class bar_info

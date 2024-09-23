@@ -101,7 +101,16 @@ buckle.enable = true # if true, require the following 2 parameters
 buckle.rmin = 0.1
 # Maximal radius for A2 calculation
 buckle.rmax = 10
-# TODO: bar length
+# Parameters for calculate the A2(R) profile, which is useful for
+# calculation of A2,max and bar length. 
+# NOTE: again, assume the bar is located in the X-Y plane.
+A2profile.enable = true
+# Minimal radius for A2 radial profile calculation
+A2profile.rmin = 0.01
+# Maximal radius for A2 radial profile calculation
+A2profile.rmax = 10
+# Number of radial bins for A2 calculation
+A2profile.binnum = 20
 
 ##### Parameter for orbital logs
 [orbit]

@@ -116,35 +116,43 @@ int main()
         if ( comp.second->align.enable )
         {
             INFO( "Alignment of this component is enabled." );
+            INFO( "Initial guess of the recenter:" );
+            INFO( "Potential enclosed radius for align: %g.", comp.second->align.radius );
         }
-        INFO( "Initial guess of the recenter:" );
-        INFO( "Potential enclosed radius for align: %g.", comp.second->align.radius );
         if ( comp.second->image.enable )
         {
             INFO( "Image of this component is enabled." );
+            INFO( "Image half length: %g.", comp.second->image.halfLength );
+            INFO( "Image bin number: %d.", comp.second->image.binNum );
         }
-        INFO( "Image half length: %g.", comp.second->image.halfLength );
-        INFO( "Image bin number: %d.", comp.second->image.binNum );
         if ( comp.second->sBar.enable )
         {
             INFO( "A2 of this component is enabled." );
+            INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
+            INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
         }
-        INFO( "A2 rmin : %g.", comp.second->sBar.rmin );
-        INFO( "A2 rmax : %g.", comp.second->sBar.rmax );
 
         if ( comp.second->barAngle.enable )
         {
             INFO( "barAngle of this component is enabled." );
+            INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
+            INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
         }
-        INFO( "barAngle rmin : %g.", comp.second->barAngle.rmin );
-        INFO( "barAngle rmax : %g.", comp.second->barAngle.rmax );
 
         if ( comp.second->sBuckle.enable )
         {
             INFO( "buckle of this component is enabled." );
+            INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
+            INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
         }
-        INFO( "buckle rmin : %g.", comp.second->sBuckle.rmin );
-        INFO( "buckle rmax : %g.", comp.second->sBuckle.rmax );
+
+        if ( comp.second->A2profile.enable )
+        {
+            INFO( "Radial A2 profile of this component is enabled." );
+            INFO( "Radial A2 profile rmin : %g.", comp.second->A2profile.rmin );
+            INFO( "Radial A2 profile rmax : %g.", comp.second->A2profile.rmax );
+            INFO( "Radial A2 profile binnum : %u.", comp.second->A2profile.binnum );
+        }
     }
 
     return 0;

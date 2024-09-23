@@ -66,6 +66,19 @@ struct basic_bar_para
 };
 
 /**
+ * @class a2_profile_para
+ * @brief The parameters used for A2 radial profile calculation.
+ *
+ */
+struct a2_profile_para
+{
+    bool     enable;
+    double   rmin;
+    double   rmax;
+    unsigned binnum;
+};
+
+/**
  * @class orbit_recenter_para
  * @brief The parameters used for recenter in orbital log.
  *
@@ -86,16 +99,17 @@ enum class coordinate_frame : std::uint8_t { CYLINDRICAL = 0, SPHERICAL, CARTESI
 struct component
 {
     component( std::string_view& compName, toml::table& compNodeTable );
-    std::string             compName;  // name of the component
-    std::vector< unsigned > types;     // particle types in this component
-    int                     period;    // analysis period
-    recenter_para           recenter;  // parameter of coordinate recenter
-    coordinate_frame        frame;     // coordinate frame type
-    align_para              align;     // whether align coordinates with the inertia tensor
-    image_para              image;     // parameter of the spatial image part
-    basic_bar_para          sBar;      // bar strength parameter
-    basic_bar_para          barAngle;  // bar angle parameter
-    basic_bar_para          sBuckle;   // buckling strength parameter
+    std::string             compName;   // name of the component
+    std::vector< unsigned > types;      // particle types in this component
+    int                     period;     // analysis period
+    recenter_para           recenter;   // parameter of coordinate recenter
+    coordinate_frame        frame;      // coordinate frame type
+    align_para              align;      // whether align coordinates with the inertia tensor
+    image_para              image;      // parameter of the spatial image part
+    basic_bar_para          sBar;       // bar strength parameter
+    basic_bar_para          barAngle;   // bar angle parameter
+    basic_bar_para          sBuckle;    // buckling strength parameter
+    a2_profile_para         A2profile;  // A2(R) profile parameter
 };
 
 /**

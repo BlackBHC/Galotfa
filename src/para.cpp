@@ -34,8 +34,8 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
     const string tmpFileName( *paraTable[ "global" ][ "filename" ].value< string_view >() );
     const string tmpDir( *paraTable[ "global" ][ "outdir" ].value< string_view >() );
     // fileName                              = std::move( tmpFileName );
-    outputDir                         = std::move( tmpDir );
-    fileName                          = std::move( tmpFileName );
+    outputDir                         = tmpDir;
+    fileName                          = tmpFileName;
     constexpr unsigned defaultMaxIter = 25;
     constexpr double   defaultEpsilon = 1e-8;  // floating-point number equal threshold
     maxIter = paraTable[ "global" ][ "maxiter" ].value_or( defaultMaxIter );
@@ -80,7 +80,8 @@ runtime_para::runtime_para( const std::string_view& tomlParaFile )
         // if at least one information is enabled, it's an effective component
         effective = comp.second->recenter.enable or comp.second->align.enable
                     or comp.second->sBar.enable or comp.second->barAngle.enable
-                    or comp.second->sBuckle.enable or comp.second->image.enable;
+                    or comp.second->sBuckle.enable or comp.second->image.enable
+                    or comp.second->A2profile.enable;
 
         if ( not effective )
         {
@@ -240,6 +241,23 @@ component::component( string_view& compName, toml::table& compNodeTable )
             throw;
         };
     }
+    // buckling strength
+    A2profile.enable = *compNodeTable[ "A2profile" ][ "enable" ].value< bool >();
+    if ( A2profile.enable )
+    {
+        A2profile.rmin   = *compNodeTable[ "A2profile" ][ "rmin" ].value< double >();
+        A2profile.rmax   = *compNodeTable[ "A2profile" ][ "rmax" ].value< double >();
+        A2profile.binnum = *compNodeTable[ "A2profile" ][ "binnum" ].value< unsigned >();
+        if ( not( A2profile.rmin >= 0 and A2profile.rmin < A2profile.rmax
+                  and A2profile.binnum > 0 ) )
+        {
+            int rank;
+            MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+            MPI_ERROR( rank, "The parameters for radial A2 profile calculation of [%s] is illegal.",
+                       compName.data() );
+            throw;
+        };
+    }
 }
 
 orbit::orbit( toml::table& orbitNode )
@@ -302,7 +320,7 @@ orbit::orbit( toml::table& orbitNode )
     {
         // By a text file
         const string tmpIdFileName( *orbitNode[ "idfile" ].value< string_view >() );
-        this->idfile = std::move( tmpIdFileName );
+        this->idfile = tmpIdFileName;
     }
 
     // recenter parameters

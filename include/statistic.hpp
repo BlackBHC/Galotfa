@@ -36,36 +36,30 @@ private:
     static auto find_index( double lowerBound, double upperBound, unsigned long binNum,
                             double value ) -> unsigned long;
     static auto bin2dcount( int mpiRank, const double* xData, double xLowerBound,
-                            double xUpperBound, unsigned long xBinNum,
-                            const double* yData, double yLowerBound, double yUpperBound,
-                            unsigned long yBinNum,
+                            double xUpperBound, unsigned long xBinNum, const double* yData,
+                            double yLowerBound, double yUpperBound, unsigned long yBinNum,
                             unsigned long dataNum ) -> std::unique_ptr< double[] >;
-    static auto bin2dsum( int mpiRank, const double* xData, double xLowerBound,
-                          double xUpperBound, unsigned long xBinNum,
-                          const double* yData, double yLowerBound, double yUpperBound,
-                          unsigned long yBinNum, unsigned long dataNum,
+    static auto bin2dsum( int mpiRank, const double* xData, double xLowerBound, double xUpperBound,
+                          unsigned long xBinNum, const double* yData, double yLowerBound,
+                          double yUpperBound, unsigned long yBinNum, unsigned long dataNum,
                           const double* data ) -> std::unique_ptr< double[] >;
-    static auto bin2dmean( int mpiRank, const double* xData, double xLowerBound,
-                           double xUpperBound, unsigned long xBinNum,
-                           const double* yData, double yLowerBound, double yUpperBound,
-                           unsigned long yBinNum, unsigned long dataNum,
+    static auto bin2dmean( int mpiRank, const double* xData, double xLowerBound, double xUpperBound,
+                           unsigned long xBinNum, const double* yData, double yLowerBound,
+                           double yUpperBound, unsigned long yBinNum, unsigned long dataNum,
                            const double* data ) -> std::unique_ptr< double[] >;
     static auto bin2dstd( const double* xData, double xLowerBound, double xUpperBound,
-                          unsigned long xBinNum, const double* yData,
-                          double yLowerBound, double yUpperBound,
-                          unsigned long yBinNum, unsigned long dataNum,
+                          unsigned long xBinNum, const double* yData, double yLowerBound,
+                          double yUpperBound, unsigned long yBinNum, unsigned long dataNum,
                           const double* data ) -> std::unique_ptr< double[] >;
-    static auto bin1dcount( int mpiRank, const double* coord, double lowerBound,
-                            double upperBound, unsigned long binNum,
+    static auto bin1dcount( int mpiRank, const double* coord, double lowerBound, double upperBound,
+                            unsigned long binNum,
                             unsigned long dataNum ) -> std::unique_ptr< double[] >;
-    static auto bin1dsum( int mpiRank, const double* coord, double lowerBound,
-                          double upperBound, unsigned long binNum,
-                          unsigned long dataNum,
-                          const double*       data = nullptr ) -> std::unique_ptr< double[] >;
-    static auto bin1dmean( int mpiRank, const double* coord, double lowerBound,
-                           double upperBound, unsigned long binNum,
-                           unsigned long dataNum,
-                           const double*       data = nullptr ) -> std::unique_ptr< double[] >;
+    static auto bin1dsum( int mpiRank, const double* coord, double lowerBound, double upperBound,
+                          unsigned long binNum, unsigned long dataNum,
+                          const double* data = nullptr ) -> std::unique_ptr< double[] >;
+    static auto bin1dmean( int mpiRank, const double* coord, double lowerBound, double upperBound,
+                           unsigned long binNum, unsigned long dataNum,
+                           const double* data = nullptr ) -> std::unique_ptr< double[] >;
     static auto bin1dstd( const double* coord, double lowerBound, double upperBound,
                           unsigned long binNum, unsigned long dataNum,
                           const double* data = nullptr ) -> std::unique_ptr< double[] >;

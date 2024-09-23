@@ -28,6 +28,10 @@ barangle.rmax = 10
 buckle.enable = true        # if true, require the following 2 parameters
 buckle.rmin = 0.1
 buckle.rmax = 10
+A2profile.enable = true
+A2profile.rmin = 0.01
+A2profile.rmax = 10
+A2profile.binnum = 20
 [orbit]
 enable = false
 period = 10
