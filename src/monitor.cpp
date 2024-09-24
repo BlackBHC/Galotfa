@@ -835,7 +835,6 @@ void monitor::a2_profile( monitor::compDataContainer&        dataContainer,
     {
         for ( unsigned i = 0; i < binNum; ++i )
         {
-            myprint( "Re: %lf, Im: %lf, A0: %lf", A2ReRecv[ i ], A2ImRecv[ i ], A0Recv[ i ] );
             A2ReRecv[ i ] /= A0Recv[ i ];
             A2ImRecv[ i ] /= A0Recv[ i ];
         }
@@ -1013,9 +1012,9 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         if ( comp->A2profile.enable )
         {
             h5Organizer->flush_single_block( comp->compName, "A2profile_Re",
-                                             &compResContainer.A2Re );
+                                             compResContainer.A2Re.get() );
             h5Organizer->flush_single_block( comp->compName, "A2profile_Im",
-                                             &compResContainer.A2Im );
+                                             compResContainer.A2Im.get() );
         }
 
         // images
