@@ -72,7 +72,6 @@ private:
         // For radial A2 profile
         std::unique_ptr< double[] > A2Re = nullptr;  // real parts of the radial A2 profile
         std::unique_ptr< double[] > A2Im = nullptr;  // imaginary parts of the radial A2 profile
-        std::unique_ptr< double[] > A2Rs = nullptr;  // radii of the radial A2 profile
     };
 
     // extract the data used for orbital log

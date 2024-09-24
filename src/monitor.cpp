@@ -781,7 +781,7 @@ void monitor::a2_profile( monitor::compDataContainer&        dataContainer,
     unsigned                       count = 0;
     unique_ptr< double[] > const   usedMasses( new double[ dataContainer.partNum ] );
     unique_ptr< double[] > const   usedPhis( new double[ dataContainer.partNum ] );
-    unique_ptr< unsigned[] > const ids( new unsigned[ dataContainer.partNum ] );
+    unique_ptr< unsigned[] > const locs( new unsigned[ dataContainer.partNum ] );
 
     // extract the used data
     static double   lowerBound = comp->A2profile.rmin;
@@ -796,7 +796,7 @@ void monitor::a2_profile( monitor::compDataContainer&        dataContainer,
             + dataContainer.coordinates[ 3 * i + 1 ] * dataContainer.coordinates[ 3 * i + 1 ] );
 
         // if the particle not in the specified region, go to the next loop
-        if ( radius < comp->barAngle.rmin or radius > comp->barAngle.rmax )
+        if ( radius < comp->A2profile.rmin or radius >= comp->A2profile.rmax )
         {
             continue;
         }
@@ -804,24 +804,25 @@ void monitor::a2_profile( monitor::compDataContainer&        dataContainer,
         usedPhis[ count ] =
             atan2( dataContainer.coordinates[ 3 * i + 1 ], dataContainer.coordinates[ 3 * i + 0 ] );
         usedMasses[ count ] = dataContainer.masses[ i ];
-        ids[ count ]        = ( radius - lowerBound ) / ( upperBound - lowerBound ) * binNum;
+        locs[ count ] =
+            unsigned( ( radius - lowerBound ) / ( upperBound - lowerBound ) * ( double )binNum );
         ++count;
     }
 
     // Other used variables
-    auto A2ReSend( make_unique< double[] >( comp->A2profile.binNum ) );
-    auto A2ReRecv( make_unique< double[] >( comp->A2profile.binNum ) );
-    auto A2ImSend( make_unique< double[] >( comp->A2profile.binNum ) );
-    auto A2ImRecv( make_unique< double[] >( comp->A2profile.binNum ) );
-    auto A0Send( make_unique< double[] >( comp->A2profile.binNum ) );
-    auto A0Recv( make_unique< double[] >( comp->A2profile.binNum ) );
+    auto A2ReSend( make_unique< double[] >( binNum ) );
+    auto A2ReRecv( make_unique< double[] >( binNum ) );
+    auto A2ImSend( make_unique< double[] >( binNum ) );
+    auto A2ImRecv( make_unique< double[] >( binNum ) );
+    auto A0Send( make_unique< double[] >( binNum ) );
+    auto A0Recv( make_unique< double[] >( binNum ) );
 
     // Accumulate in the local mpi rank
     for ( unsigned i = 0; i < count; ++i )
     {
-        A2ReSend[ ids[ i ] ] += usedMasses[ i ] * cos( 2 * usedPhis[ i ] );
-        A2ImSend[ ids[ i ] ] += usedMasses[ i ] * sin( 2 * usedPhis[ i ] );
-        A0Send[ ids[ i ] ] += usedMasses[ i ];
+        A2ReSend[ locs[ i ] ] += usedMasses[ i ] * cos( 2 * usedPhis[ i ] );
+        A2ImSend[ locs[ i ] ] += usedMasses[ i ] * sin( 2 * usedPhis[ i ] );
+        A0Send[ locs[ i ] ] += usedMasses[ i ];
     }
 
     // MPI reduce
@@ -960,7 +961,7 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         if ( comp->A2profile.enable )
         {
             // for radii
-            h5Organizer->create_dataset_in_group( "A2_Rs", comp->compName,
+            h5Organizer->create_dataset_in_group( "A2profile_Rs", comp->compName,
                                                   { comp->A2profile.binNum }, H5T_NATIVE_DOUBLE );
             double rBinSize =
                 ( comp->A2profile.rmax - comp->A2profile.rmin ) / comp->A2profile.binNum;
@@ -969,13 +970,13 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
             {
                 A2Rs[ i ] = comp->A2profile.rmin + ( i + 0.5 ) * rBinSize;
             }
-            h5Organizer->flush_single_block( comp->compName, "A2_Rs", A2Rs.get() );
+            h5Organizer->flush_single_block( comp->compName, "A2profile_Rs", A2Rs.get() );
 
             // for read parts
-            h5Organizer->create_dataset_in_group( "A2_Re", comp->compName,
+            h5Organizer->create_dataset_in_group( "A2profile_Re", comp->compName,
                                                   { comp->A2profile.binNum }, H5T_NATIVE_DOUBLE );
             // for imaginary parts
-            h5Organizer->create_dataset_in_group( "A2_Im", comp->compName,
+            h5Organizer->create_dataset_in_group( "A2profile_Im", comp->compName,
                                                   { comp->A2profile.binNum }, H5T_NATIVE_DOUBLE );
         }
     }
@@ -1010,8 +1011,10 @@ void monitor::component_analysis( double time, unsigned particleNumber, const in
         // radial A2 profile
         if ( comp->A2profile.enable )
         {
-            h5Organizer->flush_single_block( comp->compName, "A2_Re", &compResContainer.A2Re );
-            h5Organizer->flush_single_block( comp->compName, "A2_Im", &compResContainer.A2Im );
+            h5Organizer->flush_single_block( comp->compName, "A2profile_Re",
+                                             &compResContainer.A2Re );
+            h5Organizer->flush_single_block( comp->compName, "A2profile_Im",
+                                             &compResContainer.A2Im );
         }
 
         // images
