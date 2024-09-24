@@ -835,6 +835,7 @@ void monitor::a2_profile( monitor::compDataContainer&        dataContainer,
     {
         for ( unsigned i = 0; i < binNum; ++i )
         {
+            myprint( "Re: %lf, Im: %lf, A0: %lf", A2ReRecv[ i ], A2ImRecv[ i ], A0Recv[ i ] );
             A2ReRecv[ i ] /= A0Recv[ i ];
             A2ImRecv[ i ] /= A0Recv[ i ];
         }
