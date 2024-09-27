@@ -117,7 +117,7 @@ If you want to learn about the programming details, you can use `doxygen` to cre
 
 ## Future Work
 
-- [ ] Bar length.
+- [ ] Bar length (post analysis).
 - [ ] Images with more "colors": mean velocities, dispersions.
 - [ ] Dispersion tensor.
 - [ ] Toomre Q.
