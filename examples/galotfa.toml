@@ -63,7 +63,7 @@ recenter.iguess = [0, 0, 0]
 align.enable = true
 # Enclose radius for calculation of inertial tensor. For example, to
 # align the x,y,z axes with the bar principal axes, a value closing
-# to the bar radius is recommended.
+# to half of the bar radius is recommended.
 align.radius = 5
 # Parameters for calculations of x-y, x-z, and y-z projections.
 # TODO: images of streaming motion, their dispersion etc.
